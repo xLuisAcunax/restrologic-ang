@@ -1,0 +1,200 @@
+<div class="p-5 border-b border-base-200 flex flex-col gap-4">
+  <div
+    class="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+  >
+    <div class="form-control w-full md:w-1/2">
+      <label class="label">
+        <span class="label-text font-semibold">Modificador</span>
+      </label>
+      <select
+        class="select select-bordered w-full"
+        [ngModel]="selectedBundleId()"
+        (ngModelChange)="selectBundle($event)"
+      >
+        <option value="">Selecciona un Modificador</option>
+        @for (bundle of bundles(); track bundle.id) {
+          <option [value]="bundle.id">
+            {{ bundle.name }} · {{ getProductName(bundle.productId) }}
+          </option>
+        }
+      </select>
+    </div>
+
+    <div class="flex items-end">
+      <button
+        class="btn btn-sm btn-primary"
+        [disabled]="!selectedBundle()"
+        (click)="openGroupModal()"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4 mr-1"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 4v16m8-8H4"
+          />
+        </svg>
+        Agregar Modificador
+      </button>
+    </div>
+  </div>
+
+  @if (selectedBundle()) {
+    <div class="text-xs text-base-content/60">
+      Configurando grupos de
+      <span class="font-semibold">{{ selectedBundle()?.name }}</span>
+    </div>
+  }
+</div>
+
+<div class="overflow-x-auto">
+  <table class="table w-full align-middle 2xl:table-lg">
+    <thead
+      class="bg-base-200/40 text-xs uppercase font-bold text-base-content/60"
+    >
+      <tr>
+        <th class="pl-6 py-4 w-[30%]">Grupo</th>
+        <th class="py-4">Selección</th>
+        <th class="py-4">Modo</th>
+        <th class="py-4">Tipo</th>
+        <th class="py-4">Opciones</th>
+        <th class="pr-6 py-4 text-right">Acciones</th>
+      </tr>
+    </thead>
+
+    <tbody class="divide-y divide-base-200">
+      @for (group of getGroups(); track $index) {
+        <tr class="hover:bg-base-200/30 transition-colors group">
+          <td class="pl-6 py-4">
+            <div class="flex flex-col">
+              <span class="font-bold text-base-content text-sm">{{
+                group.name
+              }}</span>
+              <span class="text-xs text-base-content/60">
+                Orden: {{ group.sortOrder ?? 0 }}
+              </span>
+            </div>
+          </td>
+          <td class="py-4">
+            <span class="text-sm font-medium">
+              Min {{ group.minSelections ?? 0 }} · Max
+              {{ group.maxSelections ?? 0 }}
+            </span>
+          </td>
+          <td class="py-4">
+            <span class="badge badge-sm badge-ghost font-medium text-xs">
+              {{ group.priceMode || "SumComponents" }}
+            </span>
+          </td>
+          <td class="py-4">
+            @if (group.useDynamicProduct) {
+              <span
+                class="badge badge-sm badge-primary/10 text-primary border border-primary/20"
+                >Scoped</span
+              >
+            } @else {
+              <span class="badge badge-sm badge-ghost">Explícito</span>
+            }
+          </td>
+          <td class="py-4">
+            <span class="font-mono font-bold text-base-content text-sm">
+              {{ group.items?.length || 0 }}
+            </span>
+          </td>
+          <td class="pr-6 py-4 text-right">
+            <div
+              class="flex items-center justify-end gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+            >
+              <button
+                class="btn btn-ghost btn-xs btn-square text-info tooltip tooltip-left"
+                data-tip="Editar"
+                (click)="openGroupModal(group, $index)"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                  <path d="m15 5 4 4" />
+                </svg>
+              </button>
+
+              <button
+                class="btn btn-ghost btn-xs btn-square text-error tooltip tooltip-left"
+                data-tip="Eliminar"
+                (click)="deleteGroup(group)"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M3 6h18" />
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                  <line x1="10" x2="10" y1="11" y2="17" />
+                  <line x1="14" x2="14" y1="11" y2="17" />
+                </svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="6" class="py-12">
+            <div class="flex flex-col items-center justify-center text-center">
+              <div
+                class="w-16 h-16 bg-base-200 rounded-full flex items-center justify-center mb-4"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-8 w-8 text-base-content/30"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+              </div>
+              <h3 class="text-base font-bold text-base-content">Sin grupos</h3>
+              <p class="text-sm text-base-content/60 mt-1 mb-4">
+                Agrega grupos para definir opciones del modificador.
+              </p>
+              <button
+                class="btn btn-primary btn-sm"
+                [disabled]="!selectedBundle()"
+                (click)="openGroupModal()"
+              >
+                Crear grupo
+              </button>
+            </div>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

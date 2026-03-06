@@ -1,0 +1,26 @@
+.badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  background: #e5e7eb;
+  color: #222;
+}
+.badge.cloudinary {
+  background: #4b3af5;
+  color: #fff;
+}
+.badge.orders {
+  background: #0d9488;
+  color: #fff;
+}
+.badge.auth {
+  background: #dc2626;
+  color: #fff;
+}
+.sev-error {
+  color: #dc2626;
+  font-weight: 600;
+}
+.sev-warn {
+  color: #d97706;
+}

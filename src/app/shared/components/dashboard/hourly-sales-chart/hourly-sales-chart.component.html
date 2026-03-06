@@ -1,0 +1,31 @@
+<div class="card bg-base-100 shadow-sm">
+  <div class="px-5 pt-5">
+    <div class="flex justify-between mb-3">
+      <div>
+        <h3 class="text-lg font-semibold">Ventas por hora (Hoy)</h3>
+        <p class="mt-1 text-gray-500 text-theme-sm dark:text-gray-400">
+          Distribución de ingresos a lo largo del día.
+        </p>
+      </div>
+    </div>
+    <apx-chart
+      [series]="series"
+      [chart]="chart"
+      [dataLabels]="dataLabels"
+      [stroke]="stroke"
+      [xaxis]="xaxis"
+      [yaxis]="yaxis"
+      [tooltip]="tooltip"
+      [grid]="grid"
+      [legend]="legend"
+    ></apx-chart>
+  </div>
+  <div class="card-body bg-base-200 rounded-b-lg p-0">
+    <div class="flex justify-between px-6 py-3.5 text-sm">
+      <span>Total hoy:</span>
+      <span class="font-semibold">{{
+        totalToday | currency : "COP" : "symbol" : "1.0-0" : "es-CO"
+      }}</span>
+    </div>
+  </div>
+</div>

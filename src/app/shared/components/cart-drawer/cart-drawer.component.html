@@ -1,0 +1,277 @@
+@if (ui.drawerOpen()) {
+<div class="fixed inset-0 z-50 flex justify-end">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" (click)="ui.closeDrawer()"></div>
+
+  <div class="relative w-full max-w-md h-full bg-base-100 shadow-2xl flex flex-col animate-slide-in-right">
+    <div class="p-5 border-b border-base-200 bg-base-100 flex items-center justify-between z-10">
+      <div class="flex items-center gap-3">
+        <div class="indicator">
+          <span class="indicator-item badge badge-primary badge-sm font-bold">{{ cart.count() }}</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          </svg>
+        </div>
+        <h2 class="font-bold text-xl">Tu Pedido</h2>
+      </div>
+      <button class="btn btn-circle btn-sm btn-ghost hover:bg-base-200" (click)="ui.closeDrawer()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-5 space-y-6">
+      @if (cart.items().length > 0) {
+      <div class="space-y-4">
+        @for (item of cart.items(); track trackById($index, item)) {
+        <div
+          class="flex gap-4 p-3 bg-base-100 rounded-xl border border-base-200 hover:border-primary/30 transition-colors group">
+          <div class="flex-1 min-w-0">
+            <div class="font-bold text-base-content leading-tight">
+              @if (item.type === "single") {
+              {{ item.productName }}
+              } @else {
+              <span class="text-xs text-primary font-bold uppercase tracking-wide block mb-0.5">Pizza Mitad &
+                Mitad</span>
+              {{ item.productNameA }} + {{ item.productNameB }}
+              }
+            </div>
+
+            @if (sizeBadge(item); as label) {
+            <div class="mt-1">
+              <span
+                class="text-[10px] uppercase font-bold bg-base-200 text-base-content/60 px-1.5 py-0.5 rounded tracking-wide">{{
+                label }}</span>
+            </div>
+            }
+
+            @if (
+            item.type === "single" &&
+            item.modifiers &&
+            item.modifiers.length > 0
+            ) {
+            <div class="mt-1.5 space-y-0.5">
+              @for (mod of item.modifiers; track mod.modifierId) {
+              <div class="text-xs text-base-content/60 flex items-center gap-1">
+                <span class="w-1 h-1 bg-base-content/40 rounded-full"></span>
+                <span>{{ mod.modifierName }}</span>
+                @if (mod.priceAdjustment !== 0) {
+                <span class="font-medium {{
+                                mod.priceAdjustment > 0
+                                  ? 'text-base-content/80'
+                                  : 'text-error'
+                              }}">
+                  ({{ mod.priceAdjustment > 0 ? "+" : "" }}${{
+                  mod.priceAdjustment | number: "1.0-0"
+                  }})
+                </span>
+                }
+              </div>
+              }
+            </div>
+            }
+
+            <div class="mt-2 text-sm text-base-content/50 font-medium">
+              ${{ item.price | number: "1.0-0" }} c/u
+            </div>
+          </div>
+
+          <div class="flex flex-col items-end justify-between gap-2">
+            <div class="font-bold text-lg font-mono text-base-content">
+              ${{ item.price * item.qty | number: "1.0-0" }}
+            </div>
+
+            <div class="join border border-base-300 rounded-lg">
+              <button class="join-item btn btn-xs btn-ghost hover:bg-error/10 hover:text-error px-2"
+                (click)="item.qty === 1 ? remove(item.id) : dec(item.id)">
+                @if (item.qty === 1) {
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd"
+                    d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                    clip-rule="evenodd" />
+                </svg>
+                } @else {
+                -
+                }
+              </button>
+              <span
+                class="join-item bg-base-100 px-3 text-sm flex items-center font-bold min-w-[2rem] justify-center">{{
+                item.qty }}</span>
+              <button class="join-item btn btn-xs btn-ghost hover:bg-primary/10 hover:text-primary px-2"
+                (click)="inc(item.id)">
+                +
+              </button>
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+      } @else {
+      <div class="flex flex-col items-center justify-center h-64 text-center">
+        <div class="w-20 h-20 bg-base-200 rounded-full flex items-center justify-center mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-base-content/30" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          </svg>
+        </div>
+        <h3 class="font-bold text-lg text-base-content/70">
+          Tu carrito está vacío
+        </h3>
+        <p class="text-sm text-base-content/50 mt-1">
+          ¡Agrega algo delicioso del menú!
+        </p>
+        <button class="btn btn-outline btn-sm mt-4" (click)="ui.closeDrawer()">
+          Ver Menú
+        </button>
+      </div>
+      }
+
+      @if (checkoutOpen() && cart.count() > 0) {
+      <div class="border-t-2 border-dashed border-base-200 pt-6 animate-fade-in-up">
+        <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd"
+              d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+              clip-rule="evenodd" />
+          </svg>
+          Datos de Entrega
+        </h3>
+
+        <div class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="form-control">
+              <label class="label text-xs font-bold uppercase text-base-content/50 pb-1">Nombre</label>
+              <input type="text" class="input input-bordered w-full bg-base-200/50 focus:bg-base-100 transition-all"
+                [ngModel]="customerName()" (ngModelChange)="customerName.set($event)" placeholder="Tu nombre" />
+              @if (
+              !nameValid() && (submitted() || customerName().length > 0)
+              ) {
+              <span class="text-error text-xs mt-1 ml-1">Requerido</span>
+              }
+            </div>
+            <div class="form-control">
+              <label class="label text-xs font-bold uppercase text-base-content/50 pb-1">Teléfono</label>
+              <input type="tel" class="input input-bordered w-full bg-base-200/50 focus:bg-base-100 transition-all"
+                [ngModel]="customerPhone()" (ngModelChange)="customerPhone.set($event)" placeholder="300..." />
+              @if (
+              !phoneValid() && (submitted() || customerPhone().length > 0)
+              ) {
+              <span class="text-error text-xs mt-1 ml-1">Requerido</span>
+              }
+            </div>
+          </div>
+
+          <div class="form-control">
+            <label class="label text-xs font-bold uppercase text-base-content/50 pb-1">Dirección de Entrega</label>
+            <textarea class="textarea textarea-bordered h-20 bg-base-200/50 focus:bg-base-100 transition-all"
+              [ngModel]="customerAddress()" (ngModelChange)="customerAddress.set($event)"
+              placeholder="Calle, número, apto, conjunto..."></textarea>
+            @if (
+            !addressOk() && (submitted() || customerAddress().length > 0)
+            ) {
+            <span class="text-error text-xs mt-1 ml-1">Dirección requerida para domicilio</span>
+            }
+          </div>
+
+          @if (hasAddress()) {
+          <div class="bg-base-200/50 p-4 rounded-xl border border-base-200">
+            <label class="label text-xs font-bold uppercase text-base-content/50 pt-0">Calculadora de Domicilio</label>
+            <div class="flex gap-2 items-start">
+              <div class="flex-1">
+                <input type="number" class="input input-sm input-bordered w-full" [ngModel]="estimatedDistanceKm()"
+                  (ngModelChange)="computeFeePreview($event || 0)" placeholder="KM de distancia" />
+                <div class="text-[10px] opacity-50 mt-1">
+                  Distancia estimada en km
+                </div>
+              </div>
+
+              <div class="text-right">
+                @if (calculatingFee()) {
+                <span class="loading loading-spinner loading-sm"></span>
+                } @else if (radiusExceeded()) {
+                <div class="badge badge-error badge-sm">
+                  Fuera de rango
+                </div>
+                } @else if (showDeliveryPreview()) {
+                <div class="font-bold text-base-content">
+                  ${{ deliveryFee() | number: "1.0-0" }}
+                </div>
+                <div class="text-xs text-success font-medium">
+                  Tarifa aplicada
+                </div>
+                }
+              </div>
+            </div>
+            @if (radiusExceeded()) {
+            <div class="text-error text-xs mt-2 font-medium">
+              ⚠️ La distancia excede el límite de
+              {{ deliveriesConfig()?.deliveryRadiusKm }} km.
+            </div>
+            }
+          </div>
+          }
+
+          <div class="form-control">
+            <label class="label text-xs font-bold uppercase text-base-content/50 pb-1">Notas Adicionales</label>
+            <textarea class="textarea textarea-bordered h-16 bg-base-200/50 focus:bg-base-100 transition-all"
+              [ngModel]="customerNotes()" (ngModelChange)="customerNotes.set($event)"
+              placeholder="¿Algo más que debamos saber?"></textarea>
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+
+    @if (cart.count() > 0) {
+    <div class="p-5 border-t border-base-200 bg-base-100 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+      <div class="space-y-2 mb-4 text-sm">
+        <div class="flex justify-between text-base-content/70">
+          <span>Subtotal</span>
+          <span>${{ cart.total() | number: "1.0-0" }}</span>
+        </div>
+        @if (showDeliveryPreview() && !radiusExceeded()) {
+        <div class="flex justify-between text-base-content/70">
+          <span>Domicilio</span>
+          <span>${{ deliveryFee() | number: "1.0-0" }}</span>
+        </div>
+        }
+        <div class="flex justify-between items-end pt-2 border-t border-base-100">
+          <span class="font-bold text-lg">Total</span>
+          <span class="font-black text-2xl text-primary">
+            ${{
+            cart.total() +
+            (showDeliveryPreview() && !radiusExceeded()
+            ? deliveryFee()
+            : 0) | number: "1.0-0"
+            }}
+          </span>
+        </div>
+      </div>
+
+      @if (!checkoutOpen()) {
+      <button class="btn btn-primary btn-block btn-lg shadow-xl shadow-primary/20" (click)="openCheckout()">
+        Ir a Pagar
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd"
+            d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
+            clip-rule="evenodd" />
+        </svg>
+      </button>
+      } @else {
+      <div class="grid grid-cols-2 gap-3">
+        <button class="btn btn-outline" (click)="closeCheckout()">
+          Volver
+        </button>
+        <button class="btn btn-primary shadow-xl shadow-primary/20"
+          [disabled]="!ctx.tenantId() || !ctx.branchId() || !formValid()" (click)="placeOrder()">
+          Confirmar
+        </button>
+      </div>
+      }
+    </div>
+    }
+  </div>
+</div>
+}

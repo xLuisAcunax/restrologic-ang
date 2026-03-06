@@ -1,0 +1,44 @@
+<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
+  <div class="stats shadow bg-base-100">
+    <div class="stat">
+      <div class="stat-title">Órdenes hoy</div>
+      <div class="stat-value" *ngIf="data; else ordersSkeleton">
+        {{ data.ordersToday }}
+      </div>
+      <ng-template #ordersSkeleton
+        ><span class="loading loading-spinner loading-sm"></span
+      ></ng-template>
+      <div class="stat-desc" *ngIf="data">
+        <span
+          [class.text-success]="data.growthOrdersPct >= 0"
+          [class.text-error]="data.growthOrdersPct < 0"
+        >
+          {{ data.growthOrdersPct | number : "1.0-0" }}% vs ayer ({{
+            data.ordersPrevDay
+          }})
+        </span>
+      </div>
+    </div>
+  </div>
+  <div class="stats shadow bg-base-100">
+    <div class="stat">
+      <div class="stat-title">Ventas hoy</div>
+      <div class="stat-value" *ngIf="data; else salesSkeleton">
+        {{ formatCurrency(data.salesToday) }}
+      </div>
+      <ng-template #salesSkeleton
+        ><span class="loading loading-spinner loading-sm"></span
+      ></ng-template>
+      <div class="stat-desc" *ngIf="data">
+        <span
+          [class.text-success]="data.growthSalesPct >= 0"
+          [class.text-error]="data.growthSalesPct < 0"
+        >
+          {{ data.growthSalesPct | number : "1.0-0" }}% vs ayer ({{
+            formatCurrency(data.salesPrevDay)
+          }})
+        </span>
+      </div>
+    </div>
+  </div>
+</div>

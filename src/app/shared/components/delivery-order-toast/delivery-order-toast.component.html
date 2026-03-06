@@ -1,0 +1,38 @@
+<div
+  class="toast toast-top toast-end z-50 space-y-2"
+  *ngIf="toasts().length > 0"
+>
+  <ng-container *ngFor="let t of toasts()">
+    <div class="alert alert-info alert-soft shadow-lg flex items-start gap-3">
+      <span class="text-sm font-medium">
+        {{ t.message }}
+        <span *ngIf="t.address" class="block text-xs opacity-70">{{
+          t.address
+        }}</span>
+      </span>
+      <button
+        class="btn btn-xs"
+        (click)="dismiss(t.id)"
+        aria-label="Cerrar notificación"
+      >
+        Cerrar
+      </button>
+    </div>
+  </ng-container>
+  <div class="flex justify-end gap-2">
+    <button
+      class="btn btn-xs"
+      (click)="notif.enableSound()"
+      *ngIf="!notif.soundEnabled()"
+    >
+      Activar sonido
+    </button>
+    <button
+      class="btn btn-xs"
+      (click)="notif.disableSound()"
+      *ngIf="notif.soundEnabled()"
+    >
+      Silenciar
+    </button>
+  </div>
+</div>

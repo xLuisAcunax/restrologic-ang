@@ -1,0 +1,127 @@
+<aside
+  class="fixed flex flex-col top-0 px-5 left-0 h-screen transition-all duration-300 ease-in-out z-50 bg-base-200 border-neutral border-r"
+  [ngClass]="{
+    'w-[290px]':
+      (isExpanded$ | async) || (isMobileOpen$ | async) || (isHovered$ | async),
+    'w-[90px]': !(
+      (isExpanded$ | async) ||
+      (isMobileOpen$ | async) ||
+      (isHovered$ | async)
+    ),
+    'is-collapsed': !(
+      (isExpanded$ | async) ||
+      (isMobileOpen$ | async) ||
+      (isHovered$ | async)
+    ),
+    'translate-x-0': isMobileOpen$ | async,
+    '-translate-x-full': !(isMobileOpen$ | async),
+    'xl:translate-x-0': true
+  }" (mouseenter)="onSidebarMouseEnter()" (mouseleave)="sidebarService.setHovered(false)">
+  <div class="py-3 flex justify-center">
+    <a routerLink="/" class="flex justify-center">
+      <img src="/images/logo.png" alt="RestroLogic" class="h-27 w-auto object-contain" />
+    </a>
+  </div>
+
+  <div class="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
+    <nav class="mb-6">
+      <div class="flex flex-col gap-4">
+        <!-- Menu Section -->
+        <div>
+          <h2 class="mb-4 text-xs uppercase flex leading-[20px]" [ngClass]="{
+              'xl:justify-center': !(
+                (isExpanded$ | async) || (isHovered$ | async)
+              ),
+              'justify-start': (isExpanded$ | async) || (isHovered$ | async)
+            }">
+            @if ((isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$
+            | async)) { } @else {
+            <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+              class="size-6">
+              <path fill-rule="evenodd" clip-rule="evenodd"
+                d="M5.99915 10.2451C6.96564 10.2451 7.74915 11.0286 7.74915 11.9951V12.0051C7.74915 12.9716 6.96564 13.7551 5.99915 13.7551C5.03265 13.7551 4.24915 12.9716 4.24915 12.0051V11.9951C4.24915 11.0286 5.03265 10.2451 5.99915 10.2451ZM17.9991 10.2451C18.9656 10.2451 19.7491 11.0286 19.7491 11.9951V12.0051C19.7491 12.9716 18.9656 13.7551 17.9991 13.7551C17.0326 13.7551 16.2491 12.9716 16.2491 12.0051V11.9951C16.2491 11.0286 17.0326 10.2451 17.9991 10.2451ZM13.7491 11.9951C13.7491 11.0286 12.9656 10.2451 11.9991 10.2451C11.0326 10.2451 10.2491 11.0286 10.2491 11.9951V12.0051C10.2491 12.9716 11.0326 13.7551 11.9991 13.7551C12.9656 13.7551 13.7491 12.9716 13.7491 12.0051V11.9951Z"
+                fill="currentColor"></path>
+            </svg>
+            }
+          </h2>
+          <ul class="menu menu-vertical w-full mx-0 p-0">
+            @for (nav of navItems(); track $index;let i = $index) {
+            <li>
+              @if (nav.subItems) {
+              <details [open]="isAnyChildActive(nav.subItems)">
+                <summary [class.bg-neutral]="isAnyChildActive(nav.subItems)"
+                  [class.text-neutral-content]="isAnyChildActive(nav.subItems)">
+                  <span class="menu-item-icon-size" [class.menu-item-icon-active]="
+                      isAnyChildActive(nav.subItems)
+                    " [class.menu-item-icon-inactive]="
+                      !isAnyChildActive(nav.subItems)
+                    " [innerHTML]="nav.icon | safeHtml">
+                  </span>
+                  <span class="menu-item-text ml-2">
+                    {{ nav.name }}
+                  </span>
+                </summary>
+                <ul class="submenu bg-base-200 rounded p-0 m-0">
+                  @for (subItem of nav.subItems; track $index) {
+                  <li>
+                    <a [routerLink]="subItem.path" routerLinkActive="bg-neutral-300 text-base-content"
+                      [routerLinkActiveOptions]="{ exact: true }" (click)="onSubmenuClick()"
+                      class="text-sm flex items-center gap-2">
+                      @if (subItem.icon) {
+                      <span class="w-4 h-4 mx-1" [innerHTML]="subItem.icon | safeHtml"></span>
+                      }
+                      <span class="ml-2">{{ subItem.name }}</span>
+                    </a>
+                  </li>
+                  }
+                </ul>
+              </details>
+              } @else { @if (nav.path) {
+              <a [routerLink]="nav.path" routerLinkActive="bg-neutral text-neutral-content"
+                [routerLinkActiveOptions]="{ exact: true }" class="relative">
+                <span class="menu-item-icon-size" [ngClass]="{
+                    'menu-item-icon-active': isActive(nav.path),
+                    'menu-item-icon-inactive': !isActive(nav.path)
+                  }" [innerHTML]="nav.icon | safeHtml">
+                </span>
+                <span class="menu-item-text ml-2">
+                  {{ nav.name }}
+                </span>
+                @if (nav.path === '/user/orders' &&
+                ordersBadge.inProgressCount() > 0) {
+                <span class="badge badge-sm badge-accent absolute top-2 right-2">{{ ordersBadge.inProgressCount()
+                  }}</span>
+                }
+              </a>
+              } }
+            </li>
+            }
+          </ul>
+        </div>
+        <!-- end main menu -->
+      </div>
+    </nav>
+  </div>
+
+  <!-- Footer with version -->
+  <div class="mt-auto pb-4 border-t border-base-300 pt-4">
+    <div class="flex items-center justify-center text-xs opacity-60" [ngClass]="{
+        'flex-col gap-1':
+          (isExpanded$ | async) ||
+          (isHovered$ | async) ||
+          (isMobileOpen$ | async),
+        'flex-row': !(
+          (isExpanded$ | async) ||
+          (isHovered$ | async) ||
+          (isMobileOpen$ | async)
+        )
+      }">
+      @if ((isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$ |
+      async)) {
+      <span class="font-medium">Versión {{ appVersion }}</span>
+      } @else {
+      <span class="font-medium text-[10px]">v{{ appVersion }}</span>
+      }
+    </div>
+  </div>
+</aside>

@@ -1,0 +1,218 @@
+<div
+  class="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 border-b border-base-200"
+>
+  <div class="form-control w-full sm:w-auto">
+    <div class="relative">
+      <input
+        type="text"
+        placeholder="Buscar ajuste..."
+        class="input input-bordered input-sm w-full pl-10"
+      />
+      <div
+        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4 text-base-content/50"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn btn-sm btn-primary" (click)="openPriceAdjustmentModal()">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      class="h-4 w-4 mr-1"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M12 4v16m8-8H4"
+      />
+    </svg>
+    Nuevo Ajuste
+  </button>
+</div>
+
+<div class="overflow-x-auto">
+  <table class="table w-full align-middle 2xl:table-lg">
+    <thead
+      class="bg-base-200/40 text-xs uppercase font-bold text-base-content/60"
+    >
+      <tr>
+        <th class="pl-6 py-4">Alcance (Categoría)</th>
+        <th class="py-4">Objetivo (Producto/Porción)</th>
+        <th class="py-4">Valor del Ajuste</th>
+        <th class="pr-6 py-4 text-right">Acciones</th>
+      </tr>
+    </thead>
+
+    <tbody class="divide-y divide-base-200">
+      @for (pa of priceAdjustmentService.priceAdjustments(); track pa.id) {
+        <tr class="hover:bg-base-200/30 transition-colors group">
+          <td class="pl-6 py-4">
+            <div class="flex flex-col gap-1">
+              <span class="font-bold text-sm text-base-content">
+                {{ getCategoryName(pa.categoryId || "") || "General" }}
+              </span>
+              @if (pa.subcategoryId) {
+                <span
+                  class="text-xs text-base-content/60 flex items-center gap-1"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-3 w-3"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  {{ getSubcategoryName(pa.subcategoryId || "") }}
+                </span>
+              } @else {
+                <span class="text-xs text-base-content/40 italic"
+                  >Todas las subcategorías</span
+                >
+              }
+            </div>
+          </td>
+
+          <td class="py-4">
+            <div class="flex flex-col items-start gap-1.5">
+              @if (pa.productId) {
+                <div class="flex items-center gap-2">
+                  <span class="font-medium text-sm">{{
+                    getProductName(pa.productId || "")
+                  }}</span>
+                </div>
+              } @else {
+                <span
+                  class="text-xs font-medium text-base-content/40 bg-base-200 px-2 py-0.5 rounded"
+                  >Todos los productos</span
+                >
+              }
+
+              @if (pa.productSizeId) {
+                <span class="badge badge-sm badge-outline text-xs">
+                  {{ getProductSizeName(pa.productSizeId || "") }}
+                </span>
+              }
+            </div>
+          </td>
+
+          <td class="py-4">
+            <span
+              class="font-mono font-bold text-base-content text-sm bg-base-200/50 px-2 py-1 rounded-md"
+            >
+              {{ pa.amount | currency: "$" }}
+            </span>
+          </td>
+
+          <td class="pr-6 py-4 text-right">
+            <div
+              class="flex items-center justify-end gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+            >
+              <button
+                class="btn btn-ghost btn-xs btn-square text-info tooltip tooltip-left"
+                data-tip="Editar"
+                (click)="openPriceAdjustmentModal(pa)"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                  <path d="m15 5 4 4" />
+                </svg>
+              </button>
+
+              <button
+                class="btn btn-ghost btn-xs btn-square text-error tooltip tooltip-left"
+                data-tip="Eliminar"
+                (click)="deletePriceAdjustment(pa)"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M3 6h18" />
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                  <line x1="10" x2="10" y1="11" y2="17" />
+                  <line x1="14" x2="14" y1="11" y2="17" />
+                </svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="4" class="py-12">
+            <div class="flex flex-col items-center justify-center text-center">
+              <div
+                class="w-16 h-16 bg-base-200 rounded-full flex items-center justify-center mb-4"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-8 w-8 text-base-content/30"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                  />
+                </svg>
+              </div>
+              <h3 class="text-base font-bold text-base-content">
+                Sin Ajustes de Precio
+              </h3>
+              <p class="text-sm text-base-content/60 mt-1 mb-4">
+                Configura reglas avanzadas de precios por variantes.
+              </p>
+              <button
+                class="btn btn-primary btn-sm"
+                (click)="openPriceAdjustmentModal()"
+              >
+                Crear regla
+              </button>
+            </div>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

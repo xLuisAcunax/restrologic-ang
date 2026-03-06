@@ -1,0 +1,260 @@
+<div class="w-full min-h-screen bg-base-200/30 p-4 md:p-8">
+  <div class="w-[95%] 2xl:w-[90%] max-w-[1920px] mx-auto space-y-6 mb-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-extrabold text-base-content tracking-tight">
+          Usuarios y Accesos
+        </h1>
+        <p class="text-base-content/60 mt-1 font-medium">
+          Gestiona el equipo, roles y permisos del sistema.
+        </p>
+      </div>
+
+      <div
+        class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto"
+      >
+        <div class="relative w-full sm:w-64">
+          <input
+            type="text"
+            placeholder="Buscar por nombre, email..."
+            class="input input-bordered w-full pl-10"
+          />
+          <div
+            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 text-base-content/40"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" (click)="showCreateUserModal()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5 mr-1"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+            />
+          </svg>
+          Nuevo Usuario
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="w-[95%] 2xl:w-[90%] max-w-[1920px] mx-auto">
+    <div
+      class="card bg-base-100 shadow-xl border border-base-200 rounded-2xl overflow-hidden"
+    >
+      <div class="overflow-x-auto">
+        <table class="table w-full align-middle 2xl:table-lg">
+          <thead
+            class="bg-base-200/40 text-xs uppercase font-bold text-base-content/60"
+          >
+            <tr>
+              <th class="pl-6 py-4">Usuario</th>
+              <th class="py-4">Rol / Cargo</th>
+              <th class="py-4">Credenciales</th>
+              <th class="py-4 text-center">Estado</th>
+              <th class="pr-6 py-4 text-right">Acciones</th>
+            </tr>
+          </thead>
+
+          <tbody class="divide-y divide-base-200">
+            @for (user of users(); track user.id) {
+              <tr class="hover:bg-base-200/30 transition-colors group">
+                <td class="pl-6 py-4">
+                  <div class="flex items-center gap-4">
+                    <div class="avatar placeholder">
+                      <div
+                        class="bg-neutral text-neutral-content rounded-full w-10 h-10"
+                      >
+                        <span class="text-sm font-bold">
+                          {{ user.firstName.charAt(0)
+                          }}{{ user.lastName.charAt(0) }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="flex flex-col">
+                      <span class="font-bold text-base-content"
+                        >{{ user.firstName }} {{ user.lastName }}</span
+                      >
+                      <span class="text-xs text-base-content/60">{{
+                        user.email
+                      }}</span>
+                    </div>
+                  </div>
+                </td>
+
+                <td class="py-4">
+                  <span
+                    class="badge badge-sm font-medium border-0 py-3"
+                    [class.bg-primary/10]="getRoleName(user.roleId) === 'Admin'"
+                    [class.text-primary]="getRoleName(user.roleId) === 'Admin'"
+                    [class.bg-secondary/10]="
+                      getRoleName(user.roleId) === 'Gerente'
+                    "
+                    [class.text-secondary]="
+                      getRoleName(user.roleId) === 'Gerente'
+                    "
+                    [class.bg-base-200]="
+                      !['Admin', 'Gerente'].includes(getRoleName(user.roleId))
+                    "
+                  >
+                    {{ getRoleName(user.roleId) }}
+                  </span>
+                </td>
+
+                <td class="py-4">
+                  <div
+                    class="flex items-center gap-2 text-sm font-mono text-base-content/70 bg-base-200/50 px-2 py-1 rounded w-fit"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-3 w-3 opacity-50"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    @ {{ user.userName }}
+                  </div>
+                </td>
+
+                <td class="py-4 text-center">
+                  @if (user.isActive) {
+                    <div
+                      class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/10 text-success text-xs font-bold border border-success/20"
+                    >
+                      <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+                      Activo
+                    </div>
+                  } @else {
+                    <div
+                      class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-base-content/5 text-base-content/50 text-xs font-bold border border-base-200"
+                    >
+                      <span
+                        class="w-1.5 h-1.5 rounded-full bg-base-content/40"
+                      ></span>
+                      Inactivo
+                    </div>
+                  }
+                </td>
+
+                <td class="pr-6 py-4 text-right">
+                  <div
+                    class="flex items-center justify-end gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                  >
+                    <button
+                      class="btn btn-ghost btn-xs btn-square text-info tooltip tooltip-left"
+                      data-tip="Editar"
+                      (click)="showCreateUserModal(user)"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path
+                          d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"
+                        />
+                        <path d="m15 5 4 4" />
+                      </svg>
+                    </button>
+
+                    <button
+                      class="btn btn-ghost btn-xs btn-square text-error tooltip tooltip-left"
+                      data-tip="Desactivar"
+                      (click)="deleteUser(user)"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                        <line x1="12" y1="2" x2="12" y2="12"></line>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="py-12">
+                  <div
+                    class="flex flex-col items-center justify-center text-center"
+                  >
+                    <div
+                      class="w-16 h-16 bg-base-200 rounded-full flex items-center justify-center mb-4"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-8 w-8 text-base-content/30"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                        />
+                      </svg>
+                    </div>
+                    <h3 class="text-base font-bold text-base-content">
+                      Sin Usuarios
+                    </h3>
+                    <p class="text-sm text-base-content/60 mt-1 mb-4">
+                      Agrega miembros a tu equipo para comenzar.
+                    </p>
+                    <button
+                      class="btn btn-primary btn-sm"
+                      (click)="showCreateUserModal()"
+                    >
+                      Crear primer usuario
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

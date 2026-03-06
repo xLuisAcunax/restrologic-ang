@@ -1,0 +1,431 @@
+<div class="w-full min-h-screen bg-base-200/30 p-4 md:p-8 font-sans">
+  <div
+    class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8"
+  >
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <a
+          routerLink="/admin/cash-history"
+          class="btn btn-circle btn-sm btn-ghost hover:bg-base-200 text-base-content/60"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </a>
+        <h1 class="text-3xl font-extrabold text-base-content tracking-tight">
+          Detalle de Cierre
+        </h1>
+      </div>
+      <p class="text-base-content/60 ml-10 font-medium">
+        Auditoría completa de movimientos del turno.
+      </p>
+    </div>
+
+    <div class="dropdown dropdown-end">
+      <button
+        tabindex="0"
+        class="btn btn-primary shadow-lg shadow-primary/20 gap-2"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+          />
+        </svg>
+        Exportar Datos
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4 opacity-70"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </button>
+      <ul
+        tabindex="0"
+        class="dropdown-content menu p-2 shadow-xl bg-base-100 rounded-box w-64 z-[1] border border-base-200 mt-1"
+      >
+        <li class="menu-title text-xs uppercase opacity-50 font-bold px-4 py-2">
+          Formatos Disponibles
+        </li>
+        <li>
+          <button
+            (click)="exportSalesCsv()"
+            class="active:bg-base-200 active:text-base-content"
+          >
+            📄 Ventas (CSV)
+          </button>
+        </li>
+        <li>
+          <button (click)="exportOtherMovementsCsv()">
+            📄 Movimientos (CSV)
+          </button>
+        </li>
+        <div class="divider my-1"></div>
+        <li>
+          <button
+            (click)="exportSalesExcel()"
+            class="text-success hover:bg-success/10"
+          >
+            📊 Ventas (Excel)
+          </button>
+        </li>
+        <li>
+          <button
+            (click)="exportOtherMovementsExcel()"
+            class="text-success hover:bg-success/10"
+          >
+            📊 Movimientos (Excel)
+          </button>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="alert alert-error shadow-sm mb-6 border-l-4 border-l-error/50">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="stroke-current shrink-0 h-6 w-6"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+      <span>{{ error() }}</span>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="h-32 bg-base-100 rounded-xl animate-pulse col-span-3"></div>
+      <div class="h-64 bg-base-100 rounded-xl animate-pulse col-span-3"></div>
+    </div>
+  } @else if (drawer()) {
+    <div class="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+      <div class="card bg-base-100 shadow-sm border border-base-200">
+        <div class="card-body p-4">
+          <h3
+            class="text-[10px] font-bold text-base-content/40 uppercase tracking-wider"
+          >
+            Apertura
+          </h3>
+          <div class="text-xl font-bold text-base-content/70">
+            {{ formatCurrency(drawer()?.openingFloat) }}
+          </div>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow-sm border-l-4 border-l-primary">
+        <div class="card-body p-4">
+          <h3
+            class="text-[10px] font-bold text-base-content/40 uppercase tracking-wider"
+          >
+            Cierre Final
+          </h3>
+          <div class="text-2xl font-black text-primary tracking-tight">
+            {{ formatCurrency(drawer()?.closingFloat) }}
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="card bg-base-100 shadow-sm border border-base-200 border-b-4 border-b-info/20"
+      >
+        <div class="card-body p-4">
+          <h3
+            class="text-[10px] font-bold text-base-content/40 uppercase tracking-wider text-info"
+          >
+            Ingresos Ventas
+          </h3>
+          <div class="text-xl font-bold text-base-content">
+            {{ formatCurrency(totalPayments()) }}
+          </div>
+          <div class="text-[10px] opacity-50">
+            {{ paymentMovements().length }} transacciones
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="card bg-base-100 shadow-sm border border-base-200 border-b-4 border-b-warning/20"
+      >
+        <div class="card-body p-4">
+          <h3
+            class="text-[10px] font-bold text-base-content/40 uppercase tracking-wider text-warning"
+          >
+            Vueltos
+          </h3>
+          <div class="text-xl font-bold text-base-content">
+            {{ formatCurrency(totalChange()) }}
+          </div>
+          <div class="text-[10px] opacity-50">
+            {{ changeMovements().length }} registros
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="card bg-base-100 shadow-sm border border-base-200 border-b-4 border-b-success/20"
+      >
+        <div class="card-body p-4">
+          <h3
+            class="text-[10px] font-bold text-base-content/40 uppercase tracking-wider text-success"
+          >
+            Entradas Manuales
+          </h3>
+          <div class="text-xl font-bold text-base-content">
+            {{ formatCurrency(totalManualIncome()) }}
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="card bg-base-100 shadow-sm border border-base-200 border-b-4 border-b-error/20"
+      >
+        <div class="card-body p-4">
+          <h3
+            class="text-[10px] font-bold text-base-content/40 uppercase tracking-wider text-error"
+          >
+            Salidas Manuales
+          </h3>
+          <div class="text-xl font-bold text-base-content">
+            {{ formatCurrency(totalManualOutcome()) }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div class="space-y-8">
+        <div class="card bg-base-100 shadow-sm border border-base-200">
+          <div
+            class="p-4 border-b border-base-200 bg-base-100 rounded-t-xl flex justify-between items-center"
+          >
+            <h3 class="font-bold text-base-content flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-info"></span>
+              Pagos Recibidos
+            </h3>
+            <span class="badge badge-sm badge-ghost">{{
+              paymentMovements().length
+            }}</span>
+          </div>
+
+          <div class="overflow-x-auto max-h-[400px] overflow-y-auto">
+            @if (paymentMovements().length === 0) {
+              <div class="p-8 text-center text-sm text-base-content/40 italic">
+                No hay pagos registrados.
+              </div>
+            } @else {
+              <table class="table table-zebra w-full text-sm">
+                <thead
+                  class="bg-base-200/50 text-xs uppercase font-bold text-base-content/50 sticky top-0"
+                >
+                  <tr>
+                    <th>Hora</th>
+                    <th>Detalle</th>
+                    <th class="text-right">Monto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (m of paymentMovements(); track m.id) {
+                    <tr>
+                      <td class="font-mono text-xs opacity-60">
+                        {{ m.createdAt | date: "h:mm a" }}
+                      </td>
+                      <td>
+                        <div class="font-medium">
+                          {{ formatMovementReason(m.reason) }}
+                        </div>
+                        <div class="text-[10px] opacity-50">
+                          {{ m.reference || "—" }}
+                        </div>
+                      </td>
+                      <td class="text-right font-bold text-success font-mono">
+                        +{{ formatCurrency(m.amount) }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          </div>
+        </div>
+
+        <div class="card bg-base-100 shadow-sm border border-base-200">
+          <div
+            class="p-4 border-b border-base-200 bg-base-100 rounded-t-xl flex justify-between items-center"
+          >
+            <h3 class="font-bold text-base-content flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-warning"></span>
+              Cambios / Vueltos
+            </h3>
+            <span class="badge badge-sm badge-ghost">{{
+              changeMovements().length
+            }}</span>
+          </div>
+
+          <div class="overflow-x-auto max-h-[300px] overflow-y-auto">
+            @if (changeMovements().length === 0) {
+              <div class="p-8 text-center text-sm text-base-content/40 italic">
+                No hay cambios registrados.
+              </div>
+            } @else {
+              <table class="table table-zebra w-full text-sm">
+                <thead
+                  class="bg-base-200/50 text-xs uppercase font-bold text-base-content/50 sticky top-0"
+                >
+                  <tr>
+                    <th>Hora</th>
+                    <th>Ref</th>
+                    <th class="text-right">Monto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (m of changeMovements(); track m.id) {
+                    <tr>
+                      <td class="font-mono text-xs opacity-60">
+                        {{ m.createdAt | date: "h:mm a" }}
+                      </td>
+                      <td class="text-xs opacity-60 truncate max-w-[150px]">
+                        {{ m.reference || "—" }}
+                      </td>
+                      <td class="text-right font-bold text-warning font-mono">
+                        -{{ formatCurrency(m.amount) }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card bg-base-100 shadow-sm border border-base-200 h-full">
+          <div
+            class="p-4 border-b border-base-200 bg-base-100 rounded-t-xl flex justify-between items-center"
+          >
+            <h3 class="font-bold text-base-content flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-neutral"></span>
+              Movimientos Manuales
+            </h3>
+            <span class="badge badge-sm badge-ghost">{{
+              manualMovements().length
+            }}</span>
+          </div>
+
+          <div class="overflow-x-auto max-h-[800px] overflow-y-auto">
+            @if (manualMovements().length === 0) {
+              <div
+                class="p-12 text-center flex flex-col items-center text-base-content/40"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-12 w-12 opacity-20 mb-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                </svg>
+                <p class="text-sm italic">Sin ajustes manuales</p>
+              </div>
+            } @else {
+              <table class="table table-zebra w-full text-sm">
+                <thead
+                  class="bg-base-200/50 text-xs uppercase font-bold text-base-content/50 sticky top-0"
+                >
+                  <tr>
+                    <th class="w-10">Tipo</th>
+                    <th>Detalle</th>
+                    <th class="text-right">Monto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (m of manualMovements(); track m.id) {
+                    <tr>
+                      <td class="text-center">
+                        <span
+                          class="badge badge-xs {{
+                            m.type === 'income'
+                              ? 'badge-success'
+                              : 'badge-error'
+                          }}"
+                        >
+                          {{ m.type === "income" ? "IN" : "OUT" }}
+                        </span>
+                      </td>
+                      <td>
+                        <div class="font-medium text-base-content">
+                          {{ formatMovementReason(m.reason) }}
+                        </div>
+                        <div class="text-[10px] opacity-50 flex gap-2">
+                          <span>{{ m.createdAt | date: "h:mm a" }}</span>
+                          @if (m.reference) {
+                            <span>• {{ m.reference }}</span>
+                          }
+                        </div>
+                      </td>
+                      <td
+                        class="text-right font-bold font-mono {{
+                          m.type === 'income' ? 'text-success' : 'text-error'
+                        }}"
+                      >
+                        {{ m.type === "income" ? "+" : "-"
+                        }}{{ formatCurrency(m.amount) }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div
+      class="flex flex-col items-center justify-center h-64 text-base-content/40"
+    >
+      <p class="font-medium">No se encontró información para este cierre.</p>
+    </div>
+  }
+</div>

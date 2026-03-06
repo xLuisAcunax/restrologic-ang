@@ -1,0 +1,118 @@
+<div class="route-container">
+  <!-- Header -->
+  <div class="route-header">
+    <div class="header-content">
+      <h1 class="route-title">Ruta de Entregas</h1>
+      <span class="delivery-count">{{ sortedStops().length }} entregas</span>
+    </div>
+    <button
+      class="btn-sort"
+      (click)="toggleSortOrder()"
+      [title]="
+        sortOrder() === 'nearest'
+          ? 'Ordenar: Más lejana primero'
+          : 'Ordenar: Más cercana primero'
+      "
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        @if (sortOrder() === 'nearest') {
+        <path d="M12 5v14M19 12l-7 7-7-7" />
+        } @else {
+        <path d="M12 19V5M5 12l7-7 7 7" />
+        }
+      </svg>
+      <span class="btn-text">{{
+        sortOrder() === "nearest" ? "Cerca" : "Lejos"
+      }}</span>
+    </button>
+  </div>
+
+  <!-- Map Container -->
+  <div class="map-wrapper">
+    <div id="map" class="map"></div>
+
+    @if (loading()) {
+    <div class="loading-overlay">
+      <div class="spinner"></div>
+      <p>Cargando mapa...</p>
+    </div>
+    }
+  </div>
+
+  <!-- Delivery List -->
+  <div class="delivery-list">
+    <h2 class="list-title">
+      Entregas Pendientes
+      <span class="count">{{ sortedStops().length }}</span>
+    </h2>
+
+    @if (sortedStops().length === 0 && !loading()) {
+    <div class="empty-state">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="64"
+        height="64"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+      >
+        <path d="M9 11l3 3L22 4" />
+        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+      </svg>
+      <p>No tienes entregas pendientes</p>
+    </div>
+    } @for (stop of sortedStops(); track stop.order.id; let idx = $index) {
+    <div class="delivery-card" [class.first]="idx === 0">
+      <div class="card-number">{{ idx + 1 }}</div>
+      <div class="card-content">
+        <div class="card-header">
+          <span class="order-id">#{{ stop.order.id.substring(0, 8) }}</span>
+          @if (idx === 0) {
+          <span class="badge-next">Siguiente</span>
+          }
+        </div>
+
+        <div class="customer-info">
+          <strong>{{ stop.order.customer?.name ?? "Cliente" }}</strong>
+          <p class="address">
+            {{ stop.order.delivery?.address ?? "Sin dirección" }}
+          </p>
+        </div>
+
+        <div class="card-footer">
+          @if (stop.distance !== undefined) {
+          <div class="distance">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            {{ stop.distance.toFixed(2) }} km
+          </div>
+          }
+
+          <div class="order-total">
+            ${{ (stop.order.total || 0).toLocaleString("es-CO") }}
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+  </div>
+</div>

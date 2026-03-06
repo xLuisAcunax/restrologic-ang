@@ -1,0 +1,195 @@
+<div class="flex flex-col w-full bg-base-100">
+  <div
+    class="flex-none px-6 py-4 border-b border-base-200 flex justify-between items-center bg-base-100"
+  >
+    <h2 class="text-xl font-bold text-base-content flex items-center gap-2">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-6 w-6 text-primary"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+      {{ form.get("id")?.value ? "Editar Ajuste" : "Nuevo Ajuste de Precio" }}
+    </h2>
+    <button
+      (click)="dialogRef.close('Canceled')"
+      class="btn btn-sm btn-ghost btn-circle"
+    >
+      ✕
+    </button>
+  </div>
+
+  <div class="p-6 overflow-y-auto">
+    <form [formGroup]="form" class="flex flex-col gap-6">
+      <div>
+        <div
+          class="text-xs font-bold text-base-content/40 uppercase tracking-wider mb-3"
+        >
+          Alcance de la Regla
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="form-control w-full">
+            <label class="label"
+              ><span class="label-text font-semibold">Categoría</span></label
+            >
+            <select
+              class="select select-bordered w-full"
+              formControlName="categoryId"
+            >
+              <option value="">Todas las categorías</option>
+              @for (
+                category of categoryService.categories();
+                track category.id
+              ) {
+                <option [value]="category.id">{{ category.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-control w-full">
+            <label class="label"
+              ><span class="label-text font-semibold">Subcategoría</span></label
+            >
+            <select
+              class="select select-bordered w-full"
+              formControlName="subcategoryId"
+            >
+              <option value="">Todas las subcategorías</option>
+              @for (sub of filteredSubcategories(); track sub.id) {
+                <option [value]="sub.id">{{ sub.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-control w-full">
+            <label class="label"
+              ><span class="label-text font-semibold"
+                >Producto Específico</span
+              ></label
+            >
+            <select
+              class="select select-bordered w-full"
+              formControlName="productId"
+            >
+              <option value="">Todos los productos</option>
+              @for (product of filteredProducts(); track product.id) {
+                <option [value]="product.id">{{ product.name }}</option>
+              }
+            </select>
+            <label class="label"
+              ><span class="label-text-alt text-base-content/50"
+                >Dejar vacío para aplicar a todo el grupo.</span
+              ></label
+            >
+          </div>
+
+          <div class="form-control w-full">
+            <label class="label"
+              ><span class="label-text font-semibold"
+                >Porción (Tamaño)</span
+              ></label
+            >
+            <select
+              class="select select-bordered w-full"
+              formControlName="productSizeId"
+            >
+              <option value="">Todas las porciones</option>
+              @for (size of filteredProductSizes(); track size.id) {
+                <option [value]="size.id">{{ size.name }}</option>
+              }
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider my-0"></div>
+
+      <div>
+        <div
+          class="text-xs font-bold text-base-content/40 uppercase tracking-wider mb-3"
+        >
+          Valor del Ajuste
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="form-control w-full">
+            <label class="label"
+              ><span class="label-text font-bold">Monto</span></label
+            >
+            <label
+              class="input input-bordered flex items-center gap-2 focus-within:outline-primary focus-within:outline focus-within:outline-2"
+            >
+              <span class="text-base-content/50 font-bold">$</span>
+              <input
+                type="number"
+                class="grow font-mono font-bold"
+                placeholder="0.00"
+                step="0.01"
+                formControlName="amount"
+              />
+            </label>
+          </div>
+
+          <div class="form-control w-full">
+            <label class="label"
+              ><span class="label-text font-bold">Tipo de Cálculo</span></label
+            >
+            <select
+              class="select select-bordered w-full"
+              formControlName="isPercentage"
+            >
+              <option [ngValue]="false">Monto Fijo ($)</option>
+              <option [ngValue]="true">Porcentaje (%)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-base-200/50 p-4 rounded-xl border border-base-200">
+        <div class="form-control">
+          <label class="label cursor-pointer justify-between">
+            <div class="flex flex-col">
+              <span class="label-text font-bold text-base">Regla Activa</span>
+              <span class="label-text-alt text-base-content/60 mt-0.5"
+                >El sistema aplicará este precio automáticamente</span
+              >
+            </div>
+            <input
+              type="checkbox"
+              class="toggle toggle-success"
+              formControlName="isActive"
+            />
+          </label>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div
+    class="flex-none px-6 py-4 border-t border-base-200 bg-base-100 flex justify-end gap-3"
+  >
+    <button
+      type="button"
+      class="btn btn-ghost hover:bg-base-200"
+      (click)="dialogRef.close('Canceled')"
+    >
+      Cancelar
+    </button>
+
+    <button
+      type="button"
+      class="btn btn-primary px-6"
+      (click)="onSaving()"
+      [disabled]="!form.valid"
+    >
+      Guardar
+    </button>
+  </div>
+</div>

@@ -1,0 +1,140 @@
+<div
+  class="bg-base-100 rounded-2xl shadow-2xl w-full max-w-2xl p-0 overflow-hidden"
+>
+  <div
+    class="px-6 py-4 border-b border-base-200 bg-base-100 flex justify-between items-center sticky top-0 z-10"
+  >
+    <div>
+      <h3 class="font-bold text-lg">
+        {{ data.tax ? "Editar" : "Nuevo" }} Impuesto
+      </h3>
+      <p class="text-xs text-base-content/60 mt-0.5">
+        Configura las reglas de cobro para este tributo.
+      </p>
+    </div>
+    <button
+      class="btn btn-sm btn-circle btn-ghost"
+      (click)="dialogRef.close('Canceled')"
+    >
+      ✕
+    </button>
+  </div>
+
+  <div class="p-6">
+    <form [formGroup]="form" class="space-y-6">
+      <div class="form-control">
+        <label class="label pt-0"
+          ><span class="label-text font-bold">Nombre del Impuesto</span></label
+        >
+        <input
+          type="text"
+          class="input input-bordered w-full focus:input-primary"
+          placeholder="Ej: IVA, Impoconsumo, Propina"
+          formControlName="name"
+        />
+        <label class="label pb-0">
+          <span class="label-text-alt text-base-content/50"
+            >Nombre visible en la factura.</span
+          >
+        </label>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="form-control">
+          <label class="label pt-0"
+            ><span class="label-text font-bold">Valor y Tipo</span></label
+          >
+          <div class="join w-full shadow-sm">
+            <input
+              type="number"
+              class="input input-bordered join-item w-full focus:input-primary font-mono font-bold"
+              placeholder="0.00"
+              formControlName="value"
+              step="0.01"
+              min="0"
+            />
+
+            <select
+              class="select select-bordered join-item bg-base-200/50 hover:bg-base-200 focus:bg-base-200 border-l-0 font-medium w-32"
+              formControlName="isPercentage"
+            >
+              <option [ngValue]="true">Porcentaje (%)</option>
+              <option [ngValue]="false">Fijo ($)</option>
+            </select>
+          </div>
+          <label class="label pb-0">
+            <span class="label-text-alt text-base-content/50">
+              {{
+                form.value.isPercentage
+                  ? "Calculado sobre el precio base."
+                  : "Valor plano agregado."
+              }}
+            </span>
+          </label>
+        </div>
+
+        <div class="form-control">
+          <label class="label pt-0"
+            ><span class="label-text font-bold">Aplicación</span></label
+          >
+          <div class="join w-full">
+            <input
+              class="join-item btn w-1/2 font-normal"
+              type="radio"
+              [class.btn-active]="form.value.isIncluded === true"
+              (click)="form.get('isIncluded')?.setValue(true)"
+              aria-label="Incluido"
+            />
+            <input
+              class="join-item btn w-1/2 font-normal"
+              type="radio"
+              [class.btn-active]="form.value.isIncluded === false"
+              (click)="form.get('isIncluded')?.setValue(false)"
+              aria-label="Adicional"
+            />
+          </div>
+          <label class="label pb-0">
+            <span class="label-text-alt text-base-content/50 break-words">
+              {{
+                form.value.isIncluded
+                  ? "Ya incluido en el precio."
+                  : "Se suma al total."
+              }}
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-control">
+        <label
+          class="label cursor-pointer justify-start gap-4 p-4 border border-base-200 rounded-lg hover:border-base-300 transition-colors"
+        >
+          <input
+            type="checkbox"
+            class="toggle toggle-success"
+            formControlName="isActive"
+          />
+          <div class="flex flex-col">
+            <span class="label-text font-bold">Estado Activo</span>
+            <span class="label-text-alt text-base-content/60"
+              >Habilitar este impuesto para su uso inmediato.</span
+            >
+          </div>
+        </label>
+      </div>
+    </form>
+  </div>
+
+  <div class="p-6 pt-0 flex justify-end gap-3 sticky bottom-0 bg-base-100 z-10">
+    <button class="btn btn-ghost" (click)="dialogRef.close('Canceled')">
+      Cancelar
+    </button>
+    <button
+      class="btn btn-primary px-8 shadow-lg shadow-primary/20"
+      (click)="onSaving()"
+      [disabled]="!form.valid"
+    >
+      {{ data.tax ? "Guardar Cambios" : "Crear Impuesto" }}
+    </button>
+  </div>
+</div>

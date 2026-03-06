@@ -1,0 +1,130 @@
+<div class="flex flex-col w-full bg-base-100">
+  <div
+    class="flex-none px-6 py-4 border-b border-base-200 flex justify-between items-center bg-base-100"
+  >
+    <h2 class="text-xl font-bold text-base-content flex items-center gap-2">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-6 w-6 text-primary"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+        />
+      </svg>
+      {{ data.bundle ? "Editar Modificador" : "Nuevo Modificador" }}
+    </h2>
+    <button
+      (click)="dialogRef.close('Canceled')"
+      class="btn btn-sm btn-ghost btn-circle"
+    >
+      ✕
+    </button>
+  </div>
+
+  <div class="p-6 overflow-y-auto">
+    <form [formGroup]="form" class="flex flex-col gap-5">
+      <div class="form-control w-full">
+        <label class="label">
+          <span class="label-text font-bold">Producto Principal</span>
+        </label>
+        <select
+          class="select select-bordered w-full"
+          formControlName="productId"
+        >
+          <option value="">Selecciona un producto</option>
+          @for (product of products(); track product.id) {
+            <option [value]="product.id">{{ product.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="form-control w-full">
+          <label class="label">
+            <span class="label-text font-bold">Nombre del Modificador</span>
+          </label>
+          <input
+            type="text"
+            class="input input-bordered w-full focus:input-primary"
+            placeholder="Ej. Combo Hamburguesa"
+            formControlName="name"
+          />
+        </div>
+
+        <div class="form-control w-full">
+          <label class="label">
+            <span class="label-text font-bold">Tipo</span>
+          </label>
+          <select class="select select-bordered w-full" formControlName="kind">
+            <option [ngValue]="0">Combo</option>
+            <option [ngValue]="1">Por porciones</option>
+            <option [ngValue]="2">Elección</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-control w-full">
+        <label class="label">
+          <span class="label-text font-bold">Descripción</span>
+        </label>
+        <textarea
+          rows="3"
+          class="textarea textarea-bordered w-full"
+          placeholder="Describe el modificador"
+          formControlName="description"
+        ></textarea>
+      </div>
+
+      <div class="bg-base-200/50 p-4 rounded-xl border border-base-200">
+        <div class="form-control">
+          <label class="label cursor-pointer justify-between">
+            <div class="flex flex-col">
+              <span class="label-text font-bold text-base"
+                >Modificador Activo</span
+              >
+              <span class="label-text-alt text-base-content/60 mt-0.5">
+                Visible para selección en POS
+              </span>
+            </div>
+            <input
+              type="checkbox"
+              class="toggle toggle-success"
+              formControlName="isActive"
+            />
+          </label>
+        </div>
+      </div>
+
+      <div class="text-xs text-base-content/60">
+        Los grupos se gestionan en la pestaña de grupos del modificador.
+      </div>
+    </form>
+  </div>
+
+  <div
+    class="flex-none px-6 py-4 border-t border-base-200 bg-base-100 flex justify-end gap-3"
+  >
+    <button
+      type="button"
+      class="btn btn-ghost hover:bg-base-200"
+      (click)="dialogRef.close('Canceled')"
+    >
+      Cancelar
+    </button>
+
+    <button
+      type="button"
+      class="btn btn-primary px-6"
+      (click)="onSaving()"
+      [disabled]="!form.valid"
+    >
+      Guardar
+    </button>
+  </div>
+</div>

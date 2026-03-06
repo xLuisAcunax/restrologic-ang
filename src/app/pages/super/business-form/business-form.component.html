@@ -1,0 +1,39 @@
+<div class="card bg-base-100 w-full max-w-sm shrink-0 shadow-2xl">
+  <div class="card-body">
+    <h2 class="card-title">Editar Negocio</h2>
+    <form [formGroup]="form" class="fieldset">
+      <label class="label">NIT</label>
+      <input
+        type="text"
+        class="input"
+        placeholder="NIT"
+        formControlName="nit"
+      />
+      <label class="label">Nombre</label>
+      <input
+        type="text"
+        class="input"
+        placeholder="Nombre"
+        formControlName="name"
+      />
+      <label class="label">Descripción</label>
+      <input
+        type="text"
+        class="input"
+        placeholder="Descripción"
+        formControlName="description"
+      />
+      <label class="label">Estado</label>
+      <select class="select w-full" formControlName="isActive">
+        <option [ngValue]="true">Activo</option>
+        <option [ngValue]="false">Inactivo</option>
+      </select>
+    </form>
+  </div>
+  <div class="card-actions justify-end p-6 pt-0">
+    <button class="btn mt-4" (click)="dialogRef.close('Canceled')">
+      Cancelar
+    </button>
+    <button class="btn btn-primary mt-4" (click)="onSaving()">Guardar</button>
+  </div>
+</div>

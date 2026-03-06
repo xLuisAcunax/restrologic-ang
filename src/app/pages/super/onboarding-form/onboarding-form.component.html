@@ -1,0 +1,126 @@
+<div class="card bg-base-100 w-full max-w-2xl shrink-0 shadow-2xl">
+  <div class="card-body max-h-[80vh] overflow-y-auto">
+    <h2 class="card-title mb-2">Nuevo negocio</h2>
+    <form [formGroup]="form" class="space-y-5">
+      <section
+        formGroupName="owner"
+        class="fieldset rounded-xl border border-base-200 p-4"
+      >
+        <h3 class="font-semibold text-lg mb-4">Propietario</h3>
+        <div class="grid gap-3 md:grid-cols-2">
+          <div class="md:col-span-1">
+            <label class="label">Nombre</label>
+            <input
+              type="text"
+              class="input w-full"
+              placeholder="Nombre"
+              formControlName="firstName"
+            />
+          </div>
+          <div class="md:col-span-1">
+            <label class="label">Apellido</label>
+            <input
+              type="text"
+              class="input w-full"
+              placeholder="Apellido"
+              formControlName="lastName"
+            />
+          </div>
+          <div class="md:col-span-1">
+            <label class="label">Documento</label>
+            <input
+              type="text"
+              class="input w-full"
+              placeholder="No. documento"
+              formControlName="documentId"
+            />
+          </div>
+          <div class="md:col-span-1">
+            <label class="label">Correo electrónico</label>
+            <input
+              type="email"
+              class="input w-full"
+              placeholder="email@ejemplo.com"
+              formControlName="email"
+            />
+          </div>
+          <div class="md:col-span-2">
+            <label class="label">Contraseña</label>
+            <input
+              type="password"
+              class="input w-full"
+              placeholder="Contraseña"
+              formControlName="password"
+            />
+          </div>
+          <div class="md:col-span-1">
+            <label class="label">Teléfono</label>
+            <input
+              type="text"
+              class="input w-full"
+              placeholder="Teléfono"
+              formControlName="phoneNumber"
+            />
+          </div>
+          <div class="md:col-span-1">
+            <label class="label">Dirección</label>
+            <input
+              type="text"
+              class="input w-full"
+              placeholder="Dirección"
+              formControlName="address"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section
+        formGroupName="business"
+        class="fieldset rounded-xl border border-base-200 p-4"
+      >
+        <h3 class="font-semibold text-lg mb-4">Negocio</h3>
+        <div class="grid gap-3 md:grid-cols-2">
+          <div class="md:col-span-1">
+            <label class="label">Nombre comercial</label>
+            <input
+              type="text"
+              class="input w-full"
+              placeholder="Nombre del negocio"
+              formControlName="name"
+            />
+          </div>
+          <div class="md:col-span-1">
+            <label class="label">NIT</label>
+            <input
+              type="text"
+              class="input w-full"
+              placeholder="NIT"
+              formControlName="nit"
+            />
+          </div>
+          <div class="md:col-span-2">
+            <label class="label">Descripción</label>
+            <input
+              type="text"
+              class="input w-full"
+              placeholder="Descripción"
+              formControlName="description"
+            />
+          </div>
+        </div>
+      </section>
+    </form>
+  </div>
+  <div class="card-actions justify-end p-6 pt-0">
+    <button class="btn mt-4" (click)="dialogRef.close('Canceled')">
+      Cancelar
+    </button>
+    <button
+      class="btn btn-primary mt-4"
+      (click)="onSaving()"
+      [disabled]="submitting()"
+    >
+      Crear negocio
+    </button>
+  </div>
+</div>

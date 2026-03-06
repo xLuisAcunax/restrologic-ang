@@ -1,0 +1,301 @@
+<div class="space-y-6">
+  <!-- Loading State -->
+  @if (loading()) {
+  <div class="flex justify-center items-center min-h-screen">
+    <span class="loading loading-spinner loading-lg"></span>
+  </div>
+  }
+
+  <!-- Error State -->
+  @else if (error()) {
+  <div class="alert alert-error alert-soft">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      class="stroke-current shrink-0 h-6 w-6"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    </svg>
+    <span>{{ error() }}</span>
+    <button class="btn btn-sm" (click)="refreshAnalytics()">Reintentar</button>
+  </div>
+  }
+
+  <!-- Data Loaded -->
+  @else if (summary()) {
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-base-content">
+        Module Analytics Dashboard
+      </h1>
+      <p class="text-sm text-base-content/70">
+        Track module demand and conversion metrics
+      </p>
+    </div>
+    <button class="btn btn-primary btn-sm" (click)="refreshAnalytics()">
+      🔄 Refresh
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats stats-vertical shadow lg:stats-horizontal w-full">
+    <div class="stat">
+      <div class="stat-figure text-primary">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          class="inline-block w-8 h-8 stroke-current"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M13 10V3L4 14h7v7l9-11h-7z"
+          ></path>
+        </svg>
+      </div>
+      <div class="stat-title">Total Events</div>
+      <div class="stat-value text-primary">{{ summary()!.totalEvents }}</div>
+      <div class="stat-desc">All tracked analytics events</div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-figure text-warning">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          class="inline-block w-8 h-8 stroke-current"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          ></path>
+        </svg>
+      </div>
+      <div class="stat-title">Access Denied</div>
+      <div class="stat-value text-warning">{{ summary()!.accessDenied }}</div>
+      <div class="stat-desc">Users blocked from premium features</div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-figure text-success">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          class="inline-block w-8 h-8 stroke-current"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+          ></path>
+        </svg>
+      </div>
+      <div class="stat-title">Upgrade Requests</div>
+      <div class="stat-value text-success">
+        {{ summary()!.upgradeRequests }}
+      </div>
+      <div class="stat-desc">Users who clicked upgrade CTA</div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-figure text-info">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          class="inline-block w-8 h-8 stroke-current"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
+          ></path>
+        </svg>
+      </div>
+      <div class="stat-title">Conversion Rate</div>
+      <div class="stat-value text-info">
+        {{ summary()!.conversionRate.toFixed(1) }}%
+      </div>
+      <div class="stat-desc">Requests / Access Denied</div>
+    </div>
+  </div>
+
+  <!-- Most Requested Modules -->
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <h2 class="card-title">
+        📊 Most Requested Modules
+        <div class="badge badge-secondary">Live Data</div>
+      </h2>
+
+      @if (summary()!.topModules.length === 0) {
+      <div class="alert alert-info alert-soft">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          class="stroke-current shrink-0 w-6 h-6"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          ></path>
+        </svg>
+        <span
+          >No analytics data yet. Users need to interact with module-protected
+          features.</span
+        >
+      </div>
+      } @else {
+      <div class="overflow-x-auto">
+        <table class="table table-zebra">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Module Key</th>
+              <th>Access Denied</th>
+              <th>Upgrade Requests</th>
+              <th>Affected Users</th>
+              <th>Demand Level</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (module of summary()!.topModules; track module.moduleKey; let i
+            = $index) {
+            <tr>
+              <th>{{ i + 1 }}</th>
+              <td>
+                <div class="flex items-center gap-2">
+                  <div class="avatar placeholder">
+                    <div
+                      class="bg-neutral text-neutral-content rounded-full w-8"
+                    >
+                      <span class="text-xs">{{
+                        module.moduleKey.charAt(0).toUpperCase()
+                      }}</span>
+                    </div>
+                  </div>
+                  <span class="font-semibold">{{ module.moduleKey }}</span>
+                </div>
+              </td>
+              <td>
+                <div class="badge badge-warning">
+                  {{ module.accessDeniedCount }}
+                </div>
+              </td>
+              <td>
+                <div class="badge badge-success">
+                  {{ module.upgradeRequestCount }}
+                </div>
+              </td>
+              <td>
+                <div class="badge badge-info">
+                  {{ module.affectedUsers }} users
+                </div>
+              </td>
+              <td>
+                @if (module.accessDeniedCount >= 10) {
+                <div class="badge badge-error gap-2">🔥 Very High</div>
+                } @else if (module.accessDeniedCount >= 5) {
+                <div class="badge badge-warning gap-2">⚡ High</div>
+                } @else {
+                <div class="badge badge-info gap-2">💡 Moderate</div>
+                }
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+
+      <div class="card-actions justify-end mt-4">
+        <button
+          class="btn btn-sm btn-outline"
+          onclick="console.log('Export to CSV - Coming soon')"
+        >
+          📥 Export Data
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analytics Insights -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Conversion Funnel -->
+    <div class="card bg-linear-to-br from-primary/10 to-secondary/10 shadow-xl">
+      <div class="card-body">
+        <h3 class="card-title text-base">📈 Conversion Funnel</h3>
+        <div class="space-y-2 mt-4">
+          <div class="flex justify-between items-center">
+            <span class="text-sm">Access Denied</span>
+            <span class="font-bold">{{ summary()!.accessDenied }}</span>
+          </div>
+          <progress
+            class="progress progress-warning w-full"
+            [value]="summary()!.accessDenied"
+            [max]="summary()!.totalEvents || 1"
+          ></progress>
+
+          <div class="flex justify-between items-center mt-4">
+            <span class="text-sm">Upgrade Requests</span>
+            <span class="font-bold text-success">{{
+              summary()!.upgradeRequests
+            }}</span>
+          </div>
+          <progress
+            class="progress progress-success w-full"
+            [value]="summary()!.upgradeRequests"
+            [max]="summary()!.accessDenied || 1"
+          ></progress>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h3 class="card-title text-base">⚡ Quick Actions</h3>
+        <div class="space-y-2 mt-4">
+          <a
+            href="/super/modules"
+            class="btn btn-outline btn-sm w-full justify-start"
+            >🎯 Manage Modules</a
+          >
+          <a
+            href="/super/businesses"
+            class="btn btn-outline btn-sm w-full justify-start"
+            >🏢 View Tenants</a
+          >
+          <button
+            class="btn btn-outline btn-sm w-full justify-start"
+            (click)="refreshAnalytics()"
+          >
+            🔄 Refresh Analytics
+          </button>
+          <button class="btn btn-outline btn-sm w-full justify-start" disabled>
+            📧 Email Reports (Coming Soon)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>

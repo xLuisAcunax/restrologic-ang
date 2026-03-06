@@ -1,0 +1,366 @@
+<div class="flex flex-col w-full h-[90vh] bg-base-100">
+  <div
+    class="flex-none px-6 py-4 border-b border-base-200 flex justify-between items-center bg-base-100"
+  >
+    <h2 class="text-lg font-bold text-base-content flex items-center gap-2">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-5 w-5 text-primary"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 4v16m8-8H4"
+        />
+      </svg>
+      {{ data.group ? "Editar Grupo" : "Nuevo Grupo" }}
+    </h2>
+    <button
+      (click)="dialogRef.close('Canceled')"
+      class="btn btn-sm btn-ghost btn-circle"
+    >
+      ✕
+    </button>
+  </div>
+
+  <div class="flex-1 overflow-y-auto p-5">
+    <form [formGroup]="form" class="flex flex-col gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="form-control w-full">
+          <label class="label py-2"
+            ><span class="label-text font-bold text-sm">Nombre</span></label
+          >
+          <input
+            type="text"
+            class="input input-bordered input-sm w-full focus:input-primary"
+            placeholder="Ej. Bebida"
+            formControlName="name"
+          />
+        </div>
+
+        <div class="form-control w-full">
+          <label class="label py-2"
+            ><span class="label-text font-bold text-sm">Orden</span></label
+          >
+          <input
+            type="number"
+            class="input input-bordered input-sm w-full focus:input-primary"
+            formControlName="sortOrder"
+          />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="form-control w-full">
+          <label class="label py-2"
+            ><span class="label-text font-bold text-sm">Mínimo</span></label
+          >
+          <input
+            type="number"
+            class="input input-bordered input-sm w-full focus:input-primary"
+            formControlName="minSelections"
+          />
+        </div>
+
+        <div class="form-control w-full">
+          <label class="label py-2"
+            ><span class="label-text font-bold text-sm">Máximo</span></label
+          >
+          <input
+            type="number"
+            class="input input-bordered input-sm w-full focus:input-primary"
+            formControlName="maxSelections"
+          />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="form-control w-full">
+          <label class="label py-2"
+            ><span class="label-text font-bold text-sm"
+              >Modo de precio</span
+            ></label
+          >
+          <select
+            class="select select-bordered select-sm w-full"
+            formControlName="priceMode"
+          >
+            <option [ngValue]="0">Suma de precios</option>
+            <option [ngValue]="1">Precio más alto</option>
+            <option [ngValue]="2">Precio más bajo</option>
+            <option [ngValue]="3">Precio promedio</option>
+            <option [ngValue]="4">Precio del primer item</option>
+            <option [ngValue]="5">Precio del último item</option>
+            <option [ngValue]="6">Precio base del producto</option>
+          </select>
+        </div>
+
+        <div class="form-control w-full">
+          <label class="label py-2"
+            ><span class="label-text font-bold text-sm"
+              >Override de precio</span
+            ></label
+          >
+          <input
+            type="number"
+            class="input input-bordered input-sm w-full focus:input-primary"
+            formControlName="priceOverride"
+          />
+        </div>
+      </div>
+
+      <div class="bg-base-200/50 p-3 rounded-lg border border-base-200">
+        <div class="form-control">
+          <label class="label cursor-pointer justify-between py-2">
+            <div class="flex flex-col">
+              <span class="label-text font-bold text-sm"
+                >Usar alcance de catálogo</span
+              >
+              <span class="label-text-alt text-xs text-base-content/60"
+                >Filtros dinámicos vs items fijos</span
+              >
+            </div>
+            <input
+              type="checkbox"
+              class="toggle toggle-sm toggle-success"
+              formControlName="useCatalogScope"
+              (change)="onUseCatalogScopeChange()"
+            />
+          </label>
+        </div>
+      </div>
+
+      @if (form.value.useCatalogScope) {
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="form-control w-full">
+            <label class="label py-2"
+              ><span class="label-text font-bold text-sm"
+                >Categorías</span
+              ></label
+            >
+            <select
+              class="select select-bordered select-sm w-full"
+              multiple
+              size="3"
+              formControlName="scopeCategoryIds"
+              (change)="onCategoriesChange()"
+            >
+              @for (
+                category of categoryService.categories();
+                track category.id
+              ) {
+                <option
+                  [value]="toString(category.id)"
+                  [selected]="isSelected('scopeCategoryIds', category.id)"
+                >
+                  {{ category.name }}
+                </option>
+              }
+            </select>
+          </div>
+
+          <div class="form-control w-full">
+            <label class="label py-2"
+              ><span class="label-text font-bold text-sm"
+                >Subcategorías</span
+              ></label
+            >
+            <select
+              class="select select-bordered select-sm w-full"
+              multiple
+              size="3"
+              formControlName="scopeSubcategoryIds"
+            >
+              @if (filteredSubcategories().length === 0) {
+                <option disabled>Selecciona categorías primero</option>
+              } @else {
+                @for (
+                  subcategory of filteredSubcategories();
+                  track subcategory.id
+                ) {
+                  <option
+                    [value]="toString(subcategory.id)"
+                    [selected]="
+                      isSelected('scopeSubcategoryIds', subcategory.id)
+                    "
+                  >
+                    {{ subcategory.name }}
+                  </option>
+                }
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="form-control w-full">
+            <label class="label py-2"
+              ><span class="label-text font-bold text-sm"
+                >Tipos de producto</span
+              ></label
+            >
+            <select
+              class="select select-bordered select-sm w-full"
+              multiple
+              size="3"
+              formControlName="scopeProductTypeIds"
+            >
+              @for (
+                ptype of productTypeService.productTypes();
+                track ptype.id
+              ) {
+                <option
+                  [value]="toString(ptype.id)"
+                  [selected]="isSelected('scopeProductTypeIds', ptype.id)"
+                >
+                  {{ ptype.name }}
+                </option>
+              }
+            </select>
+          </div>
+
+          <div class="form-control w-full">
+            <label class="label py-2"
+              ><span class="label-text font-bold text-sm">Tamaños</span></label
+            >
+            <select
+              class="select select-bordered select-sm w-full"
+              multiple
+              size="3"
+              formControlName="scopeProductSizeIds"
+            >
+              @for (size of filteredProductSizes(); track size.id) {
+                <option
+                  [value]="toString(size.id)"
+                  [selected]="isSelected('scopeProductSizeIds', size.id)"
+                >
+                  {{ size.name }}
+                </option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="bg-base-200/50 p-3 rounded-lg border border-base-200">
+          <div class="form-control">
+            <label class="label cursor-pointer justify-between py-2">
+              <div class="flex flex-col">
+                <span class="label-text font-bold text-sm"
+                  >Permitir tamaños personalizados</span
+                >
+                <span class="label-text-alt text-xs text-base-content/60"
+                  >Combinaciones fuera del scope</span
+                >
+              </div>
+              <input
+                type="checkbox"
+                class="toggle toggle-sm toggle-success"
+                formControlName="allowCustomSizes"
+              />
+            </label>
+          </div>
+        </div>
+      } @else {
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold text-base-content">Items</h3>
+          <button
+            type="button"
+            class="btn btn-xs btn-outline"
+            (click)="addItem()"
+          >
+            + Item
+          </button>
+        </div>
+
+        <div class="space-y-2 max-h-48 overflow-y-auto" formArrayName="items">
+          @for (item of items.controls; track $index) {
+            <div
+              class="border border-base-200 rounded-lg p-3 grid grid-cols-1 md:grid-cols-5 gap-2 text-sm"
+              [formGroupName]="$index"
+            >
+              <div class="form-control md:col-span-2">
+                <select
+                  class="select select-bordered select-xs w-full"
+                  formControlName="productId"
+                >
+                  <option value="">Producto</option>
+                  @for (product of products(); track product.id) {
+                    <option [value]="product.id">{{ product.name }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="form-control">
+                <select
+                  class="select select-bordered select-xs w-full"
+                  formControlName="productSizeId"
+                >
+                  <option value="">Tamaño</option>
+                  @for (
+                    size of productSizeService.productSizes();
+                    track size.id
+                  ) {
+                    <option [value]="size.id">{{ size.name }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="form-control">
+                <input
+                  type="number"
+                  class="input input-bordered input-xs w-full"
+                  placeholder="Cant"
+                  formControlName="quantity"
+                />
+              </div>
+
+              <div class="form-control">
+                <input
+                  type="number"
+                  class="input input-bordered input-xs w-full"
+                  placeholder="Precio"
+                  formControlName="priceOverride"
+                />
+              </div>
+
+              <div class="form-control">
+                <button
+                  type="button"
+                  class="btn btn-ghost btn-xs text-error"
+                  (click)="removeItem($index)"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </form>
+  </div>
+
+  <div
+    class="flex-none px-6 py-4 border-t border-base-200 bg-base-100 flex justify-end gap-3"
+  >
+    <button
+      type="button"
+      class="btn btn-ghost btn-sm hover:bg-base-200"
+      (click)="dialogRef.close('Canceled')"
+    >
+      Cancelar
+    </button>
+
+    <button
+      type="button"
+      class="btn btn-primary btn-sm px-6"
+      (click)="onSaving()"
+      [disabled]="!form.valid"
+    >
+      Guardar
+    </button>
+  </div>
+</div>

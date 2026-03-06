@@ -1,0 +1,229 @@
+<div class="flex flex-col w-full h-full bg-base-100">
+  <div
+    class="flex-none px-6 py-4 border-b border-base-200 flex justify-between items-center bg-base-100 z-10"
+  >
+    <h2 class="text-xl font-bold text-base-content flex items-center gap-2">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-6 w-6 text-primary"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+        />
+      </svg>
+      {{ form.get("id")?.value ? "Editar Producto" : "Nuevo Producto" }}
+    </h2>
+    <button
+      (click)="dialogRef.close('Canceled')"
+      class="btn btn-sm btn-ghost btn-circle"
+    >
+      ✕
+    </button>
+  </div>
+
+  <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+    <form [formGroup]="form">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="lg:col-span-4 space-y-6">
+          <div class="form-control">
+            <label class="label font-semibold text-base-content/70"
+              >Imagen del Producto</label
+            >
+            <div
+              class="relative group w-full aspect-square bg-base-200 rounded-xl border-2 border-dashed border-base-300 overflow-hidden hover:border-primary transition-colors flex flex-col items-center justify-center text-center"
+            >
+              <input
+                type="file"
+                accept="image/*"
+                (change)="onImageSelected($event)"
+                [disabled]="isUploadingImage"
+                [class.hidden]="previewImageUrl()"
+                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+              />
+              @if (isUploadingImage) {
+                <div
+                  class="absolute inset-0 bg-base-100/80 z-20 flex flex-col items-center justify-center"
+                >
+                  <span
+                    class="loading loading-spinner loading-md text-primary"
+                  ></span>
+                </div>
+              }
+              @if (previewImageUrl()) {
+                <img
+                  [src]="previewImageUrl()"
+                  class="absolute inset-0 w-full h-full object-cover bg-base-100 z-10"
+                  alt="Producto"
+                />
+                <div class="absolute top-2 right-2 z-20 flex gap-2">
+                  <button
+                    type="button"
+                    (click)="clearImage()"
+                    class="btn btn-circle btn-xs btn-error shadow-md"
+                  >
+                    ✕
+                  </button>
+                </div>
+              } @else {
+                <div class="p-4 text-base-content/40 pointer-events-none">
+                  <span class="text-sm font-medium">Click para subir</span>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="bg-base-200/50 p-4 rounded-xl space-y-4">
+            <div class="form-control">
+              <label class="label cursor-pointer justify-between">
+                <span class="label-text font-semibold">Producto Activo</span>
+                <input
+                  type="checkbox"
+                  class="toggle toggle-success toggle-sm"
+                  formControlName="isActive"
+                />
+              </label>
+            </div>
+            <div class="divider my-1"></div>
+            <div class="form-control">
+              <label class="label cursor-pointer justify-between">
+                <span class="label-text font-semibold"
+                  >Todas las sucursales</span
+                >
+                <input
+                  type="checkbox"
+                  class="toggle toggle-info toggle-sm"
+                  formControlName="allBranches"
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 content-start"
+        >
+          <div class="col-span-1 md:col-span-2 form-control">
+            <label class="label font-bold text-sm">Nombre del Producto</label>
+            <input
+              type="text"
+              class="input input-bordered w-full"
+              placeholder="Ej. Pizza Margarita"
+              formControlName="name"
+            />
+          </div>
+          <div class="col-span-1 md:col-span-2 form-control">
+            <label class="label font-bold text-sm">Descripción</label>
+            <input
+              type="text"
+              class="input input-bordered w-full text-sm"
+              placeholder="Breve descripción"
+              formControlName="description"
+            />
+          </div>
+
+          <div
+            class="col-span-1 md:col-span-2 divider text-xs font-semibold text-base-content/40 my-2"
+          >
+            CLASIFICACIÓN
+          </div>
+
+          <div class="form-control">
+            <label
+              class="label text-xs font-semibold uppercase text-base-content/60"
+              >Categoría</label
+            >
+            <select
+              class="select select-bordered w-full"
+              formControlName="categoryId"
+            >
+              <option value="">Seleccionar...</option>
+              @for (cat of categoryService.categories(); track cat.id) {
+                <option [value]="cat.id">{{ cat.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-control">
+            <label
+              class="label text-xs font-semibold uppercase text-base-content/60"
+              >Subcategoría</label
+            >
+            <select
+              class="select select-bordered w-full"
+              formControlName="subcategoryId"
+            >
+              <option value="">Seleccionar...</option>
+              @for (sub of filteredSubcategories(); track sub.id) {
+                <option [value]="sub.id">{{ sub.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-control">
+            <label
+              class="label text-xs font-semibold uppercase text-base-content/60"
+              >Porción</label
+            >
+            <select
+              class="select select-bordered w-full"
+              formControlName="productSizeId"
+            >
+              <option value="">Estándar</option>
+              @for (size of filteredProductSizes(); track size.id) {
+                <option [value]="size.id">{{ size.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div
+            class="col-span-1 md:col-span-2 divider text-xs font-semibold text-base-content/40 my-2"
+          >
+            PRECIO
+          </div>
+          <div class="col-span-1 form-control">
+            <label class="label font-bold text-sm">Precio de Venta</label>
+            <label class="input input-bordered flex items-center gap-2">
+              <span class="text-base-content/50 font-bold">$</span>
+              <input
+                type="number"
+                class="grow font-mono font-bold"
+                placeholder="0.00"
+                formControlName="price"
+              />
+            </label>
+          </div>
+        </div>
+      </div>
+    </form>
+    <div class="h-4"></div>
+  </div>
+
+  <div
+    class="flex-none px-6 py-4 border-t border-base-200 bg-base-100 flex justify-end gap-3 z-10"
+  >
+    <button
+      type="button"
+      class="btn btn-ghost hover:bg-base-200"
+      (click)="dialogRef.close('Canceled')"
+      [disabled]="isUploadingImage"
+    >
+      Cancelar
+    </button>
+
+    <button
+      type="button"
+      class="btn btn-primary px-8"
+      (click)="onSaving()"
+      [disabled]="!form.valid || isUploadingImage"
+    >
+      @if (isUploadingImage) {
+        <span class="loading loading-spinner loading-xs"></span>
+      }
+      Guardar
+    </button>
+  </div>
+</div>

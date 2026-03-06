@@ -1,0 +1,364 @@
+<div class="w-full min-h-screen bg-base-200/50 p-4 md:p-6 font-sans">
+  <div
+    class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8"
+  >
+    <div class="flex items-center gap-4">
+      <div
+        class="w-14 h-14 bg-neutral text-neutral-content rounded-2xl flex items-center justify-center shadow-lg"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-8 w-8"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
+          />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-3xl font-black text-base-content tracking-tight">
+          Cocina
+        </h1>
+        <div
+          class="flex items-center gap-2 text-sm font-medium text-base-content/60"
+        >
+          @if (branches().length === 1) {
+            <span class="badge badge-ghost badge-sm">{{
+              branchLabel(branches()[0])
+            }}</span>
+          }
+          <span>{{ kitchenOrders().length }} órdenes pendientes</span>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="hidden md:flex items-center gap-3 bg-base-100 px-5 py-3 rounded-xl border border-base-200 shadow-sm"
+    >
+      <div class="flex flex-col items-end leading-none">
+        <span
+          class="text-xs font-bold text-base-content/40 uppercase tracking-widest"
+          >Hora Actual</span
+        >
+        <span class="text-2xl font-black font-mono tracking-tight">{{
+          localTime()
+        }}</span>
+      </div>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div
+      class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6"
+    >
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="h-96 rounded-2xl bg-base-100 animate-pulse shadow-sm"></div>
+      }
+    </div>
+  } @else if (!hasKitchenOrders()) {
+    <div
+      class="flex flex-col items-center justify-center h-[60vh] text-base-content/40"
+    >
+      <div
+        class="w-32 h-32 bg-base-100 rounded-full flex items-center justify-center mb-6 shadow-sm border border-base-200"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-16 w-16 opacity-30"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.5"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      </div>
+      <h3 class="text-2xl font-bold mb-2 text-base-content">Sin Comandas</h3>
+      <p>Todo está al día, buen trabajo equipo.</p>
+    </div>
+  } @else {
+    <div
+      class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 items-start"
+    >
+      @for (order of kitchenOrders(); track order.id) {
+        <div
+          class="card bg-base-100 shadow-lg hover:shadow-2xl transition-all duration-300 border-t-[6px] border-t-primary rounded-xl overflow-hidden group"
+        >
+          <div
+            class="px-5 py-4 border-b border-base-200 bg-base-100 grid grid-cols-[1fr_auto] gap-4 items-start"
+          >
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-2 mb-1">
+                <h2
+                  class="text-2xl font-black text-base-content leading-none truncate"
+                >
+                  {{ tableLabel(order) }}
+                </h2>
+                @if (isPublicMenuOrder(order.source!)) {
+                  <span
+                    class="badge badge-info badge-sm font-bold text-white shrink-0"
+                    >DOMICILIO</span
+                  >
+                }
+              </div>
+              <div
+                class="text-xs font-bold text-base-content/40 font-mono flex items-center gap-1"
+              >
+                <span>#{{ order.code }}</span>
+                <span>•</span>
+                <span>{{ order.createdAt | date: "h:mm a" }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex-1">
+            <ul class="divide-y divide-base-200">
+              @for (
+                item of order.items;
+                track item.id || item.productId || $index
+              ) {
+                <li
+                  class="relative transition-all duration-200 group/item border-t-gray-500/50 border-t"
+                  [class.bg-base-100]="
+                    normalizeItemStatus(item) !== 'ready' &&
+                    normalizeItemStatus(item) !== 'preparing'
+                  "
+                  [class.bg-warning/5]="
+                    normalizeItemStatus(item) === 'preparing'
+                  "
+                  [class.border-l-4]="normalizeItemStatus(item) === 'preparing'"
+                  [class.border-l-warning]="
+                    normalizeItemStatus(item) === 'preparing'
+                  "
+                  [class.bg-base-200/50]="normalizeItemStatus(item) === 'ready'"
+                  [class.grayscale]="normalizeItemStatus(item) === 'ready'"
+                  [class.opacity-60]="normalizeItemStatus(item) === 'ready'"
+                >
+                  <div class="p-4 flex gap-3 items-stretch">
+                    <div class="flex flex-col justify-start pt-0.5">
+                      <span
+                        class="font-black text-2xl leading-none text-center min-w-[1.5rem]"
+                        [class.text-primary]="
+                          normalizeItemStatus(item) !== 'ready'
+                        "
+                        [class.text-base-content/30]="
+                          normalizeItemStatus(item) === 'ready'
+                        "
+                      >
+                        {{ item.quantity || 1 }}
+                      </span>
+                    </div>
+
+                    <div class="flex-1 min-w-0 flex flex-col justify-center">
+                      @if (normalizeItemStatus(item) === "preparing") {
+                        <div
+                          class="flex items-center gap-1 text-[10px] uppercase font-bold text-warning mb-1 animate-pulse"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-3 w-3"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fill-rule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                              clip-rule="evenodd"
+                            />
+                          </svg>
+                          <span>Cocinando...</span>
+                        </div>
+                      }
+                      <div
+                        class="font-bold text-md leading-tight truncate"
+                        [class.line-through]="
+                          normalizeItemStatus(item) === 'ready'
+                        "
+                      >
+                        {{ productLabel(item) }}
+                      </div>
+                      @if (item.sizeName || sizeBadgeLabel(item)) {
+                        <div
+                          class="text-xs font-bold text-base-content/60 uppercase tracking-wide mt-0.5"
+                        >
+                          {{ item.sizeName || sizeBadgeLabel(item) }}
+                        </div>
+                      }
+                      @if (item.modifiers?.length || item.notes) {
+                        <div class="mt-1">
+                          @if (item.notes) {
+                            <div
+                              class="text-xs text-base-content/70 font-medium whitespace-pre-line leading-tight py-1 rounded-md"
+                            >
+                              {{ item.notes }}
+                            </div>
+                          }
+                          @for (mod of item.modifiers; track $index) {
+                            <div
+                              class="text-sm text-base-content/70 flex items-center gap-1 leading-tight"
+                            >
+                              <span class="text-primary font-bold text-xs"
+                                >+</span
+                              >
+                              <span>{{ modifierLabel(mod) }}</span>
+                              @if (mod.quantity && mod.quantity > 1) {
+                                <span
+                                  class="font-bold bg-base-200 px-1 rounded text-[10px]"
+                                  >x{{ mod.quantity }}</span
+                                >
+                              }
+                            </div>
+                          }
+                        </div>
+                      }
+                    </div>
+
+                    <div class="self-center">
+                      @if (normalizeItemStatus(item) !== "ready") {
+                        <button
+                          class="btn btn-circle btn-ghost border-2 border-base-300 text-base-300 hover:scale-100 transition-all duration-200 shadow-sm"
+                          [class.border-warning]="
+                            normalizeItemStatus(item) === 'preparing'
+                          "
+                          [class.text-warning]="
+                            normalizeItemStatus(item) === 'preparing'
+                          "
+                          [class.hover:bg-warning]="
+                            normalizeItemStatus(item) === 'preparing'
+                          "
+                          [class.hover:text-warning-content]="
+                            normalizeItemStatus(item) === 'preparing'
+                          "
+                          [class.hover:bg-success]="
+                            normalizeItemStatus(item) !== 'preparing'
+                          "
+                          [class.hover:border-success]="
+                            normalizeItemStatus(item) !== 'preparing'
+                          "
+                          [class.hover:text-white]="
+                            normalizeItemStatus(item) !== 'preparing'
+                          "
+                          [disabled]="
+                            isItemUpdating(itemKey(order, item, $index))
+                          "
+                          (click)="advanceItemStatus(order, item, $index)"
+                        >
+                          @if (isItemUpdating(itemKey(order, item, $index))) {
+                            <span
+                              class="loading loading-spinner loading-xs"
+                            ></span>
+                          } @else {
+                            @if (normalizeItemStatus(item) === "preparing") {
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="h-5 w-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                stroke-width="3"
+                              >
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                            } @else {
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="h-5 w-5"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                              >
+                                <path d="M8 5v14l11-7z" />
+                              </svg>
+                            }
+                          }
+                        </button>
+                      } @else {
+                        <div
+                          class="w-12 h-12 flex items-center justify-center text-success"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-8 w-8"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fill-rule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                              clip-rule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </li>
+              }
+            </ul>
+          </div>
+
+          <div
+            class="p-4 bg-base-200/30 border-t border-base-200 flex justify-between items-center gap-3 border-t-gray-500/50 border-t"
+          >
+            <div class="flex items-center gap-2 flex-1 min-w-0">
+              <div
+                class="w-8 h-8 rounded-full bg-neutral text-neutral-content flex items-center justify-center shrink-0"
+              >
+                <span class="text-xs font-bold">{{
+                  createdByLabel(order) | slice: 0 : 2 | uppercase
+                }}</span>
+              </div>
+
+              <div class="flex flex-col flex-1 min-w-0">
+                <span
+                  class="text-[10px] font-bold text-base-content/50 uppercase tracking-widest"
+                  >Encargado</span
+                >
+                <span
+                  class="text-sm font-extrabold text-base-content leading-tight truncate w-full"
+                  title="{{ createdByLabel(order) }}"
+                >
+                  {{ createdByLabel(order) }}
+                </span>
+              </div>
+            </div>
+
+            <button
+              class="btn btn-sm btn-outline gap-2 hover:btn-primary transition-colors shrink-0"
+              (click)="printKitchenTicket(order)"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                />
+              </svg>
+              Imprimir
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

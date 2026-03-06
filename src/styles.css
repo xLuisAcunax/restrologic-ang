@@ -1,0 +1,152 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+@plugin "daisyui/theme" {
+  name: "restrologic";
+  default: true;
+  prefersdark: false;
+  color-scheme: "light";
+
+  /* Primary Brand - Deep Royal Blue */
+  --color-primary: oklch(0.55 0.2 260);
+  --color-primary-content: oklch(0.98 0 0);
+
+  /* Secondary - Vibrant Teal */
+  --color-secondary: oklch(0.7 0.15 180);
+  --color-secondary-content: oklch(0.98 0 0);
+
+  /* Functional Colors */
+  --color-success: oklch(0.65 0.18 145);
+  --color-success-content: oklch(0.98 0 0);
+  --color-warning: oklch(0.8 0.15 85);
+  --color-warning-content: oklch(0.15 0.02 260);
+  --color-error: oklch(0.6 0.2 25);
+  --color-error-content: oklch(0.98 0 0);
+  --color-info: oklch(0.6 0.18 250);
+  --color-info-content: oklch(0.98 0 0);
+  --color-neutral: oklch(0.35 0.05 260);
+  --color-neutral-content: oklch(0.98 0 0);
+
+  /* Backgrounds & Surfaces */
+  --color-base-100: oklch(1 0 0);
+  --color-base-200: oklch(0.98 0.01 260);
+  --color-base-300: oklch(0.92 0.01 260);
+  --color-base-content: oklch(0.15 0.02 260);
+
+  /* Radii & Shapes */
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
+
+@theme {
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  --animate-fade-in-up: fade-in-up 0.6s var(--ease-spring) forwards;
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* (App sidebar overrides moved to component stylesheet) */
+
+.table-details-dialog-pane {
+  align-self: center !important;
+  max-height: 90vh;
+  max-width: 95vw;
+  display: flex;
+}
+
+.table-details-dialog-pane .cdk-dialog-container {
+  display: flex;
+  max-height: inherit;
+  overflow: auto;
+  padding: 0;
+}
+
+.table-details-dialog-pane .cdk-dialog-container>* {
+  flex: 1 1 auto;
+  max-height: inherit;
+}
+
+/* Modal center for portion selector and similar dialogs */
+.modal-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-center .cdk-dialog-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+@layer utilities {
+  .animate-fade-in-up {
+    animation: fadeInUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .delay-100 {
+    animation-delay: 100ms;
+  }
+
+  .delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .delay-300 {
+    animation-delay: 300ms;
+  }
+}
+
+/* Table Details Modal */
+.table-details-modal .mat-mdc-dialog-container .mdc-dialog__surface {
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+
+/* On smaller screens (tablets, phones), make dialog fullscreen */
+@media (max-width: 1023px) {
+  .table-details-modal {
+    max-width: 100vw !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+  }
+
+  .table-details-modal .mat-mdc-dialog-container .mdc-dialog__surface {
+    border-radius: 0 !important;
+  }
+
+  .cdk-overlay-pane.table-details-modal {
+    max-width: 100vw !important;
+  }
+}

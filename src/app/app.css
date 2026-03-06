@@ -1,0 +1,11 @@
+/* Sidebar menu overrides */
+/* Remove the default left indent that daisyUI adds to nested <ul> inside .menu */
+aside .menu details > ul {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+/* Optional: normalize padding for nested items so they align with top-level */
+aside .menu details > ul li > *:not(ul) {
+  padding-left: 0.75rem !important; /* ~pl-3 */
+}

@@ -1,0 +1,198 @@
+<div class="container mx-auto p-6">
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-800">Mis Entregas</h1>
+    <p class="text-gray-600">Órdenes asignadas a ti</p>
+  </div>
+
+  @if (loading()) {
+    <div class="flex justify-center items-center py-12">
+      <span class="loading loading-spinner loading-lg"></span>
+    </div>
+  } @else {
+    <!-- Pendientes -->
+    @if (pendingOrders().length > 0) {
+      <div class="mb-8">
+        <h2 class="text-xl font-bold text-gray-700 mb-4">
+          Pendientes ({{ pendingOrders().length }})
+        </h2>
+        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          @for (order of pendingOrders(); track order.id) {
+            <div class="card bg-base-100 shadow-lg">
+              <div class="card-body">
+                <div class="flex justify-between items-start mb-2">
+                  <h3 class="card-title text-lg">Orden #{{ order.code }}</h3>
+                  <delivery-status-badge
+                    [status]="order.delivery?.status || 'pending'"
+                  />
+                </div>
+
+                <div class="space-y-2 text-sm">
+                  <div>
+                    <span class="font-semibold">Cliente:</span>
+                    {{ order.customer?.name || "Sin nombre" }}
+                  </div>
+                  <div>
+                    <span class="font-semibold">Dirección:</span>
+                    {{ order.delivery?.address || "Sin dirección" }}
+                  </div>
+                  <div>
+                    <span class="font-semibold">Total:</span>
+                    {{ formatCurrency(order.total) }}
+                  </div>
+                  <div>
+                    <span class="font-semibold">Tarifa delivery:</span>
+                    {{ formatCurrency(order.delivery?.fee) }}
+                  </div>
+                </div>
+
+                <div class="card-actions justify-end mt-4">
+                  @if (
+                    order.delivery?.status === "pending" ||
+                    order.delivery?.status === "assigned"
+                  ) {
+                    <button
+                      class="btn btn-primary btn-sm"
+                      (click)="updateStatus(order, 'accepted')"
+                    >
+                      Aceptar
+                    </button>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- En curso -->
+    @if (activeOrders().length > 0) {
+      <div class="mb-8">
+        <h2 class="text-xl font-bold text-gray-700 mb-4">
+          En Curso ({{ activeOrders().length }})
+        </h2>
+        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          @for (order of activeOrders(); track order.id) {
+            <div class="card bg-base-100 shadow-lg border-2 border-primary">
+              <div class="card-body">
+                <div class="flex justify-between items-start mb-2">
+                  <h3 class="card-title text-lg">Orden #{{ order.code }}</h3>
+                  <delivery-status-badge
+                    [status]="order.delivery?.status || 'pending'"
+                  />
+                </div>
+
+                <div class="space-y-2 text-sm">
+                  <div>
+                    <span class="font-semibold">Cliente:</span>
+                    {{ order.customer?.name || "Sin nombre" }}
+                  </div>
+                  <div>
+                    <span class="font-semibold">Teléfono:</span>
+                    {{ order.customer?.phone || "Sin teléfono" }}
+                  </div>
+                  <div>
+                    <span class="font-semibold">Dirección:</span>
+                    {{ order.delivery?.address || "Sin dirección" }}
+                  </div>
+                  <div>
+                    <span class="font-semibold">Total:</span>
+                    {{ formatCurrency(order.total) }}
+                  </div>
+                  @if (order.delivery?.notes) {
+                    <div class="text-xs italic text-gray-600">
+                      Nota: {{ order.delivery?.notes }}
+                    </div>
+                  }
+                </div>
+
+                <div class="card-actions justify-end mt-4 gap-2">
+                  @if (order.delivery?.status === "accepted") {
+                    <button
+                      class="btn btn-sm btn-info"
+                      (click)="updateStatus(order, 'picked_up')"
+                    >
+                      Recoger
+                    </button>
+                  }
+                  @if (order.delivery?.status === "picked_up") {
+                    <button
+                      class="btn btn-sm btn-warning"
+                      (click)="updateStatus(order, 'in_transit')"
+                    >
+                      En camino
+                    </button>
+                  }
+                  @if (order.delivery?.status === "in_transit") {
+                    <button
+                      class="btn btn-sm btn-success"
+                      (click)="updateStatus(order, 'delivered')"
+                    >
+                      Entregado
+                    </button>
+                    <button
+                      class="btn btn-sm btn-error"
+                      (click)="updateStatus(order, 'failed')"
+                    >
+                      Fallido
+                    </button>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Completadas -->
+    @if (completedOrders().length > 0) {
+      <div class="mb-8">
+        <h2 class="text-xl font-bold text-gray-700 mb-4">
+          Completadas ({{ completedOrders().length }})
+        </h2>
+        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          @for (order of completedOrders(); track order.id) {
+            <div class="card bg-base-100 shadow opacity-75">
+              <div class="card-body">
+                <div class="flex justify-between items-start mb-2">
+                  <h3 class="card-title text-lg">Orden #{{ order.code }}</h3>
+                  <delivery-status-badge
+                    [status]="order.delivery?.status || 'pending'"
+                  />
+                </div>
+
+                <div class="space-y-2 text-sm">
+                  <div>
+                    <span class="font-semibold">Cliente:</span>
+                    {{ order.customer?.name || "Sin nombre" }}
+                  </div>
+                  <div>
+                    <span class="font-semibold">Dirección:</span>
+                    {{ order.delivery?.address || "Sin dirección" }}
+                  </div>
+                  <div>
+                    <span class="font-semibold">Total:</span>
+                    {{ formatCurrency(order.total) }}
+                  </div>
+                  @if (order.delivery?.deliveredAt) {
+                    <div class="text-xs text-gray-600">
+                      Entregado: {{ formatTime(order.delivery?.deliveredAt) }}
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Sin entregas -->
+    @if (orders().length === 0) {
+      <div class="text-center py-12">
+        <p class="text-gray-500 text-lg">No tienes entregas asignadas</p>
+      </div>
+    }
+  }
+</div>

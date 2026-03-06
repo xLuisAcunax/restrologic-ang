@@ -1,0 +1,36 @@
+<div class="card bg-base-100 shadow-sm">
+  <div class="px-5 pt-5">
+    <h3 class="text-lg font-semibold">Top productos (Hoy)</h3>
+    <p class="mt-1 text-gray-500 text-theme-sm dark:text-gray-400">
+      Los 5 productos con mayor venta.
+    </p>
+    <div class="overflow-x-auto mt-4">
+      <table class="table w-full text-sm">
+        <thead>
+          <tr>
+            <th class="font-medium">Producto</th>
+            <th class="font-medium text-right">Cantidad</th>
+            <th class="font-medium text-right">Ingresos</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let p of products; let i = index"
+            class="hover:bg-base-200/60"
+          >
+            <td class="whitespace-nowrap">{{ i + 1 }}. {{ p.name }}</td>
+            <td class="text-right">{{ p.qty }}</td>
+            <td class="text-right font-semibold">
+              {{ formatCurrency(p.total) }}
+            </td>
+          </tr>
+          <tr *ngIf="products.length === 0">
+            <td colspan="3" class="text-center py-6 text-gray-500">
+              Sin datos
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

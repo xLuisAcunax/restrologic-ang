@@ -1,0 +1,325 @@
+<div class="min-h-screen bg-base-200 font-sans pb-24 md:pb-12">
+  <!-- Sticky Category Header -->
+  <div
+    class="sticky z-40 top-[73px] md:top-[96px] bg-base-100/80 backdrop-blur-xl border-b border-base-200 supports-[backdrop-filter]:bg-base-300/20 shadow-sm">
+    <div class="w-full max-w-7xl mx-auto px-4">
+      <div class="relative group py-3">
+        @if (tabsCanScrollLeft()) {
+        <button
+          class="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-base-100/80 backdrop-blur-sm shadow-sm rounded-full p-2 text-base-content/70 hover:text-primary transition-all hover:scale-105"
+          (click)="scrollTabs('left')">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        }
+
+        <div #tabsScroll class="flex overflow-x-auto gap-3 py-1 no-scrollbar scroll-smooth snap-x px-1">
+          @for (category of categoryService.categories(); track category.id) {
+          <button
+            class="btn btn-sm h-10 px-6 rounded-full snap-start transition-all duration-300 font-bold tracking-wide border-0 hover:scale-105"
+            [class.btn-primary]="selectedCategory() === category.id"
+            [class.shadow-lg]="selectedCategory() === category.id"
+            [class.shadow-primary/30]="selectedCategory() === category.id"
+            [class.btn-ghost]="selectedCategory() !== category.id"
+            [class.bg-base-200/50]="selectedCategory() !== category.id"
+            [class.text-base-content/60]="selectedCategory() !== category.id"
+            [class.hover:bg-base-200]="selectedCategory() !== category.id" (click)="selectCategory(category.id)">
+            {{ category.name }}
+          </button>
+          }
+        </div>
+
+        @if (tabsCanScrollRight()) {
+        <button
+          class="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-base-100/80 backdrop-blur-sm shadow-sm rounded-full p-2 text-base-content/70 hover:text-primary transition-all hover:scale-105"
+          (click)="scrollTabs('right')">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  @if (loading()) {
+  <div class="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+    <div class="loading loading-spinner loading-lg text-primary"></div>
+    <p class="text-base-content/50 font-medium animate-pulse">Preparando el menú...</p>
+  </div>
+  } @else {
+  <div class="w-full max-w-7xl mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      @for (product of getProductsForSelectedCategory(); track product.id; let i = $index) {
+      <div
+        class="card bg-base-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group h-full flex flex-col overflow-hidden border border-base-200/50 animate-fade-in-up"
+        [style.animation-delay]="(i * 50) + 'ms'">
+        <!-- Image Area -->
+        <figure class="relative h-48 sm:h-56 bg-base-200 overflow-hidden">
+          @if (product.imageUrl) {
+          <img [src]="product.imageUrl" [alt]="product.name"
+            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
+          <div
+            class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          </div>
+          } @else {
+          <!-- Placeholder Pattern -->
+          <div class="w-full h-full bg-base-200 flex items-center justify-center opacity-30 relative overflow-hidden">
+            <div
+              class="absolute inset-0 bg-[radial-gradient(#00000010_1px,transparent_1px)] [background-size:16px_16px]">
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-base-content/20" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+          </div>
+          }
+        </figure>
+
+        <!-- Card Body -->
+        <div class="card-body p-5 flex flex-col flex-1 gap-1">
+          <div class="flex-1">
+            <h2 class="font-bold text-lg leading-snug mb-1 group-hover:text-primary transition-colors">
+              {{ product.name }}
+            </h2>
+            @if (product.description) {
+            <p class="text-sm text-base-content/60 line-clamp-2 leading-relaxed">
+              {{ product.description }}
+            </p>
+            }
+          </div>
+
+          <!-- Price & Actions Footer -->
+          <div class="mt-4 pt-4 border-t border-base-100 flex flex-col gap-3">
+
+            <!-- Scenario 1: Variant Options (Inline list) -->
+            @if (getVariantOptions(product).length > 0) {
+            <div class="space-y-3">
+              <div class="text-[10px] font-bold tracking-wider text-base-content/40 uppercase">
+                Elige tu opción:
+              </div>
+              <div class="flex flex-wrap gap-2">
+                @for (opt of getVariantOptions(product); track opt.id) {
+                <button
+                  class="badge h-auto py-2 px-3 gap-2 cursor-pointer border hover:border-primary transition-all duration-200"
+                  [class.badge-primary]="getSelectedModifierIdFor(product) === opt.id"
+                  [class.shadow-md]="getSelectedModifierIdFor(product) === opt.id"
+                  [class.badge-ghost]="getSelectedModifierIdFor(product) !== opt.id"
+                  [class.bg-base-200]="getSelectedModifierIdFor(product) !== opt.id"
+                  (click)="selectVariant(product.id, opt.id)">
+                  <span class="text-xs font-semibold">{{ opt.label }}</span>
+                  <span class="font-bold text-xs opacity-90">${{ opt.price | number: "1.0-0" }}</span>
+                </button>
+                }
+              </div>
+              <button
+                class="btn btn-primary btn-block shadow-lg shadow-primary/20 group-hover:shadow-primary/40 transition-shadow mt-1"
+                (click)="addSimpleProductToCart(product)">
+                Agregar
+              </button>
+            </div>
+
+            }
+            <!-- Scenario 2: Simple Product (Fixed Price) -->
+            @else if (getProductPrice(product) !== null) {
+            <div class="flex items-center justify-between mt-auto">
+              <div class="flex flex-col">
+                <span class="text-[10px] font-bold text-base-content/40 uppercase tracking-wider">Precio</span>
+                <span class="text-2xl font-black text-base-content tracking-tight">
+                  ${{ getProductPrice(product) | number: "1.0-0" }}
+                </span>
+              </div>
+              <button
+                class="btn btn-circle btn-primary shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                (click)="addSimpleProductToCart(product)" aria-label="Agregar al carrito">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+            </div>
+
+            }
+            <!-- Scenario 3: Portions (List) -->
+            @else if (getPortionPrices(product).length > 0) {
+            <div class="space-y-3">
+              <div class="text-[10px] font-bold tracking-wider text-base-content/40 uppercase">
+                Presentaciones:
+              </div>
+              <div class="grid grid-cols-1 gap-2">
+                @for (portion of getPortionPrices(product); track portion.portionId) {
+                <button
+                  class="btn btn-sm btn-outline justify-between group/portion hover:btn-primary border-base-300 font-normal hover:font-medium transition-all"
+                  (click)="addPortionToCart(product, portion)">
+                  <span class="text-xs">{{ portion.portionName }}</span>
+                  <div class="flex items-center gap-2">
+                    <span class="font-bold text-sm">${{ portion.price | number: "1.0-0" }}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4 opacity-0 group-hover/portion:opacity-100 transition-all -mr-1" fill="none"
+                      viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                  </div>
+                </button>
+                }
+              </div>
+            </div>
+
+            }
+            <!-- Scenario 4: Complex Options (Modal Trigger) -->
+            @else {
+            <button class="btn btn-outline btn-block border-2 hover:btn-primary hover:border-primary transition-all"
+              (click)="addSimpleProductToCart(product)">
+              Personalizar
+            </button>
+            }
+          </div>
+        </div>
+      </div>
+      } @empty {
+      <div class="col-span-full py-24 text-center">
+        <div class="w-24 h-24 bg-base-200 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-base-content/30" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+        </div>
+        <h3 class="text-2xl font-bold text-base-content/70 mb-2">No hay productos aquí</h3>
+        <p class="text-base-content/50">Intenta seleccionar otra categoría.</p>
+      </div>
+      }
+    </div>
+  </div>
+  }
+
+  <!-- Modifier Modal (Bottom Sheet on Mobile, Center Modal on Desktop) -->
+  @if (modifierOpen()) {
+  <div class="fixed inset-0 z-[60] flex items-end md:items-center justify-center p-0 md:p-4" aria-modal="true"
+    role="dialog">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity animate-fade-in"
+      (click)="closeModifierSelector()"></div>
+
+    <!-- Modal Content -->
+    <div
+      class="relative bg-base-100 w-full max-w-lg rounded-t-2xl md:rounded-2xl shadow-2xl flex flex-col max-h-[90vh] md:max-h-[85vh] animate-slide-up overflow-hidden ring-1 ring-base-content/5">
+
+      <!-- Header -->
+      <div class="px-6 py-4 border-b border-base-200 flex justify-between items-center sticky top-0 bg-base-100 z-10">
+        <div>
+          <h4 class="font-black text-xl leading-tight">{{ modifierProduct()?.name }}</h4>
+          <p class="text-sm text-base-content/60 font-medium">Personaliza tu orden</p>
+        </div>
+        <button class="btn btn-circle btn-sm btn-ghost bg-base-200/50 hover:bg-base-200 text-base-content/70"
+          (click)="closeModifierSelector()">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd"
+              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+              clip-rule="evenodd" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Scrollable Content -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-8">
+        @for (pmg of getModifierGroups(); track pmg.id) {
+        @if (pmg.modifierGroup) {
+        <div class="space-y-4">
+          <div class="flex justify-between items-end border-b border-base-200 pb-2">
+            <div>
+              <h5 class="font-bold text-lg flex items-center gap-2">
+                {{ pmg.modifierGroup.name }}
+                @if (pmg.modifierGroup.isRequired) {
+                <span class="badge badge-error badge-xs font-bold text-white tracking-wide">OBLIGATORIO</span>
+                }
+              </h5>
+              @if (pmg.modifierGroup.description) {
+              <p class="text-xs text-base-content/50 mt-1 font-medium">{{ pmg.modifierGroup.description }}</p>
+              }
+            </div>
+            <span class="badge badge-ghost text-xs font-mono opacity-70">
+              {{ pmg.modifierGroup.maxSelection > 1 ? "Max " + pmg.modifierGroup.maxSelection : "Selecciona 1" }}
+            </span>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            @for (modifier of pmg.modifiers ?? pmg.modifierGroup.modifiers; track modifier.id) {
+            @if (modifier.isActive) {
+            <label
+              class="flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 group active:scale-[0.99] select-none"
+              [class.border-primary]="isModifierSelectedInGroup(pmg.modifierGroup!.id, modifier.id)"
+              [class.bg-primary/5]="isModifierSelectedInGroup(pmg.modifierGroup!.id, modifier.id)"
+              [class.border-base-200]="!isModifierSelectedInGroup(pmg.modifierGroup!.id, modifier.id)"
+              [class.hover:border-primary/50]="!isModifierSelectedInGroup(pmg.modifierGroup!.id, modifier.id)"
+              [class.shadow-sm]="isModifierSelectedInGroup(pmg.modifierGroup!.id, modifier.id)">
+              <div class="flex items-center gap-3 flex-1">
+                <div class="relative flex items-center justify-center">
+                  <input [type]="getSelectionType(pmg) === 'SINGLE' ? 'radio' : 'checkbox'"
+                    [name]="'group-' + pmg.modifierGroup!.id"
+                    class="peer appearance-none w-5 h-5 rounded border-2 border-base-300 checked:bg-primary checked:border-primary transition-all duration-200"
+                    [class.rounded-full]="getSelectionType(pmg) === 'SINGLE'"
+                    [checked]="isModifierSelectedInGroup(pmg.modifierGroup!.id, modifier.id)"
+                    (change)="toggleModifierSelection(pmg, modifier)" />
+                  <svg
+                    class="absolute w-3.5 h-3.5 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+
+                <div class="flex flex-col">
+                  <span class="font-bold text-sm text-base-content/90">{{ modifier.name }}</span>
+                  @if (modifier.description) {
+                  <span class="text-xs opacity-60 font-medium">{{ modifier.description }}</span>
+                  }
+                </div>
+              </div>
+
+              @if (modifier.priceAdjustment !== 0) {
+              <span class="text-sm font-bold badge badge-sm bg-base-100 border-base-200"
+                [class.text-primary]="modifier.priceAdjustment > 0">
+                {{ modifier.priceAdjustment > 0 ? "+" : "" }}${{ Math.abs(modifier.priceAdjustment) | number: "1.0-0" }}
+              </span>
+              }
+            </label>
+            }
+            }
+          </div>
+        </div>
+        }
+        }
+      </div>
+
+      <!-- Footer Actions -->
+      <div
+        class="p-4 border-t border-base-200 bg-base-100/95 backdrop-blur-sm z-10 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+        <div class="flex gap-4 items-center">
+          <div class="flex-1 flex flex-col">
+            <span class="text-[10px] font-bold text-base-content/40 uppercase tracking-widest mb-0.5">Total
+              estimado</span>
+            <span class="text-3xl font-black text-primary tracking-tight leading-none">
+              ${{ getModifierPrice() | number: "1.0-0" }}
+            </span>
+          </div>
+          <button class="btn btn-primary btn-lg px-8 shadow-xl shadow-primary/30 flex-1 rounded-xl text-lg font-bold"
+            [disabled]="!canAddToCartWithModifiers()" (click)="addProductWithModifiersToCart()">
+            Agregar al Pedido
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 ml-1" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>
+
+<!-- Floating Cart Preview -->
+<div class="fixed bottom-6 right-6 z-50 md:bottom-10 md:right-10 animate-bounce-in">
+  <app-cart-preview></app-cart-preview>
+</div>

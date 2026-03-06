@@ -1,0 +1,70 @@
+<div class="flex flex-col w-full bg-base-100">
+  <div class="flex-none px-6 py-4 border-b border-base-200 flex justify-between items-center bg-base-100">
+    <h2 class="text-xl font-bold text-base-content flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24"
+        stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+      </svg>
+      {{ data.table ? "Editar Mesa" : "Nueva Mesa" }}
+    </h2>
+    <button (click)="dialogRef.close('Canceled')" class="btn btn-sm btn-ghost btn-circle">
+      ✕
+    </button>
+  </div>
+
+  <div class="p-6 overflow-y-auto">
+    <form [formGroup]="form" class="flex flex-col gap-5">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="form-control w-full">
+          <label class="label"><span class="label-text font-bold">Identificador</span></label>
+          <input type="text" class="input input-bordered w-full focus:input-primary" placeholder="Ej. T-01, VIP-2"
+            formControlName="name" />
+        </div>
+
+        <div class="form-control w-full">
+          <label class="label"><span class="label-text font-bold">Capacidad (Pax)</span></label>
+          <div class="relative">
+            <input type="number" class="input input-bordered w-full pl-10 focus:input-primary" placeholder="4"
+              formControlName="capacity" />
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-base-content/40">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path
+                  d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-control w-full">
+        <label class="label"><span class="label-text font-bold">Estado Actual</span></label>
+        <select class="select select-bordered w-full" formControlName="status">
+          <option [ngValue]="0">🟢 Disponible</option>
+          <option [ngValue]="1">🔴 Ocupado</option>
+          <option [ngValue]="2">🟡 Reservado</option>
+          <option [ngValue]="3">🧹 En limpieza</option>
+          <option [ngValue]="4">⚫ Fuera de Servicio</option>
+        </select>
+        <label class="label">
+          <span class="label-text-alt text-base-content/60">Puedes cambiar esto manualmente desde el POS.</span>
+        </label>
+      </div>
+
+      <div class="form-control w-full">
+        <label class="label"><span class="label-text font-bold">Ubicación / Notas</span></label>
+        <textarea class="textarea textarea-bordered h-20 focus:textarea-primary resize-none"
+          placeholder="Ej. Cerca a la ventana, zona de fumadores..." formControlName="description">
+        </textarea>
+      </div>
+    </form>
+  </div>
+
+  <div class="flex-none px-6 py-4 border-t border-base-200 bg-base-100 flex justify-end gap-3">
+    <button type="button" class="btn btn-ghost hover:bg-base-200" (click)="dialogRef.close('Canceled')">
+      Cancelar
+    </button>
+
+    <button type="button" class="btn btn-primary px-6" (click)="onSaving()" [disabled]="!form.valid">
+      {{ data.table ? "Actualizar Mesa" : "Crear Mesa" }}
+    </button>
+  </div>

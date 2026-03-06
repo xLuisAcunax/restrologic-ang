@@ -1,0 +1,9 @@
+/* Basic styles for floating cart preview */
+:host {
+  display: contents;
+}
+
+/* Ensure the mini button and card stay on the right safely */
+.fixed {
+  right: 1rem;
+}

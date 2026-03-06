@@ -1,0 +1,86 @@
+<div class="flex flex-col w-full bg-base-100">
+  <div
+    class="flex-none px-6 py-4 border-b border-base-200 flex justify-between items-center bg-base-100"
+  >
+    <h2 class="text-xl font-bold text-base-content flex items-center gap-2">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-6 w-6 text-primary"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+        />
+      </svg>
+      {{ form.get("id")?.value ? "Editar Categoría" : "Nueva Categoría" }}
+    </h2>
+    <button
+      (click)="dialogRef.close('Canceled')"
+      class="btn btn-sm btn-ghost btn-circle"
+    >
+      ✕
+    </button>
+  </div>
+
+  <div class="p-6">
+    <form [formGroup]="form" class="flex flex-col gap-6">
+      <div class="form-control w-full">
+        <label class="label">
+          <span class="label-text font-bold">Nombre de la Categoría</span>
+        </label>
+        <input
+          type="text"
+          class="input input-bordered w-full focus:input-primary"
+          placeholder="Ej. Bebidas, Pizzas..."
+          formControlName="name"
+        />
+      </div>
+
+      <div class="bg-base-200/50 p-4 rounded-xl border border-base-200">
+        <div class="form-control">
+          <label class="label cursor-pointer justify-between">
+            <div class="flex flex-col">
+              <span class="label-text font-bold text-base"
+                >Categoría Activa</span
+              >
+              <span class="label-text-alt text-base-content/60 mt-0.5"
+                >Visible en el menú y reportes</span
+              >
+            </div>
+            <input
+              type="checkbox"
+              class="toggle toggle-success"
+              formControlName="isActive"
+            />
+          </label>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div
+    class="flex-none px-6 py-4 border-t border-base-200 bg-base-100 flex justify-end gap-3"
+  >
+    <button
+      type="button"
+      class="btn btn-ghost hover:bg-base-200"
+      (click)="dialogRef.close('Canceled')"
+    >
+      Cancelar
+    </button>
+
+    <button
+      type="button"
+      class="btn btn-primary px-6"
+      (click)="onSaving()"
+      [disabled]="!form.valid"
+    >
+      Guardar
+    </button>
+  </div>
+</div>

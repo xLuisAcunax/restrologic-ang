@@ -1,0 +1,229 @@
+<div class="flex flex-col w-full bg-base-100">
+  <div
+    class="flex-none px-6 py-4 border-b border-base-200 flex justify-between items-center bg-base-100"
+  >
+    <h2 class="text-xl font-bold text-base-content flex items-center gap-2">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-6 w-6 text-primary"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+        />
+      </svg>
+      {{ data.user ? "Editar Usuario" : "Nuevo Usuario" }}
+    </h2>
+    <button
+      (click)="dialogRef.close('Canceled')"
+      class="btn btn-sm btn-ghost btn-circle"
+    >
+      ✕
+    </button>
+  </div>
+
+  <div class="p-6 overflow-y-auto">
+    <form [formGroup]="form" class="flex flex-col gap-6">
+      <div>
+        <div
+          class="text-xs font-bold text-base-content/40 uppercase tracking-wider mb-3 flex items-center gap-2"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          Datos Personales
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="form-control w-full">
+            <label class="label"
+              ><span class="label-text font-semibold">Nombre</span></label
+            >
+            <input
+              type="text"
+              class="input input-bordered w-full focus:input-primary"
+              placeholder="Ej. Juan"
+              formControlName="firstName"
+            />
+          </div>
+
+          <div class="form-control w-full">
+            <label class="label"
+              ><span class="label-text font-semibold">Apellido</span></label
+            >
+            <input
+              type="text"
+              class="input input-bordered w-full focus:input-primary"
+              placeholder="Ej. Pérez"
+              formControlName="lastName"
+            />
+          </div>
+
+          <div class="form-control w-full md:col-span-2">
+            <label class="label"
+              ><span class="label-text font-semibold"
+                >Correo Electrónico</span
+              ></label
+            >
+            <div class="relative">
+              <input
+                type="email"
+                class="input input-bordered w-full pl-10 focus:input-primary"
+                placeholder="juan@ejemplo.com"
+                formControlName="email"
+              />
+              <div
+                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-base-content/40"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"
+                  />
+                  <path
+                    d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider my-0"></div>
+
+      <div>
+        <div
+          class="text-xs font-bold text-base-content/40 uppercase tracking-wider mb-3 flex items-center gap-2"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          Credenciales y Permisos
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="form-control w-full">
+            <label class="label"
+              ><span class="label-text font-semibold"
+                >Nombre de Usuario</span
+              ></label
+            >
+            <div class="relative">
+              <input
+                type="text"
+                class="input input-bordered w-full pl-10 focus:input-primary font-mono"
+                placeholder="juan.perez"
+                formControlName="userName"
+              />
+              <div
+                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-base-content/40"
+              >
+                <span class="font-bold">@</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-control w-full">
+            <label class="label"
+              ><span class="label-text font-semibold">Rol Asignado</span></label
+            >
+            <select
+              class="select select-bordered w-full"
+              formControlName="role"
+            >
+              @for (Rol of roles(); track $index) {
+                <option [value]="Rol.id || Rol[0]?.id">{{ Rol.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-control w-full md:col-span-2">
+            <label class="label flex justify-between">
+              <span class="label-text font-semibold">Contraseña</span>
+              @if (data.user) {
+                <span class="label-text-alt text-warning"
+                  >Dejar en blanco para no cambiar</span
+                >
+              }
+            </label>
+            <div class="relative">
+              <input
+                type="password"
+                class="input input-bordered w-full pl-10 focus:input-primary"
+                [placeholder]="
+                  data.user ? '••••••••' : 'Ingresa una contraseña segura'
+                "
+                formControlName="password"
+              />
+              <div
+                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-base-content/40"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div
+    class="flex-none px-6 py-4 border-t border-base-200 bg-base-100 flex justify-end gap-3"
+  >
+    <button
+      type="button"
+      class="btn btn-ghost hover:bg-base-200"
+      (click)="dialogRef.close('Canceled')"
+    >
+      Cancelar
+    </button>
+
+    <button
+      type="button"
+      class="btn btn-primary px-6"
+      (click)="onSaving()"
+      [disabled]="!form.valid"
+    >
+      {{ data.user ? "Actualizar Usuario" : "Crear Usuario" }}
+    </button>
+  </div>
+</div>

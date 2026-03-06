@@ -1,0 +1,586 @@
+<div class="w-full min-h-screen bg-base-200/30 p-4 md:p-8 font-sans">
+  <div class="w-[95%] 2xl:w-[90%] max-w-[1920px] mx-auto space-y-6 mb-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-extrabold text-base-content tracking-tight">
+          Monitor de Órdenes
+        </h1>
+        <p class="text-base-content/60 mt-1 font-medium">
+          Flujo de preparación y entrega en tiempo real.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        @if (!isAdmin() && branches().length === 1) {
+          <div
+            class="hidden md:flex items-center gap-2 bg-base-100 px-3 py-1.5 rounded-lg border border-base-200 text-sm shadow-sm"
+          >
+            <span class="text-base-content/50 font-medium">Sucursal:</span>
+            <span class="font-bold text-base-content">{{
+              branches()[0].name
+            }}</span>
+          </div>
+        }
+        <button
+          class="btn btn-sm btn-ghost btn-circle tooltip tooltip-left"
+          data-tip="Recargar datos"
+          (click)="refresh()"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="w-[95%] 2xl:w-[90%] max-w-[1920px] mx-auto space-y-10">
+    @if (error() || actionError()) {
+      <div
+        class="alert alert-error shadow-sm rounded-xl border-l-4 border-l-error/50"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="stroke-current shrink-0 h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <div>
+          <h3 class="font-bold">Problema de conexión</h3>
+          <div class="text-xs opacity-90">{{ error() || actionError() }}</div>
+        </div>
+        <button
+          class="btn btn-sm bg-white/20 border-0 text-white hover:bg-white/30"
+          (click)="refresh()"
+        >
+          Reintentar
+        </button>
+      </div>
+    }
+
+    @if (loading() && !hasOrders()) {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (skeleton of [1, 2, 3]; track skeleton) {
+          <div
+            class="card bg-base-100 h-72 animate-pulse shadow-sm border border-base-200 rounded-xl"
+          ></div>
+        }
+      </div>
+    } @else {
+      @if (readyOrders().length > 0) {
+        <section>
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-1.5 h-8 bg-success rounded-full"></div>
+            <h2
+              class="text-xl font-bold text-base-content flex items-center gap-2"
+            >
+              Listas para Servir 🚀
+              <span class="badge badge-success text-white font-bold border-0">{{
+                readyOrders().length
+              }}</span>
+            </h2>
+          </div>
+
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 items-stretch"
+          >
+            @for (order of readyOrders(); track order.id) {
+              <article
+                class="card bg-base-100 shadow-md border-t-4 border-t-success hover:shadow-xl transition-all duration-300 group rounded-xl overflow-hidden border-x border-b border-base-200 h-full flex flex-col"
+              >
+                <div
+                  class="px-5 py-4 border-b border-base-200 bg-success/5 flex flex-col gap-3 shrink-0"
+                >
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <div class="flex items-center gap-2 mb-1">
+                        <span
+                          class="font-black text-2xl text-base-content leading-none"
+                          >{{ tableLabel(order) }}</span
+                        >
+                        @if (isPublicMenuOrder(order.source!)) {
+                          <span
+                            class="badge badge-info badge-xs font-bold text-white border-0 uppercase"
+                            >Domi</span
+                          >
+                        }
+                      </div>
+                      <span
+                        class="text-xs font-mono font-bold text-base-content/60 bg-base-200 px-2 py-0.5 rounded"
+                        >#{{ order.code }}</span
+                      >
+                    </div>
+                    <div class="text-right">
+                      <div
+                        class="badge badge-success gap-1 text-white font-bold border-0 shadow-sm"
+                      >
+                        LISTO
+                      </div>
+                      <div class="text-sm font-bold mt-1 text-base-content">
+                        {{ formatCurrency(orderTotal(order)) }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    class="flex items-center gap-2 pt-2 border-t border-success/10"
+                  >
+                    <div class="avatar placeholder">
+                      <div
+                        class="bg-base-300 text-base-content/70 rounded-full w-6 h-6 flex items-center justify-center"
+                      >
+                        <span class="text-[10px] font-bold leading-none">{{
+                          assignedTo(order) | slice: 0 : 2 | uppercase
+                        }}</span>
+                      </div>
+                    </div>
+                    <span
+                      class="text-xs font-bold text-base-content/70 truncate"
+                      title="{{ assignedTo(order) }}"
+                    >
+                      {{ assignedTo(order) }}
+                    </span>
+                  </div>
+                </div>
+
+                <div
+                  class="p-4 space-y-3 flex-1 overflow-y-auto custom-scrollbar min-h-[120px]"
+                >
+                  @for (
+                    item of itemsInDisplayOrder(order.items);
+                    track item.id
+                  ) {
+                    <div class="flex items-start gap-3 text-sm group/item">
+                      <span
+                        class="font-black text-base-content text-lg min-w-[1.5rem] text-center leading-none text-success"
+                      >
+                        {{ item.quantity || 1 }}
+                      </span>
+                      <div class="flex flex-col">
+                        <span
+                          class="font-bold text-base-content/90 leading-tight"
+                          >{{ productLabel(item) }}</span
+                        >
+                        @if (item.modifiers?.length) {
+                          <span class="text-xs text-base-content/60 mt-0.5">{{
+                            getModifiersString(item)
+                          }}</span>
+                        }
+                        @if (notesLabel(item)) {
+                          <span
+                            class="text-xs text-base-content/50 font-medium whitespace-pre-line leading-tight mt-0.5"
+                            >{{ notesLabel(item) }}</span
+                          >
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+
+                <div
+                  class="p-4 bg-base-200/40 border-t border-base-200 flex items-center gap-3 shrink-0 mt-auto"
+                >
+                  @if (canGenerateSaleTicket(order)) {
+                    <button
+                      class="btn btn-ghost btn-square btn-sm shrink-0 text-base-content/60 hover:text-base-content hover:bg-base-200 tooltip tooltip-right"
+                      data-tip="Imprimir Ticket"
+                      (click)="generateSaleTicket(order)"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                        />
+                      </svg>
+                    </button>
+                  }
+                  <button
+                    class="btn btn-sm btn-success text-white flex-1 shadow-md shadow-success/20 hover:shadow-lg transition-all"
+                    (click)="serveOrder(order)"
+                    [disabled]="isOrderUpdating(order.id)"
+                  >
+                    @if (isOrderUpdating(order.id)) {
+                      <span class="loading loading-spinner loading-xs"></span>
+                    } @else {
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5 mr-1"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    }
+                    Entregar
+                  </button>
+                </div>
+              </article>
+            }
+          </div>
+        </section>
+
+        <div class="divider my-10 opacity-50"></div>
+      }
+
+      @if (hasActiveOrders()) {
+        <section>
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-1.5 h-8 bg-primary rounded-full"></div>
+            <h2
+              class="text-xl font-bold text-base-content flex items-center gap-2"
+            >
+              En Preparación 👨‍🍳
+              <span class="badge badge-neutral font-bold border-0">{{
+                preparingOrders().length
+              }}</span>
+            </h2>
+          </div>
+
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6"
+          >
+            @for (order of preparingOrders(); track order.id) {
+              <article
+                class="card bg-base-100 shadow-sm border border-base-200 hover:border-primary/40 hover:shadow-md transition-all duration-300 h-[22rem] flex flex-col rounded-xl overflow-hidden"
+              >
+                <div
+                  class="px-5 py-4 border-b border-base-100 flex flex-col gap-2 shrink-0"
+                >
+                  <div class="flex justify-between items-start">
+                    <div class="flex items-center gap-2">
+                      <span
+                        class="font-bold text-xl text-base-content leading-none"
+                        >{{ tableLabel(order) }}</span
+                      >
+                      @if (isPublicMenuOrder(order.source!)) {
+                        <span
+                          class="badge badge-info badge-xs font-bold text-white border-0"
+                          >DOMI</span
+                        >
+                      }
+                    </div>
+                    <span
+                      class="badge badge-sm badge-ghost font-bold border-0"
+                      >{{ orderStatusLabel(order.status) }}</span
+                    >
+                  </div>
+
+                  <div class="flex items-center justify-between mt-1">
+                    <span
+                      class="text-xs font-mono font-bold bg-base-200 text-base-content/60 px-2 py-0.5 rounded"
+                      >#{{ order.code }}</span
+                    >
+                    <span
+                      class="text-[10px] font-bold text-base-content/40 uppercase flex items-center gap-1"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-3 w-3"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      {{ order.createdAt | localDateTime: "short" }}
+                    </span>
+                  </div>
+
+                  <div
+                    class="flex items-center gap-2 mt-2 pt-2 border-t border-base-100"
+                  >
+                    <div class="avatar placeholder">
+                      <div
+                        class="bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center"
+                      >
+                        <span class="text-[10px] font-bold leading-none">{{
+                          assignedTo(order) | slice: 0 : 2 | uppercase
+                        }}</span>
+                      </div>
+                    </div>
+                    <span
+                      class="text-xs font-bold text-base-content/70 truncate"
+                      title="{{ assignedTo(order) }}"
+                    >
+                      {{ assignedTo(order) }}
+                    </span>
+                  </div>
+                </div>
+
+                <div
+                  class="p-5 space-y-3 overflow-y-auto grow custom-scrollbar"
+                >
+                  @for (
+                    item of itemsInDisplayOrder(order.items);
+                    track item.id
+                  ) {
+                    <div class="flex justify-between items-center text-sm">
+                      <div class="flex items-center gap-3">
+                        <span
+                          class="font-bold text-base-content min-w-[1.2rem] text-center"
+                          >{{ item.quantity || 1 }}</span
+                        >
+                        <div class="flex flex-col">
+                          <span class="font-medium text-base-content/80">{{
+                            productLabel(item)
+                          }}</span>
+                          @if (item.modifiers?.length) {
+                            <span
+                              class="text-[10px] text-base-content/50 leading-tight max-w-[150px] truncate"
+                              >{{ getModifiersString(item) }}</span
+                            >
+                          }
+                          @if (notesLabel(item)) {
+                            <span
+                              class="text-[10px] text-base-content/50 font-medium whitespace-pre-line leading-tight max-w-[150px]"
+                              >{{ notesLabel(item) }}</span
+                            >
+                          }
+                        </div>
+                      </div>
+                      <span
+                        class="w-2.5 h-2.5 rounded-full"
+                        [class.bg-warning]="
+                          normalizeItemStatus(item.status ?? '') === 'preparing'
+                        "
+                        [class.bg-base-300]="
+                          normalizeItemStatus(item.status ?? '') === 'pending'
+                        "
+                        [class.bg-success]="
+                          normalizeItemStatus(item.status ?? '') === 'ready'
+                        "
+                        [title]="
+                          itemStatusLabel(
+                            normalizeItemStatus(item.status ?? '')
+                          )
+                        "
+                      >
+                      </span>
+                    </div>
+                  }
+                </div>
+
+                <div
+                  class="p-3 bg-base-200/30 border-t border-base-200 flex justify-end gap-2 shrink-0"
+                >
+                  <button
+                    class="btn btn-sm btn-ghost hover:bg-base-200 font-normal"
+                    (click)="openDetails(order)"
+                  >
+                    Ver detalle
+                  </button>
+                  @if (canGenerateSaleTicket(order)) {
+                    <button
+                      class="btn btn-sm btn-ghost btn-square text-base-content/60"
+                      (click)="generateSaleTicket(order)"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                        />
+                      </svg>
+                    </button>
+                  }
+                </div>
+              </article>
+            }
+          </div>
+        </section>
+      }
+
+      @if (servedOrders().length > 0) {
+        <div class="divider my-10 opacity-50"></div>
+        <section
+          class="opacity-80 hover:opacity-100 transition-opacity duration-300"
+        >
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-1.5 h-8 bg-neutral rounded-full"></div>
+            <h2 class="text-xl font-bold text-base-content">
+              Pendientes de Pago 💰
+            </h2>
+            <span class="badge badge-ghost font-bold">{{
+              servedOrders().length
+            }}</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            @for (order of servedOrders(); track order.id) {
+              <div
+                class="card bg-base-100 border border-base-200 shadow-sm hover:shadow-md transition-shadow rounded-xl"
+              >
+                <div
+                  class="card-body p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                >
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-3 mb-1">
+                      <span
+                        class="font-black text-xl text-base-content truncate"
+                        >{{ tableLabel(order) }}</span
+                      >
+                      <span
+                        class="text-xs font-mono font-bold bg-base-200 text-base-content/70 px-2 py-0.5 rounded"
+                        >#{{ order.code }}</span
+                      >
+                    </div>
+
+                    <div class="flex items-center gap-3 mt-2">
+                      <span
+                        class="font-mono font-black text-lg text-base-content"
+                        >{{ formatCurrency(orderTotal(order)) }}</span
+                      >
+                      <div class="h-4 w-px bg-base-300"></div>
+                    </div>
+
+                    <div class="flex items-center gap-3 mb-1">
+                      <div
+                        class="flex items-center gap-1.5 bg-base-200/50 py-1 rounded-md"
+                      >
+                        @if (isPublicMenuOrder(order.source!)) {
+                          <span
+                            class="badge badge-info badge-xs font-bold text-white border-0 uppercase"
+                            >Domicilio</span
+                          >
+                        } @else {
+                          <div class="avatar placeholder">
+                            <div
+                              class="bg-base-300 text-base-content/70 rounded-full w-5 h-5 flex items-center justify-center"
+                            >
+                              <span class="text-[9px] font-bold leading-none">{{
+                                assignedTo(order) | slice: 0 : 2 | uppercase
+                              }}</span>
+                            </div>
+                          </div>
+                          <span
+                            class="text-[10px] font-bold uppercase text-base-content/60 truncate max-w-[100px]"
+                            title="{{ assignedTo(order) }}"
+                          >
+                            {{ assignedTo(order) }}
+                          </span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-2 sm:justify-end shrink-0">
+                    @if (canGenerateSaleTicket(order)) {
+                      <button
+                        class="btn btn-ghost btn-square btn-sm shrink-0 text-base-content/60 hover:text-base-content hover:bg-base-200 tooltip tooltip-top"
+                        data-tip="Imprimir Ticket"
+                        (click)="generateSaleTicket(order)"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          class="h-5 w-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                          />
+                        </svg>
+                      </button>
+                    }
+                    @if (!isOrderFullyPaid(order)) {
+                      <button
+                        class="btn btn-sm btn-primary shadow-sm whitespace-nowrap"
+                        (click)="openPaymentDialog(order)"
+                      >
+                        Cobrar
+                      </button>
+                    } @else {
+                      <span
+                        class="badge badge-success badge-outline text-xs font-bold"
+                        >Pagado</span
+                      >
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      @if (
+        !hasActiveOrders() &&
+        readyOrders().length === 0 &&
+        servedOrders().length === 0
+      ) {
+        <div
+          class="flex flex-col items-center justify-center h-[50vh] text-base-content/40"
+        >
+          <div
+            class="w-20 h-20 bg-base-200 rounded-full flex items-center justify-center mb-4"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-10 w-10 opacity-50"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+              />
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-base-content/60">
+            Sin órdenes activas
+          </h3>
+          <p class="text-sm">Todo está tranquilo en la cocina.</p>
+        </div>
+      }
+    }
+  </div>
+</div>

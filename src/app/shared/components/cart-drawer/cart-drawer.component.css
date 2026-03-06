@@ -1,0 +1,7 @@
+.drawer-enter {
+  transform: translateX(100%);
+}
+.drawer-enter-active {
+  transform: translateX(0);
+  transition: transform 0.2s ease-out;
+}

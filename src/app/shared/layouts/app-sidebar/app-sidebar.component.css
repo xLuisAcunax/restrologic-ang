@@ -1,0 +1,78 @@
+:host .menu details>ul {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+:host .menu details>ul li>*:not(ul) {
+  padding-left: 0.75rem !important;
+}
+
+.menu-item-icon-size {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+}
+
+:host .menu li>a {
+  display: flex;
+  align-items: center;
+}
+
+:host .is-collapsed .menu-item-text {
+  display: none;
+}
+
+:host .is-collapsed .menu {
+  overflow: hidden;
+  padding: 0;
+}
+
+:host .is-collapsed .menu-item-icon-size {
+  margin: 0 auto;
+}
+
+:host .is-collapsed .menu li>details>summary,
+:host .is-collapsed .menu li>a {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+  border-radius: 0.75rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+:host .is-collapsed .menu li>details>summary::after,
+:host .is-collapsed .menu li>details>summary::marker,
+:host .is-collapsed .menu li>details>summary::-webkit-details-marker {
+  display: none !important;
+  content: none !important;
+}
+
+:host .is-collapsed .menu li>details>ul {
+  display: none !important;
+}
+
+:host .is-collapsed .menu li>details[open] {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+:host .is-collapsed .menu li>details[open]>summary {
+  margin-bottom: 0.5rem !important;
+  /* Ensure the gap relies only on summary tag */
+}
+
+/* Hide scrollbar for sidebar nav */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}

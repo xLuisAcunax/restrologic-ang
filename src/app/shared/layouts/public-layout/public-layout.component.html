@@ -1,0 +1,133 @@
+<div class="min-h-screen bg-base-200 font-sans selection:bg-primary selection:text-primary-content">
+
+    <!-- Announcement Bar (Optional) -->
+    <div class="bg-neutral text-neutral-content text-xs py-2 px-4 text-center font-bold tracking-wide hidden md:block">
+        Envios gratis por pedidos superiores a $50.000 COP 🛵
+    </div>
+
+    <!-- Main Navbar (Sticky) -->
+    <nav #hdr
+        class="sticky top-0 z-50 w-full transition-all duration-300 border-b border-base-200 bg-neutral supports-[backdrop-filter]:bg-neutral backdrop-blur-sm"
+        [class.shadow-md]="isScrolled" [class.py-2]="isScrolled" [class.py-4]="!isScrolled">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-14 md:h-16">
+
+                <!-- Left: Branding -->
+                <div class="flex-shrink-0 flex items-center gap-3 cursor-pointer" [routerLink]="['/menu']"
+                    [queryParams]="queryParams()">
+                    <img src="/images/logo-dark.png" alt="Logo" class="h-20 mb-8 xs:h-18">
+                </div>
+
+                <!-- Center: Desktop Navigation -->
+                <div
+                    class="hidden md:flex items-center gap-1 bg-base-200/50 p-1.5 rounded-full backdrop-blur-sm border border-base-200">
+                    <a [routerLink]="['/menu']" [queryParams]="queryParams()"
+                        routerLinkActive="bg-white shadow-sm text-primary"
+                        class="px-5 py-2 rounded-full text-sm font-bold text-base-content/70 hover:text-primary transition-all duration-200">
+                        Menú
+                    </a>
+                    <a [routerLink]="['/seguimiento']" [queryParams]="queryParams()"
+                        routerLinkActive="bg-white shadow-sm text-primary"
+                        class="px-5 py-2 rounded-full text-sm font-bold text-base-content/70 hover:text-primary transition-all duration-200">
+                        Orden
+                    </a>
+                </div>
+
+                <!-- Right: Cart & Mobile Menu -->
+                <div class="flex items-center gap-3">
+
+                    <!-- Cart Button -->
+                    <button class="btn btn-circle btn-ghost relative group hover:bg-base-200"
+                        [class.animate-cart-bounce]="cart.itemAdded()" (click)="openCart()">
+                        <div class="indicator">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="h-6 w-6 text-secondary group-hover:text-primary transition-colors" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                            </svg>
+                            @if (cart.count() > 0) {
+                            <span class="indicator-item badge badge-primary badge-xs font-bold scale-90">{{ cart.count()
+                                }}</span>
+                            }
+                        </div>
+                    </button>
+
+                    <!-- Mobile Menu Trigger (Placeholder for now, keeping simple) -->
+                    <div class="md:hidden dropdown dropdown-end">
+                        <button class="btn btn-square btn-ghost">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 6h16M4 12h16m-7 6h7" />
+                            </svg>
+                        </button>
+                        <ul tabindex="0"
+                            class="dropdown-content z-[1] menu p-2 shadow-xl bg-base-100 rounded-box w-52 mt-4 border border-base-200">
+                            <li><a [routerLink]="['/menu']" [queryParams]="queryParams()" routerLinkActive="active"
+                                    class="font-bold">Menú</a></li>
+                            <li><a [routerLink]="['/seguimiento']" [queryParams]="queryParams()"
+                                    routerLinkActive="active" class="font-bold">Seguimiento</a></li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Router Outlet -->
+    <div class="relative z-0">
+        <router-outlet></router-outlet>
+    </div>
+
+    <!-- Site Footer -->
+    <footer class="bg-neutral text-neutral-content py-12 mt-auto">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+                <h3 class="font-black text-xl mb-4">Pomodoro</h3>
+                <p class="text-sm opacity-60 leading-relaxed">
+                    La mejor experiencia gastronómica directo a tu mesa. Ingredientes frescos, recetas auténticas y
+                    pasión por la cocina.
+                </p>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-4">Enlaces</h4>
+                <ul class="space-y-2 text-sm opacity-70">
+                    <li><a href="#" class="hover:text-primary hover:underline">Política de Privacidad</a></li>
+                    <li><a href="#" class="hover:text-primary hover:underline">Términos del Servicio</a></li>
+                    <li><a href="#" class="hover:text-primary hover:underline">Soporte</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-4">Contacto</h4>
+                <ul class="space-y-2 text-sm opacity-70">
+                    <li class="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Calle 123 # 45-67, Bogotá
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                        +57 300 123 4567
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-6 mt-8 pt-8 border-t border-neutral-content/10 text-center text-xs opacity-40">
+            &copy; 2026 RestroLogic SaaS. Todos los derechos reservados.
+        </div>
+    </footer>
+
+    <!-- Drawer (Cart) -->
+    <app-cart-drawer></app-cart-drawer>
+</div>

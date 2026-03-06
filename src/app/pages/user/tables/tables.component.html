@@ -1,0 +1,184 @@
+<div class="w-full p-4 md:p-6 min-h-screen bg-base-200/30">
+  @if (branch()) {
+  <!-- Header -->
+  <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+      <h2 class="text-3xl font-black text-base-content tracking-tight">
+        Salón
+      </h2>
+      <div class="flex items-center gap-2 text-base-content/60 mt-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd"
+            d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+            clip-rule="evenodd" />
+        </svg>
+        <span class="font-medium">{{ branch()?.name }}</span>
+      </div>
+    </div>
+
+    <!-- Status Legend Pill -->
+    <div
+      class="bg-base-100 border border-base-200 rounded-full px-5 py-2.5 flex items-center gap-5 shadow-sm text-xs font-bold uppercase tracking-wider">
+      <div class="flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-success"></span>
+        <span class="text-base-content/70">Disponible</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-error"></span>
+        <span class="text-base-content/70">Ocupada</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-slate-400"></span>
+        <span class="text-base-content/70">Bloqueado</span>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (tables().length > 0) {
+  <!-- Cards Grid -->
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+    @for (t of tables(); track t.id) {
+    <div
+      class="relative bg-base-100 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden cursor-pointer border border-base-200/60 flex flex-col"
+      (click)="openTableDetails(t)" role="button" [tabindex]="0"
+      [class.border-green-200]="t.status == 'Free' && !getOrderForTable(t)"
+      [class.border-red-200]="t.status == 'Occupied' || getOrderForTable(t)">
+
+      <!-- Card Body -->
+      <div class="flex-1 flex flex-col items-center justify-center py-5 px-3 relative min-h-[140px]">
+
+        <!-- Order Status badge (top-right) -->
+        @if (!t.locked && getOrderForTable(t)) {
+        <div class="absolute top-2 right-2">
+          <span class="badge badge-xs border-0 font-bold text-[10px] uppercase" [ngClass]="getOrderStatusBadgeClass(t)">
+            {{ getOrderStatusLabel(t) }}
+          </span>
+        </div>
+        }
+
+        <!-- Elapsed time pill (top-left, only for occupied) -->
+        @if (!t.locked && getOrderForTable(t) && !isOrderServed(t) &&
+        elapsedInfoForTable(t); as ei) {
+        <div class="absolute top-2 left-2">
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
+            style="background-color: #fff7ed; color: #ea580c;">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                clip-rule="evenodd" />
+            </svg>
+            {{ ei.time }}
+          </span>
+        </div>
+        }
+
+        <!-- Frozen timer for served orders (top-left) -->
+        @if (!t.locked && getOrderForTable(t) && isOrderServed(t) &&
+        elapsedInfoForTable(t); as ei) {
+        <div class="absolute top-2 left-2">
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold opacity-80"
+            style="background-color: #dcfce7; color: #16a34a;">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                clip-rule="evenodd" />
+            </svg>
+            {{ ei.time }}
+          </span>
+        </div>
+        }
+
+        <!-- Lock icon (top-right for locked tables) -->
+        @if (t.locked) {
+        <div class="absolute top-2 right-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-base-content/30" viewBox="0 0 20 20"
+            fill="currentColor">
+            <path fill-rule="evenodd"
+              d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+              clip-rule="evenodd" />
+          </svg>
+        </div>
+        }
+
+
+
+        <!-- Table Name -->
+        <h3 class="text-2xl md:text-3xl font-black text-base-content tracking-tighter leading-none">
+          {{ t.name }}
+        </h3>
+
+        <!-- Description / Category -->
+        <p class="text-[11px] font-bold uppercase tracking-widest mt-1" [class.text-base-content/40]="t.status !== 1"
+          [class.text-primary]="t.status !== 1 && t.description" [class.text-error/60]="t.status === 1">
+          {{ t.description || 'GENERAL' }}
+        </p>
+
+        <!-- Order Number -->
+        @if (getOrderForTable(t); as order) {
+        <div class="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full"
+          style="background-color: #eff6ff; border: 1px solid #dbeafe;">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5" style="color: #1a73e8;" viewBox="0 0 20 20"
+            fill="currentColor">
+            <path fill-rule="evenodd"
+              d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
+              clip-rule="evenodd" />
+          </svg>
+          <span class="text-[10px] font-bold" style="color: #1a73e8;">
+            #{{ order.code || order.id.slice(-4) }}
+          </span>
+        </div>
+        }
+      </div>
+
+      <!-- Status Footer Bar -->
+      <div class="h-10 flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-widest"
+        [ngStyle]="{
+          'background-color': getOrderForTable(t) ? '#fef2f2' : (t.status === 'Free' ? '#f0fdf4' : '#f1f5f9'),
+          'color': getOrderForTable(t) ? '#ef4444' : (t.status === 'Free' ? '#16a34a' : '#64748b')
+        }">
+
+        @if (t.status == 'Occupied' || getOrderForTable(t)) {
+        <!-- Occupied -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+        </svg>
+        <span>Ocupada</span>
+        } @else if (t.status == 'Free') {
+        <!-- Available -->
+        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+        <span>Disponible</span>
+        } @else if (t.status == 'Reserved') {
+        <!-- Reserved -->
+        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+        <span>Reservada</span>
+        } @else {
+        <!-- Other (Cleaning, Disabled) -->
+        <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+        <span>Bloqueado</span>
+        }
+      </div>
+
+    </div>
+    }
+  </div>
+  } @else {
+  <ng-template #emptyState>
+    <div class="flex flex-col items-center justify-center h-[60vh] text-neutral-400">
+      <div class="w-20 h-20 bg-base-200 rounded-full flex items-center justify-center mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 opacity-50" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        </svg>
+      </div>
+      <h3 class="text-xl font-bold text-base-content/60">
+        No hay mesas asignadas
+      </h3>
+      <p class="text-sm">
+        Esta sucursal aún no tiene configuración de salón.
+      </p>
+    </div>
+  </ng-template>
+  }
+</div>

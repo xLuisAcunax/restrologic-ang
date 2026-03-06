@@ -1,0 +1,272 @@
+<div class="w-full min-h-screen bg-base-200/30 p-4 md:p-8">
+  <div class="w-[95%] 2xl:w-[90%] max-w-[1920px] mx-auto space-y-6 mb-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-extrabold text-base-content tracking-tight">
+          Sucursales
+        </h1>
+        <p class="text-base-content/60 mt-1 font-medium">
+          Gestiona y supervisa tus locaciones físicas.
+        </p>
+      </div>
+
+      <div
+        class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto"
+      >
+        <div class="relative w-full sm:w-64">
+          <input
+            type="text"
+            placeholder="Buscar sucursal..."
+            class="input input-bordered w-full pl-10"
+            [value]="search()"
+            (input)="search.set($event.target.value)"
+          />
+          <div
+            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 text-base-content/40"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </div>
+        </div>
+
+        <div
+          class="bg-base-200 p-1 rounded-lg flex items-center border border-base-300"
+        >
+          <button
+            class="px-3 py-2 rounded-md transition-all duration-200 flex items-center gap-2 text-sm font-medium"
+            [class.bg-white]="viewMode() === 'cards'"
+            [class.shadow-sm]="viewMode() === 'cards'"
+            [class.text-primary]="viewMode() === 'cards'"
+            [class.text-base-content/60]="viewMode() !== 'cards'"
+            (click)="viewMode.set('cards')"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect width="7" height="7" x="3" y="3" rx="1" />
+              <rect width="7" height="7" x="14" y="3" rx="1" />
+              <rect width="7" height="7" x="14" y="14" rx="1" />
+              <rect width="7" height="7" x="3" y="14" rx="1" />
+            </svg>
+            Cards
+          </button>
+          <button
+            class="px-3 py-2 rounded-md transition-all duration-200 flex items-center gap-2 text-sm font-medium"
+            [class.bg-white]="viewMode() === 'table'"
+            [class.shadow-sm]="viewMode() === 'table'"
+            [class.text-primary]="viewMode() === 'table'"
+            [class.text-base-content/60]="viewMode() !== 'table'"
+            (click)="viewMode.set('table')"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M3 3v18h18" />
+              <path d="M18 8H6" />
+              <path d="M18 16H6" />
+            </svg>
+            Lista
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="w-[95%] 2xl:w-[90%] max-w-[1920px] mx-auto">
+    @if (viewMode() === "cards") {
+      <div
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6"
+      >
+        @for (branch of filteredBranches; track $index) {
+          <div
+            class="group card bg-base-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-base-200 cursor-pointer"
+            (click)="showModal(branch)"
+          >
+            <div class="card-body p-5">
+              <div class="flex justify-between items-start mb-2">
+                <div
+                  class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-2 group-hover:bg-primary group-hover:text-white transition-colors"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                    />
+                  </svg>
+                </div>
+                <span class="badge badge-success badge-sm gap-1 pl-1.5 pr-2">
+                  <span class="w-1.5 h-1.5 rounded-full bg-white"></span> Activo
+                </span>
+              </div>
+
+              <h3 class="card-title text-lg mb-1">{{ branch.name }}</h3>
+
+              <div
+                class="flex flex-col gap-2 text-sm text-base-content/70 mt-2"
+              >
+                <div class="flex items-start gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4 mt-0.5 opacity-70"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  <span class="line-clamp-2">{{ branch.address }}</span>
+                </div>
+                <div class="flex items-start gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4 mt-0.5 opacity-70"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  <span class="line-clamp-1 italic">{{
+                    branch.description || "Sin descripción"
+                  }}</span>
+                </div>
+              </div>
+
+              <div
+                class="card-actions justify-end mt-4 pt-4 border-t border-base-100"
+              >
+                <button
+                  class="btn btn-sm btn-ghost text-primary gap-1 px-0 hover:bg-transparent"
+                >
+                  Administrar
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4 transform group-hover:translate-x-1 transition-transform"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M14 5l7 7m0 0l-7 7m7-7H3"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    @if (viewMode() === "table") {
+      <div
+        class="card bg-base-100 shadow-xl border border-base-200 rounded-2xl overflow-hidden"
+      >
+        <div class="overflow-x-auto">
+          <table class="table w-full align-middle 2xl:table-lg">
+            <thead
+              class="bg-base-200/40 text-xs uppercase font-bold text-base-content/60"
+            >
+              <tr>
+                <th class="pl-6 py-4">Nombre de Sucursal</th>
+                <th class="py-4">Ubicación / Dirección</th>
+                <th class="py-4">Detalles</th>
+                <th class="pr-6 py-4 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-base-200">
+              @for (branch of filteredBranches; track $index) {
+                <tr
+                  class="hover:bg-base-200/30 transition-colors group cursor-pointer"
+                  (click)="showModal(branch)"
+                >
+                  <td class="pl-6 py-4">
+                    <div class="flex items-center gap-3">
+                      <div
+                        class="w-10 h-10 rounded bg-base-200 flex items-center justify-center text-base-content/50"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          class="h-6 w-6"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                          />
+                        </svg>
+                      </div>
+                      <span class="font-bold text-base-content">{{
+                        branch.name
+                      }}</span>
+                    </div>
+                  </td>
+                  <td class="py-4">
+                    <span class="text-sm">{{ branch.address }}</span>
+                  </td>
+                  <td class="py-4">
+                    <span class="text-sm text-base-content/60 italic">{{
+                      branch.description
+                    }}</span>
+                  </td>
+                  <td class="pr-6 py-4 text-right">
+                    <button class="btn btn-ghost btn-xs text-primary">
+                      Editar
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  </div>
+</div>

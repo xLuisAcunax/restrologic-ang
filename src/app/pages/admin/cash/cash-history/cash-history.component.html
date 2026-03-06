@@ -1,0 +1,282 @@
+<div class="w-full min-h-screen bg-base-200/30 p-4 md:p-8 font-sans">
+  <div
+    class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8"
+  >
+    <div>
+      <h1 class="text-3xl font-extrabold text-base-content tracking-tight">
+        Historial de Cierres
+      </h1>
+      <p class="text-base-content/60 mt-1 font-medium">
+        Auditoría y consulta de turnos pasados.
+      </p>
+    </div>
+
+    <div
+      class="flex flex-col sm:flex-row items-end gap-2 bg-base-100 p-2 rounded-xl shadow-sm border border-base-200 w-full md:w-auto"
+    >
+      <label class="form-control w-full sm:w-auto">
+        <div class="label p-1 pb-0">
+          <span
+            class="label-text text-xs font-bold text-base-content/50 uppercase"
+            >Desde</span
+          >
+        </div>
+        <input
+          type="date"
+          class="input input-sm input-ghost w-full font-mono text-base-content focus:bg-transparent"
+          [ngModel]="startDate()"
+          (ngModelChange)="onDateChange('start', $event)"
+          [attr.max]="maxDate"
+        />
+      </label>
+
+      <div class="hidden sm:block h-8 w-px bg-base-300 mx-1"></div>
+
+      <label class="form-control w-full sm:w-auto">
+        <div class="label p-1 pb-0">
+          <span
+            class="label-text text-xs font-bold text-base-content/50 uppercase"
+            >Hasta</span
+          >
+        </div>
+        <input
+          type="date"
+          class="input input-sm input-ghost w-full font-mono text-base-content focus:bg-transparent"
+          [ngModel]="endDate()"
+          (ngModelChange)="onDateChange('end', $event)"
+          [attr.max]="maxDate"
+        />
+      </label>
+
+      <button
+        class="btn btn-primary btn-sm h-10 px-6 ml-2 w-full sm:w-auto shadow-md shadow-primary/20"
+        (click)="search()"
+        [disabled]="loading()"
+      >
+        @if (loading()) {
+          <span class="loading loading-spinner loading-xs"></span>
+        } @else {
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4 mr-1"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+          Filtrar
+        }
+      </button>
+    </div>
+  </div>
+
+  <div
+    class="card bg-base-100 shadow-sm border border-base-200 overflow-hidden min-h-[500px]"
+  >
+    @if (error()) {
+      <div
+        class="alert alert-error m-6 w-auto shadow-sm border-l-4 border-l-error/50"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="stroke-current shrink-0 h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <span>{{ error() }}</span>
+        <button class="btn btn-sm btn-ghost" (click)="search()">
+          Reintentar
+        </button>
+      </div>
+    } @else if (loading()) {
+      <div class="p-6 space-y-4">
+        @for (i of [1, 2, 3, 4, 5]; track i) {
+          <div
+            class="h-16 w-full bg-base-200/50 rounded-lg animate-pulse"
+          ></div>
+        }
+      </div>
+    } @else if (drawers().length === 0) {
+      <div
+        class="flex flex-col items-center justify-center h-96 text-base-content/40"
+      >
+        <div
+          class="w-24 h-24 bg-base-200 rounded-full flex items-center justify-center mb-4"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-10 w-10 opacity-30"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+        </div>
+        <h3 class="font-bold text-lg">No se encontraron registros</h3>
+        <p class="text-sm">Prueba ajustando el rango de fechas.</p>
+      </div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="table w-full">
+          <thead
+            class="bg-base-200/50 text-xs uppercase font-bold text-base-content/50"
+          >
+            <tr>
+              <th class="pl-6 py-4">Fecha Cierre</th>
+              <th class="text-right">Base Apertura</th>
+              <th class="text-right">Total Cierre</th>
+              <th class="pl-8">Responsable</th>
+              <th>Notas</th>
+              <th class="pr-6 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="text-sm divide-y divide-base-100">
+            @for (d of paged(); track d.id) {
+              <tr class="hover group transition-colors">
+                <td class="pl-6 py-4">
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="w-10 h-10 rounded-lg bg-base-200 flex flex-col items-center justify-center text-xs font-bold border border-base-300"
+                    >
+                      <span class="opacity-50 uppercase">{{
+                        d.closedAt || d.updatedAt | date: "MMM"
+                      }}</span>
+                      <span class="text-base-content text-lg leading-none">{{
+                        d.closedAt || d.updatedAt | date: "dd"
+                      }}</span>
+                    </div>
+                    <div class="flex flex-col">
+                      <span class="font-bold text-base-content">{{
+                        d.closedAt || d.updatedAt | date: "EEEE"
+                      }}</span>
+                      <span class="text-xs text-base-content/50 font-mono">{{
+                        d.closedAt || d.updatedAt | date: "h:mm a"
+                      }}</span>
+                    </div>
+                  </div>
+                </td>
+
+                <td class="text-right font-mono text-base-content/60">
+                  {{ formatCurrency(d.openingFloat) }}
+                </td>
+
+                <td class="text-right">
+                  <span class="font-bold font-mono text-base-content">{{
+                    formatCurrency(d.closingFloat)
+                  }}</span>
+                </td>
+
+                <td class="pl-8">
+                  <div class="flex items-center gap-2">
+                    <div class="avatar placeholder">
+                      <div
+                        class="bg-neutral text-neutral-content rounded-full w-6 h-6"
+                      >
+                        <span class="text-[10px]">{{
+                          userName(d.closedBy) | slice: 0 : 2 | uppercase
+                        }}</span>
+                      </div>
+                    </div>
+                    <span class="font-medium text-sm">{{
+                      userName(d.closedBy)
+                    }}</span>
+                  </div>
+                </td>
+
+                <td class="max-w-xs">
+                  @if (d.closingNotes || d.notes) {
+                    <div
+                      class="text-xs text-base-content/60 italic truncate"
+                      title="{{ d.closingNotes || d.notes }}"
+                    >
+                      {{ d.closingNotes || d.notes }}
+                    </div>
+                  } @else {
+                    <span class="text-base-content/20 text-xs">—</span>
+                  }
+                </td>
+
+                <td class="pr-6 text-right">
+                  <button
+                    class="btn btn-sm btn-ghost btn-square hover:bg-base-200 text-base-content/60 hover:text-primary tooltip tooltip-left"
+                    data-tip="Ver detalle completo"
+                    (click)="goToDetail(d)"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div
+        class="p-4 border-t border-base-200 flex items-center justify-between bg-base-100"
+      >
+        <div class="text-xs text-base-content/50">
+          Mostrando {{ paged().length }} de {{ total() }} registros
+        </div>
+        <div class="join">
+          <button
+            class="join-item btn btn-sm btn-ghost"
+            [disabled]="page() <= 1"
+            (click)="page.set(page() - 1)"
+          >
+            «
+          </button>
+          <button
+            class="join-item btn btn-sm btn-disabled bg-transparent border-transparent text-base-content"
+          >
+            Página {{ page() }}
+          </button>
+          <button
+            class="join-item btn btn-sm btn-ghost"
+            [disabled]="page() >= totalPages()"
+            (click)="page.set(page() + 1)"
+          >
+            »
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

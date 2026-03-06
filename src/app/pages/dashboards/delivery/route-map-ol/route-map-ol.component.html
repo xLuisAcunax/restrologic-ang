@@ -1,0 +1,13 @@
+<div class="ol-route-container">
+  <div class="header">
+    <h1>Ruta (OpenLayers)</h1>
+    <span class="small" *ngIf="!loading()"
+      >{{ deliveryStops().length }} entregas</span
+    >
+  </div>
+
+  <div class="map-wrapper">
+    <div id="olmap" class="map"></div>
+    <div class="loading" *ngIf="loading()">Cargando mapa…</div>
+  </div>
+</div>

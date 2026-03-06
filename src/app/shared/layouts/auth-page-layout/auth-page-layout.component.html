@@ -1,0 +1,78 @@
+<div class="min-h-screen grid lg:grid-cols-2 bg-base-200">
+  <!-- Left Side: Form Container -->
+  <div class="flex flex-col justify-center items-center p-6 lg:p-12 xl:p-24 relative">
+    <!-- Mobile Logo -->
+    <div class="lg:hidden absolute top-8 left-6">
+      <a routerLink="/" class="flex items-center gap-2 group">
+        <div
+          class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-content shadow-lg shadow-primary/30 group-hover:scale-105 transition-transform">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+            <path fill-rule="evenodd"
+              d="M9.528 1.718a.75.75 0 0 1 .162.819A8.97 8.97 0 0 0 9 6a9 9 0 0 0 9 9 8.97 8.97 0 0 0 3.463-.69.75.75 0 0 1 .981.98 10.503 10.503 0 0 1-9.694 6.46c-5.799 0-10.5-4.7-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 0 1 .818.162Z"
+              clip-rule="evenodd" />
+          </svg>
+        </div>
+        <span
+          class="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">RestroLogic</span>
+      </a>
+    </div>
+
+    <!-- Content Slot -->
+    <div class="w-full max-w-md animate-fade-in-up">
+      <ng-content></ng-content>
+    </div>
+
+    <!-- Rights -->
+    <div class="absolute bottom-6 text-center w-full text-xs text-base-content/40">
+      &copy; {{ currentYear }} RestroLogic. Powered by Luis Acuña.
+    </div>
+  </div>
+
+  <!-- Right Side: Hero Visual -->
+  <div
+    class="hidden lg:flex flex-col justify-center items-center relative overflow-hidden bg-neutral text-neutral-content p-12">
+    <!-- Abstract Background -->
+    <div class="absolute inset-0">
+      <div class="absolute inset-0 bg-gradient-to-br from-primary via-primary-focus to-secondary opacity-90"></div>
+      <div
+        class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=2574&auto=format&fit=crop')] bg-cover bg-center mix-blend-overlay opacity-20">
+      </div>
+
+      <!-- Decorative blobs -->
+      <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-secondary/30 blur-3xl"></div>
+      <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 rounded-full bg-primary/30 blur-3xl"></div>
+    </div>
+
+    <div class="relative z-10 max-w-lg text-center space-y-8">
+      <!-- Logo -->
+      <div class="flex justify-center mb-8">
+        <div
+          class="w-20 h-20 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-2xl">
+          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 48 48">
+            <path fill="currentColor" fill-rule="evenodd"
+              d="M22 8v2.588c-10.427.918-18.81 8.948-20.273 19.21c-.383 2.684 1.848 4.702 4.27 4.702h36.007c2.421 0 4.653-2.018 4.27-4.703C44.81 19.536 36.427 11.507 26 10.587V8h2a2 2 0 0 0 0-4h-8a2 2 0 1 0 0 4zm2 10.5c5.178 0 9.678 2.915 11.943 7.201a1.5 1.5 0 1 0 2.653-1.402C35.83 19.069 30.333 15.5 24 15.5a1.5 1.5 0 0 0 0 3M5.179 37.56c2.374-.02 8.37-.06 18.82-.06s16.447.04 18.821.06c.428.004 1.033.03 1.62.213c.612.19 1.339.596 1.756 1.434a2.91 2.91 0 0 1 0 2.586c-.417.838-1.144 1.243-1.756 1.434c-.587.182-1.192.21-1.62.213c-2.374.02-8.37.06-18.82.06s-16.447-.04-18.821-.06c-.428-.004-1.033-.03-1.62-.213c-.612-.19-1.339-.596-1.756-1.434a2.92 2.92 0 0 1 0-2.586c.417-.838 1.144-1.243 1.756-1.434c.587-.182 1.192-.21 1.62-.213"
+              clip-rule="evenodd" />
+          </svg>
+        </div>
+      </div>
+
+      <h2 class="text-4xl xl:text-5xl font-bold tracking-tight text-white">
+        Manage your restaurant with <span class="text-secondary-content">confidence</span>
+      </h2>
+
+      <p class="text-xl text-white/80 font-light leading-relaxed">
+        The complete platform for modern food service. Streamline operations, track inventory, and delight your guests.
+      </p>
+
+      <!-- Feature badges -->
+      <div class="flex flex-wrap justify-center gap-3 pt-8">
+        <div class="px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/10 text-sm font-medium">
+          Real-time Analytics</div>
+        <div class="px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/10 text-sm font-medium">
+          Inventory Control</div>
+        <div class="px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/10 text-sm font-medium">
+          Table Management</div>
+      </div>
+    </div>
+  </div>
+</div>

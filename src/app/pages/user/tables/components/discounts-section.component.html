@@ -1,0 +1,94 @@
+<div class="mt-6 space-y-4">
+  <div class="px-4">
+    <div class="fieldset grid grid-cols-3 gap-4 mb-4">
+      <div class="col-span-1">
+        <label class="label">
+          <span class="label-text">Valor</span>
+        </label>
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          class="input input-bordered"
+          [ngModel]="discountValue"
+          (ngModelChange)="onValueChange($event)"
+          placeholder="0.00"
+        />
+      </div>
+      <div class="col-span-2">
+        <label class="label">
+          <span class="label-text">Motivo</span>
+        </label>
+        <input
+          class="input input-bordered w-full"
+          [ngModel]="discountReason"
+          (ngModelChange)="onReasonChange($event)"
+          placeholder="Describe por qué se aplica el descuento"
+        />
+      </div>
+    </div>
+
+    @if (discountFormError) {
+    <div class="alert alert-error alert-soft">
+      <span class="text-sm">{{ discountFormError }}</span>
+    </div>
+    }
+
+    <div class="flex flex-col gap-2 md:flex-row md:justify-end">
+      <button
+        class="btn btn-sm btn-ghost md:flex-none"
+        type="button"
+        (click)="clearAll()"
+        [disabled]="orderDiscounts.length === 0"
+      >
+        Limpiar descuentos
+      </button>
+      <button
+        class="btn btn-sm btn-info md:flex-none"
+        type="button"
+        (click)="apply()"
+        [disabled]="loading"
+      >
+        Agregar descuento
+      </button>
+    </div>
+  </div>
+
+  <div class="card bg-base-200">
+    <div class="card-body space-y-4">
+      @if (orderDiscounts.length > 0) {
+      <div
+        class="rounded-lg border border-dashed border-base-300 bg-base-100 p-4 text-sm"
+      >
+        <div class="flex items-center justify-between">
+          <span class="font-semibold">Descuentos aplicados</span>
+          <span class="text-error font-semibold"
+            >-${{ orderDiscountsTotal.toFixed(2) }}</span
+          >
+        </div>
+        <ul class="mt-3 space-y-2 text-xs text-base-content/70">
+          @for (discount of orderDiscounts; track $index; let idx = $index) {
+          <li class="flex items-start justify-between gap-3">
+            <div>
+              <div class="font-medium text-base-content">
+                {{ discount.reason || "Descuento " + (idx + 1) }}
+              </div>
+              <div class="text-base-content/60">
+                -${{ discount.value.toFixed(2) }}
+              </div>
+            </div>
+            <button
+              class="btn btn-ghost btn-xs text-error"
+              type="button"
+              (click)="removeOne(idx)"
+            >
+              Quitar
+            </button>
+          </li>
+          }
+        </ul>
+      </div>
+      }
+    </div>
+  </div>
+</div>

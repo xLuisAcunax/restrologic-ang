@@ -1,0 +1,176 @@
+<div class="card bg-base-100 w-full shadow-2xl">
+  <div class="card-body overflow-y-auto space-y-5">
+    <div>
+      <h2 class="text-xl font-semibold">Registrar pago</h2>
+      <p class="text-sm text-base-content/70">
+        Ingresa los detalles del abono recibido para asociarlo a la orden.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div class="card bg-base-200 shadow-sm">
+        <div class="card-body p-4">
+          <p class="text-xs uppercase text-base-content/60">Total</p>
+          <p class="text-lg font-semibold">{{ formatCurrency(data.total) }}</p>
+        </div>
+      </div>
+      <div class="card bg-base-200 shadow-sm">
+        <div class="card-body p-4">
+          <p class="text-xs uppercase text-base-content/60">Pagado</p>
+          <p class="text-lg font-semibold">{{ formatCurrency(data.paid) }}</p>
+        </div>
+      </div>
+      <div
+        class="card shadow-sm"
+        [ngClass]="isFullyPaid() ? 'bg-success/20' : 'bg-warning/20'"
+      >
+        <div class="card-body p-4">
+          <p class="text-xs uppercase text-base-content/60">Pendiente</p>
+          <p class="text-lg font-semibold">
+            {{ formatCurrency(outstanding()) }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    @if (data.payments && data.payments.length > 0) {
+    <div class="space-y-2">
+      <h3 class="text-sm font-semibold">Pagos registrados</h3>
+      <div class="overflow-x-auto">
+        <table class="table table-compact">
+          <thead>
+            <tr class="text-xs text-base-content/60">
+              <th>Método</th>
+              <th class="text-right">Monto</th>
+              <th class="hidden text-right sm:table-cell">Referencia</th>
+              <th class="hidden sm:table-cell">Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (payment of data.payments; track payment.paidAt +
+            payment.amount) {
+            <tr>
+              <td>{{ formatPaymentMethod(payment.method) }}</td>
+              <td class="text-right">{{ formatCurrency(payment.amount) }}</td>
+              <td class="hidden text-right sm:table-cell">
+                {{ payment.reference || "-" }}
+              </td>
+              <td class="hidden sm:table-cell">
+                {{ payment.paidAt | localDateTime : "short" }}
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    } @if (isFullyPaid()) {
+    <div class="alert alert-success alert-soft">
+      <span>La orden ya se encuentra saldada.</span>
+      <button class="btn btn-sm" type="button" (click)="cancel()">
+        Cerrar
+      </button>
+    </div>
+    }
+
+    <form
+      class="fieldset grid-cols-2"
+      [formGroup]="form"
+      (ngSubmit)="confirm()"
+    >
+      <div class="form-control">
+        <label class="label" for="method">
+          <span class="label-text">Método de pago</span>
+        </label>
+        <select
+          id="method"
+          class="select select-bordered"
+          formControlName="method"
+          [disabled]="isFullyPaid()"
+        >
+          @for (option of methodOptions; track option.value) {
+          <option [ngValue]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-control">
+        <label class="label" for="amount">
+          <span class="label-text">Monto recibido</span>
+          <span class="label-text-alt"
+            >Saldo pendiente: {{ formatCurrency(outstanding()) }}</span
+          >
+        </label>
+        <input
+          id="amount"
+          type="number"
+          step="0.01"
+          min="0"
+          class="input input-bordered"
+          formControlName="amount"
+          placeholder="0.00"
+          [disabled]="isFullyPaid()"
+        />
+        @if (form.controls.amount.invalid && form.controls.amount.touched) {
+        <span class="mt-1 text-xs text-error col-span-2">
+          @if (form.controls.amount.hasError('required')) { El monto es
+          obligatorio. } @else if (form.controls.amount.hasError('min')) {
+          Ingresa un valor mayor a 0. } @else if
+          (form.controls.amount.hasError('max')) { El monto supera el saldo
+          pendiente. }
+        </span>
+        }
+      </div>
+
+      <div class="form-control col-span-2 w-full">
+        <label class="label" for="reference">
+          <span class="label-text">Referencia (opcional)</span>
+          <span class="label-text-alt">Ej. número de transacción</span>
+        </label>
+        <input
+          id="reference"
+          type="text"
+          class="input input-bordered w-full"
+          formControlName="reference"
+          maxlength="120"
+          [disabled]="isFullyPaid()"
+        />
+      </div>
+
+      <div class="form-control col-span-2 w-full">
+        <label class="label" for="notes">
+          <span class="label-text">Notas (opcional)</span>
+        </label>
+        <textarea
+          id="notes"
+          class="textarea textarea-bordered w-full"
+          rows="3"
+          formControlName="notes"
+          maxlength="250"
+          placeholder="Observaciones adicionales sobre el pago"
+          [disabled]="isFullyPaid()"
+        ></textarea>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button
+          type="button"
+          class="btn"
+          (click)="cancel()"
+          [disabled]="isProcessing()"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="form.invalid || isFullyPaid() || isProcessing()"
+        >
+          @if (isProcessing()) {
+          <span class="loading loading-spinner loading-xs"></span>
+          Procesando... } @else { Registrar pago }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

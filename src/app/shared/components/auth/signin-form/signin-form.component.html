@@ -1,0 +1,95 @@
+<div class="w-full max-w-md mx-auto px-6 sm:px-0">
+  <div class="mt-10 sm:mt-16 space-y-6">
+    <div class="space-y-1 text-center sm:text-left">
+      <h1 class="text-2xl font-bold sm:text-3xl text-base-content tracking-tight">
+        Welcome Back
+      </h1>
+      <p class="text-base text-base-content/70">
+        Enter your credentials to access your dashboard.
+      </p>
+    </div>
+
+    <div class="card bg-base-100 shadow-xl border border-base-300">
+      <div class="card-body p-8 space-y-4">
+        <form [formGroup]="form" (ngSubmit)="onSignIn()" class="space-y-4">
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Email</span>
+            </label>
+            <input type="email" class="input input-bordered w-full focus:input-primary transition-all"
+              placeholder="name@company.com" formControlName="email" [class.input-error]="
+                form.get('email')?.invalid && form.get('email')?.touched
+              " required />
+            @if (form.get('email')?.invalid && form.get('email')?.touched) {
+            <span class="text-error text-xs mt-1">
+              Please enter a valid email address.
+            </span>
+            }
+          </div>
+
+          <div class="form-control relative">
+            <label class="label">
+              <span class="label-text font-medium">Password</span>
+            </label>
+            <div class="relative">
+              <input [type]="showPassword() ? 'text' : 'password'"
+                class="input input-bordered w-full focus:input-primary transition-all pr-12" formControlName="password"
+                placeholder="••••••••" [class.input-error]="
+                  form.get('password')?.invalid && form.get('password')?.touched
+                " />
+              <button type="button" (click)="togglePasswordVisibility()"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/50 hover:text-base-content transition-colors focus:outline-none">
+                @if (showPassword()) {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-5">
+                  <path fill-rule="evenodd"
+                    d="M3.28 2.22a.75.75 0 0 0-1.06 1.06l14.5 14.5a.75.75 0 1 0 1.06-1.06l-1.745-1.745A10.029 10.029 0 0 0 18 10c0-4.758-5.575-8.86-8.995-8.995a.752.752 0 0 0-.01 0c-2.31 0-4.475 1.173-6.223 2.721L3.28 2.22Zm6.98 6.98a1.5 1.5 0 0 0 2.122 2.122L10.26 9.2Z"
+                    clip-rule="evenodd" />
+                  <path
+                    d="M11.96 11.96a11.028 11.028 0 0 0-2.22-3.15C7.94 7.025 6.223 6 4.417 6c-.347 0-.687.039-1.018.113L16.29 18.99c.99-.81 1.63-2.617 1.63-2.99 0-2.455-2.583-4.9-5.96-4.04Z" />
+                </svg>
+                } @else {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-5">
+                  <path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+                  <path fill-rule="evenodd"
+                    d="M.664 10.59a1.651 1.651 0 0 1 0-1.186A10.004 10.004 0 0 1 10 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0 1 10 17c-4.257 0-7.893-2.66-9.336-6.41ZM14 10a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"
+                    clip-rule="evenodd" />
+                </svg>
+                }
+              </button>
+            </div>
+            @if (form.get('password')?.invalid &&
+            form.get('password')?.touched) {
+            <span class="text-error text-xs mt-1">
+              Password is required.
+            </span>
+            }
+            <div class="flex justify-end mt-1">
+              <a class="link link-hover link-primary text-sm font-medium">Forgot password?</a>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-full shadow-lg shadow-primary/20 text-white"
+            [disabled]="isSubmitting()">
+            @if (isSubmitting()) {
+            <span class="loading loading-spinner loading-sm"></span>
+            Signing in...
+            } @else {
+            Sign In
+            }
+          </button>
+
+          @if (error()) {
+          <div role="alert" class="alert alert-error text-sm py-2 rounded-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{{ error() }}</span>
+          </div>
+          }
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,66 @@
+{
+  "name": "restrologic",
+  "version": "2.0.10",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "prebuild": "node scripts/generate-version.js",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "setup-hooks": "node scripts/setup-hooks.js",
+    "postinstall": "npm run setup-hooks"
+  },
+  "prettier": {
+    "overrides": [
+      {
+        "files": "*.html",
+        "options": {
+          "parser": "angular"
+        }
+      }
+    ]
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/animations": "20.3.1",
+    "@angular/cdk": "20.2.3",
+    "@angular/common": "20.3.1",
+    "@angular/compiler": "20.3.1",
+    "@angular/core": "20.3.1",
+    "@angular/forms": "20.3.1",
+    "@angular/platform-browser": "20.3.1",
+    "@angular/platform-browser-dynamic": "20.3.1",
+    "@angular/router": "20.3.1",
+    "@tailwindcss/postcss": "^4.1.13",
+    "@types/leaflet": "^1.9.21",
+    "apexcharts": "^5.3.5",
+    "jspdf": "^3.0.3",
+    "leaflet": "^1.9.4",
+    "ng-apexcharts": "^2.0.1",
+    "ol": "^10.7.0",
+    "postcss": "^8.5.6",
+    "rxjs": "~7.8.2",
+    "socket.io-client": "^4.8.1",
+    "tailwindcss": "^4.1.13",
+    "tslib": "^2.3.0",
+    "uuid": "^13.0.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@angular/build": "20.3.1",
+    "@angular/cli": "20.3.1",
+    "@angular/compiler-cli": "20.3.1",
+    "@types/jasmine": "~5.1.0",
+    "@types/uuid": "^10.0.0",
+    "daisyui": "^5.1.10",
+    "jasmine-core": "~5.8.0",
+    "k6": "^0.0.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "typescript": "5.8.3"
+  }
+}

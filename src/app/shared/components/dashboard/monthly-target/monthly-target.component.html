@@ -1,0 +1,74 @@
+<div class="card bg-base-100 shadow-sm">
+  <figure>
+    <div class="px-5 pt-5">
+      <div class="flex justify-between">
+        <div>
+          <h3 class="text-lg font-semibold">Meta mensual</h3>
+          <p class="mt-1 text-gray-500 text-theme-sm dark:text-gray-400">
+            Progreso vs mes anterior (+10% objetivo)
+          </p>
+        </div>
+        <div class="relative inline-block"></div>
+      </div>
+      <div class="relative">
+        <div class="max-h-[330px]" id="chartDarkStyle">
+          <apx-chart
+            [series]="series"
+            [chart]="chart"
+            [plotOptions]="plotOptions"
+            [fill]="fill"
+            [stroke]="stroke"
+            [labels]="labels"
+            [colors]="colors"
+          ></apx-chart>
+        </div>
+        <span
+          class="absolute left-1/2 top-full -translate-x-1/2 -translate-y-[95%]"
+          [class.text-success]="progressPct >= 100"
+          [class.text-warning]="progressPct < 100"
+        >
+          {{ progressPct | number : "1.0-0" }}%
+        </span>
+      </div>
+      <p
+        class="mx-auto mt-10 w-full max-w-[380px] text-center text-sm sm:text-base"
+      >
+        Mes actual: {{ formatCurrency(monthToDateSales) }} · Mes previo:
+        {{ formatCurrency(prevMonthSales) }} · Objetivo:
+        {{ formatCurrency(monthTarget) }}
+      </p>
+    </div>
+  </figure>
+  <div class="card-body bg-base-200 rounded-b-lg p-0">
+    <div
+      class="flex items-center justify-center gap-5 px-6 py-3.5 sm:gap-8 sm:py-5"
+    >
+      <div>
+        <p class="mb-1 text-center sm:text-sm">Objetivo</p>
+        <p
+          class="flex items-center justify-center gap-1 text-base font-semibold sm:text-lg"
+        >
+          {{ formatCurrency(monthTarget) }}
+        </p>
+      </div>
+      <div class="w-px"></div>
+      <div>
+        <p class="mb-1 text-center sm:text-sm">Mes previo</p>
+        <p
+          class="flex items-center justify-center gap-1 text-base font-semibold sm:text-lg"
+        >
+          {{ formatCurrency(prevMonthSales) }}
+        </p>
+      </div>
+      <div class="w-px"></div>
+      <div>
+        <p class="mb-1 text-center sm:text-sm">Mes actual</p>
+        <p
+          class="flex items-center justify-center gap-1 text-base font-semibold sm:text-lg"
+        >
+          {{ formatCurrency(monthToDateSales) }}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

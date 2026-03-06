@@ -1,0 +1,141 @@
+<div class="p-6">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-3xl font-bold">Gestión de Entregas</h1>
+      <p class="text-sm text-gray-600 mt-1">
+        {{ pendingCount() }} entregas pendientes de asignación
+      </p>
+    </div>
+
+    <div class="flex gap-2">
+      <button class="btn btn-outline btn-sm" (click)="loadOrders()">
+        <span class="material-icons text-base">refresh</span>
+        Actualizar
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  @if (!branchId()) {
+    <div class="alert alert-info alert-soft mb-6">
+      <span
+        >Selecciona una sucursal en el encabezado para ver las entregas.</span
+      >
+    </div>
+  }
+  @if (branchId()) {
+    <div class="flex gap-4 mb-4">
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text">Estado</span>
+        </label>
+        <select
+          class="select select-bordered select-sm"
+          [value]="selectedStatus()"
+          (change)="onStatusFilterChange($any($event.target).value)"
+        >
+          <option value="all">Todos</option>
+          <option value="pending">Pendiente</option>
+          <option value="assigned">Asignado</option>
+          <option value="accepted">Aceptado</option>
+          <option value="preparing">Preparando</option>
+          <option value="ready">Listo</option>
+          <option value="picked_up">Recogido</option>
+          <option value="in_transit">En tránsito</option>
+          <option value="delivered">Entregado</option>
+          <option value="cancelled">Cancelado</option>
+          <option value="failed">Fallido</option>
+        </select>
+      </div>
+
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text">Conductor</span>
+        </label>
+        <select
+          class="select select-bordered select-sm"
+          [value]="selectedDriver()"
+          (change)="onDriverFilterChange($any($event.target).value)"
+        >
+          <option value="all">Todos</option>
+          <option value="">Sin asignar</option>
+          @for (driver of drivers(); track driver.id) {
+            <option [value]="driver.id">{{ driver.name }}</option>
+          }
+        </select>
+      </div>
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="flex justify-center py-12">
+      <span class="loading loading-spinner loading-lg"></span>
+    </div>
+  }
+
+  <!-- Orders Table -->
+  @if (!loading() && filteredOrders().length > 0) {
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th>Orden #</th>
+            <th>Dirección</th>
+            <th>Distancia</th>
+            <th>Tarifa</th>
+            <th>Estado</th>
+            <th>Conductor</th>
+            <th>Creada</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (order of filteredOrders(); track order.id) {
+            <tr>
+              <td class="font-mono">{{ order.code }}</td>
+              <td class="max-w-xs truncate">
+                {{ order.delivery?.address || "-" }}
+              </td>
+              <td>{{ order.delivery?.distanceKm || 0 }} km</td>
+              <td>{{ formatCurrency(order.delivery?.fee) }}</td>
+              <td>
+                <delivery-status-badge
+                  [status]="order.delivery?.status || 'pending'"
+                />
+              </td>
+              <td>
+                {{ getDriverName(order.delivery?.driverId) }}
+              </td>
+              <td>{{ formatTime(order.createdAt) }}</td>
+              <td>
+                @if (
+                  order.delivery?.status === "pending" ||
+                  order.delivery?.status === "assigned"
+                ) {
+                  <button
+                    class="btn btn-sm btn-primary"
+                    (click)="openAssignmentModal(order)"
+                  >
+                    <span class="material-icons text-base">assignment_ind</span>
+                    {{ order.delivery?.driverId ? "Reasignar" : "Asignar" }}
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (branchId() && !loading() && filteredOrders().length === 0) {
+    <div class="text-center py-12">
+      <span class="material-icons text-6xl text-gray-300">local_shipping</span>
+      <p class="text-gray-500 mt-4">
+        No hay entregas que coincidan con los filtros
+      </p>
+    </div>
+  }
+</div>

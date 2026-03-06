@@ -1,0 +1,393 @@
+<!-- Summary Section -->
+<div>
+  <!-- Action Buttons -->
+  <div class="flex flex-row-reverse gap-2 mr-3">
+    <div class="tooltip" data-tip="Productos">
+      <button
+        class="btn btn-ghost btn-circle btn-info"
+        type="button"
+        (click)="addProducts.emit()"
+        [disabled]="!canAddProducts || loading"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 48 48"
+        >
+          <g
+            fill="none"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-width="3"
+          >
+            <path
+              stroke-linejoin="round"
+              d="M40.29 36.31c1.239.442 2.21 1.353 2.21 2.69c0 2.803-2.713 4.698-5.515 4.8c-2.804.104-7.014.2-12.985.2s-10.18-.096-12.985-.2C8.213 43.699 5.5 41.804 5.5 39c0-1.337.972-2.248 2.211-2.69"
+            />
+            <path
+              d="M3.92 28.905a4.93 4.93 0 0 0-.913 3.035c.027.835.14 1.708.408 2.495c.63 1.855 2.901 1.946 4.858 1.855c1.038-.048 2.142.038 2.945.454c3.23 1.674 6.578 1.674 9.808 0c2.022-1.048 3.925-1.048 5.947 0c3.23 1.674 6.578 1.674 9.809 0c.803-.416 1.906-.502 2.944-.454c1.957.09 4.228 0 4.858-1.855a7 7 0 0 0 .185-.656c.391-1.707-.084-3.428-1.093-4.708"
+            />
+            <path
+              stroke-linejoin="round"
+              d="M5.5 16.5c0-6.856 5.382-12.174 12.233-12.402C19.563 4.038 21.645 4 24 4s4.437.037 6.267.098C37.117 4.326 42.5 9.644 42.5 16.5c0 1.26-.1 2.394-.232 3.343c-.268 1.929-1.774 3.311-3.708 3.534c-2.6.3-7.126.623-14.56.623s-11.96-.323-14.56-.623c-1.934-.223-3.44-1.605-3.708-3.534A24 24 0 0 1 5.5 16.5"
+            />
+            <path
+              d="m6.949 22.238l-.592.025c-1.543.067-3.014.76-3.253 2.286C3.04 24.959 3 25.439 3 26s.04 1.042.104 1.452c.24 1.526 1.71 2.219 3.253 2.286C9.02 29.854 14.31 30 24 30c9.3 0 14.546-.135 17.308-.248c1.751-.072 3.419-.903 3.629-2.643q.061-.495.063-1.109c0-.41-.024-.778-.063-1.108c-.21-1.74-1.878-2.572-3.628-2.643l-.258-.01M36.5 15H36m-5.5-4H30m-1 7h.5"
+            />
+          </g>
+        </svg>
+      </button>
+    </div>
+    <div class="tooltip" data-tip="Factura">
+      <button
+        class="btn btn-ghost btn-circle btn-info"
+        type="button"
+        (click)="generateInvoice.emit()"
+        [disabled]="!canGenerateInvoice || loading"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 48 48"
+        >
+          <g
+            fill="none"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="3"
+          >
+            <path
+              d="M12.016 27.757c2.93.14 6.836.244 11.984.244s9.052-.104 11.982-.244c-.044 5.962-.167 10.022-.277 12.579c-.092 2.135-1.605 3.892-3.724 4.167a62.5 62.5 0 0 1-7.982.497c-3.278 0-6.007-.24-7.982-.497c-2.118-.275-3.63-2.03-3.722-4.164c-.111-2.557-.235-6.617-.28-12.582"
+            />
+            <path
+              d="M35.854 35.87c1.828-.045 3.337-.097 4.554-.147c2.37-.098 4.252-1.916 4.387-4.286c.11-1.92.205-4.45.205-7.437a66 66 0 0 0-.471-7.955c-.263-2.132-2.017-3.665-4.163-3.76C37.298 12.15 32.074 12 24 12c-7.858 0-13.166.142-16.404.275c-2.373.097-4.256 1.916-4.391 4.287C3.095 18.482 3 21.014 3 24c0 2.987.096 5.517.205 7.437c.135 2.37 2.016 4.188 4.387 4.286c1.217.05 2.725.102 4.552.147m.347-28.37l.053-.469c.214-1.832 1.573-3.247 3.4-3.505C17.817 3.261 20.543 3 24 3c3.458 0 6.183.261 8.056.526c1.827.258 3.186 1.673 3.4 3.505l.053.469M36 20h-1M18 34h12m-12 5h12"
+            />
+          </g>
+        </svg>
+      </button>
+    </div>
+    <div class="tooltip" data-tip="Pagos">
+      <button
+        class="btn btn-ghost btn-circle btn-info"
+        type="button"
+        (click)="processPayment.emit()"
+        [disabled]="!canProcessPayment || loading"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 48 48"
+        >
+          <g
+            fill="none"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="3"
+          >
+            <path
+              d="M24 3c11.598 0 21 9.402 21 21s-9.402 21-21 21S3 35.598 3 24S12.402 3 24 3"
+            />
+            <path
+              d="M24 8c8.837 0 16 7.163 16 16s-7.163 16-16 16S8 32.837 8 24S15.163 8 24 8"
+            />
+            <path
+              d="M28.5 18.949S26.7 17.57 24 17.57c-2.25 0-4.5 1.378-4.5 3.215c0 4.591 9 1.836 9 6.428c0 1.837-2.25 3.214-4.5 3.214c-2.7 0-4.5-1.377-4.5-1.377M24 17.571V15m0 18v-2.57"
+            />
+          </g>
+        </svg>
+      </button>
+    </div>
+    <div class="tooltip" data-tip="Descuentos">
+      <button
+        class="btn btn-ghost btn-circle btn-info"
+        type="button"
+        (click)="openDiscounts.emit()"
+        [disabled]="!canManageDiscounts"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 48 48"
+        >
+          <g
+            fill="none"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="3"
+          >
+            <path
+              d="M44.547 40.027c-.233 2.417-2.11 4.209-4.53 4.411c-3.208.27-8.441.562-16.017.562s-12.81-.293-16.017-.562c-2.42-.202-4.297-1.994-4.53-4.41C3.219 37.603 3 33.997 3 29s.22-8.604.453-11.027c.233-2.417 2.11-4.209 4.53-4.411C11.191 13.292 16.424 13 24 13s12.81.293 16.017.562c2.42.202 4.297 1.994 4.53 4.41c.234 2.424.453 6.03.453 11.028c0 4.997-.22 8.604-.453 11.027M24 13v32M3 29h42"
+            />
+            <path
+              d="M24 13c0-3-4-10-10-10c-3.5 0-6 2.686-6 6c0 1.682.692 3.203 1.808 4.292M24 13c0-3 4-10 10-10c3.5 0 6 2.686 6 6a5.98 5.98 0 0 1-1.808 4.292"
+            />
+          </g>
+        </svg>
+      </button>
+    </div>
+    <div class="tooltip" data-tip="Impuestos">
+      <button
+        class="btn btn-ghost btn-circle btn-info"
+        type="button"
+        (click)="openTaxes.emit()"
+        [disabled]="!canManageTaxes || !hasTaxes"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 48 48"
+        >
+          <path
+            fill="none"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="3"
+            d="M33 3.174c-1.89-.075-4.052-.132-6.5-.158m-6 0c-2.449.026-4.61.083-6.5.158m-6 .345l-.24.02c-2.556.207-4.514 2.165-4.721 4.72l-.02.24M39 3.52l.241.02c2.556.207 4.513 2.165 4.721 4.72l.02.24M39 44.48l.24-.019c2.556-.208 4.513-2.165 4.721-4.72l.02-.241M26.5 44.984a228 228 0 0 0 6.5-.158m-19 0c1.89.074 4.051.132 6.5.158M8 44.48l-.24-.019c-2.556-.208-4.514-2.165-4.721-4.72l-.02-.241m-.345-25c-.075 1.89-.132 4.051-.158 6.5m0 6c.026 2.448.083 4.61.158 6.5M44.484 21c-.026-2.449-.084-4.61-.158-6.5m0 19c.074-1.89.132-4.052.158-6.5m-10.602 7.808Q35 33.615 35 31.486q0-2.1-1.118-3.294Q32.764 27.001 31 27q-1.789 0-2.907 1.192Q27 29.385 27 31.486q0 2.13 1.093 3.322Q29.211 35.999 31 36q1.764 0 2.882-1.192m-14-15Q21 18.615 21 16.486q0-2.1-1.118-3.294Q18.764 12.001 17 12q-1.79 0-2.907 1.192Q13 14.384 13 16.486q0 2.13 1.093 3.322Q15.21 20.999 17 21q1.764 0 2.882-1.192M34 14L14 34"
+          />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Discounts Banner -->
+  @if (orderDiscounts.length > 0 && orderDiscountsTotal > 0) {
+    <div
+      class="alert alert-info alert-soft mt-4 flex flex-col gap-2 sm:flex-row sm:items-center"
+    >
+      <div class="flex-1">
+        <div class="font-medium text-sm">Descuentos aplicados</div>
+        @if (orderDiscounts.length === 1) {
+          @let single = orderDiscounts[0];
+          <div class="text-xs text-base-content/70">
+            {{ single.reason || "Sin motivo registrado" }}
+            <span class="text-base-content/60"
+              >(-${{ single.value.toFixed(2) }} COP)</span
+            >
+          </div>
+        } @else {
+          <ul
+            class="mt-1 list-disc space-y-1 pl-4 text-xs text-base-content/70"
+          >
+            @for (discount of orderDiscounts; track $index; let idx = $index) {
+              <li>
+                {{ discount.reason || "Descuento " + (idx + 1) }}
+                <span class="text-base-content/60"
+                  >(-${{ discount.value.toFixed(2) }} COP)</span
+                >
+              </li>
+            }
+          </ul>
+        }
+      </div>
+      <div class="text-sm font-semibold text-error sm:ml-auto">
+        -${{ orderDiscountsTotal.toFixed(2) }}
+      </div>
+    </div>
+  }
+
+  <!-- Items Table -->
+  @if (orderItems.length > 0) {
+    <div class="mt-4">
+      <div class="overflow-x-auto">
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th class="text-center">Cant.</th>
+              <th class="text-right">Precio</th>
+              <th class="text-right">Subtotal</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of orderItems; track item.productId) {
+              <tr>
+                <td class="font-medium">
+                  <div>{{ name(item) }}</div>
+                  @if (item.modifiers && item.modifiers.length > 0) {
+                    <div class="text-xs text-neutral-500 mt-1">
+                      @for (mod of item.modifiers; track mod.modifierId) {
+                        <div>
+                          • {{ mod.modifierName }}
+                          @if (mod.quantity && mod.quantity > 1) {
+                            <span>x{{ mod.quantity }}</span>
+                          }
+                          @if (mod.additionalPrice && mod.additionalPrice > 0) {
+                            <span class="text-accent-content"
+                              >(+${{ mod.additionalPrice.toFixed(2) }})</span
+                            >
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                </td>
+                <td class="text-center">
+                  <div class="join">
+                    <button
+                      class="btn btn-xs join-item"
+                      type="button"
+                      (click)="
+                        updateItemQuantity.emit({
+                          item,
+                          qty: (item.quantity || 1) - 1,
+                        })
+                      "
+                    >
+                      -
+                    </button>
+                    <span class="btn btn-xs join-item no-animation">{{
+                      item.quantity || 1
+                    }}</span>
+                    <button
+                      class="btn btn-xs join-item"
+                      type="button"
+                      (click)="
+                        updateItemQuantity.emit({
+                          item,
+                          qty: (item.quantity || 1) + 1,
+                        })
+                      "
+                    >
+                      +
+                    </button>
+                  </div>
+                </td>
+                <td class="text-right">${{ item.unitPrice.toFixed(2) }}</td>
+                <td class="text-right font-semibold">
+                  ${{ item.subtotal.toFixed(2) }}
+                </td>
+                <td>
+                  <button
+                    class="btn btn-ghost btn-xs text-error"
+                    type="button"
+                    (click)="removeItem.emit(item)"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr class="font-semibold">
+              <td
+                colspan="3"
+                class="text-right text-xs uppercase text-base-content/70"
+              >
+                Subtotal:
+              </td>
+              <td class="text-right">{{ fc(orderItemsSubtotal) }}</td>
+              <td></td>
+            </tr>
+            @if (orderDiscountsTotal > 0) {
+              <tr class="text-sm text-error">
+                <td colspan="3" class="text-right">Descuentos:</td>
+                <td class="text-right font-semibold">
+                  -{{ fc(orderDiscountsTotal) }}
+                </td>
+                <td></td>
+              </tr>
+            }
+            @if (taxesTotal > 0) {
+              <tr class="text-sm text-base-content/70">
+                <td colspan="3" class="text-right">Impuestos:</td>
+                <td class="text-right font-semibold">+{{ fc(taxesTotal) }}</td>
+                <td></td>
+              </tr>
+            }
+            <tr class="text-sm text-base-content">
+              <td colspan="3" class="text-right font-semibold">
+                Total a pagar:
+              </td>
+              <td class="text-right text-base font-bold">
+                {{ fc(orderTotal) }}
+              </td>
+              <td></td>
+            </tr>
+            @if (paymentsTotal > 0) {
+              <tr class="text-sm text-success">
+                <td colspan="3" class="text-right">Pagado:</td>
+                <td class="text-right font-semibold">
+                  {{ fc(paymentsTotal) }}
+                </td>
+                <td></td>
+              </tr>
+            }
+            <tr
+              class="text-sm font-semibold"
+              [class.text-warning]="outstandingBalance > 0"
+              [class.text-success]="outstandingBalance === 0"
+            >
+              <td colspan="3" class="text-right">Saldo pendiente:</td>
+              <td class="text-right">{{ fc(outstandingBalance) }}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      @if (orderError) {
+        <div class="alert alert-error alert-soft mt-2">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="stroke-current shrink-0 h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <span class="text-sm">{{ orderError }}</span>
+        </div>
+      }
+    </div>
+  }
+  @if (orderItems.length === 0) {
+    <div role="alert" class="alert alert-error alert-soft mt-4">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        class="stroke-current shrink-0 w-6 h-6"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        ></path>
+      </svg>
+      <span
+        >No hay productos en la orden. Usa la pestaña "Agregar Productos" para
+        comenzar.</span
+      >
+    </div>
+  }
+</div>

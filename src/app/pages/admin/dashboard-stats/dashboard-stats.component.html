@@ -1,0 +1,53 @@
+<div class="max-w-2xl mx-auto card bg-base-100 shadow-sm">
+  <div class="px-5 pt-5">
+    <h2 class="text-xl font-semibold">Estadísticas (configuración)</h2>
+    <p class="mt-1 text-gray-500 text-theme-sm dark:text-gray-400">
+      Valores usados por la dashboard. Más adelante se persistirán en la base de
+      datos.
+    </p>
+  </div>
+  <div class="card-body">
+    <div class="form-control w-full">
+      <label class="label"
+        ><span class="label-text">Meta mensual (COP)</span></label
+      >
+      <input
+        class="input input-bordered w-full"
+        type="number"
+        min="0"
+        step="1000"
+        [value]="monthlyTargetCOP"
+        (input)="updateTarget($any($event.target).value)"
+      />
+      <span class="text-xs text-gray-500 mt-1"
+        >Por ahora fija: 6,000,000 COP (puedes ajustar el valor aquí).</span
+      >
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mt-4">
+      <div class="form-control">
+        <label class="label"
+          ><span class="label-text">Auto refrescar (segundos)</span></label
+        >
+        <input
+          class="input input-bordered"
+          type="number"
+          min="1"
+          [value]="refreshIntervalSeconds"
+          (input)="onRefreshSecondsChange($any($event.target).value)"
+        />
+      </div>
+      <div class="form-control">
+        <label class="label cursor-pointer flex items-center gap-3">
+          <input
+            type="checkbox"
+            class="toggle"
+            [checked]="autoRefreshEnabled"
+            (change)="toggleAutoRefresh($event)"
+          />
+          <span class="label-text">Habilitar auto refresco</span>
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
