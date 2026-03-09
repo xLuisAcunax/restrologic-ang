@@ -31,6 +31,7 @@ import { PaymentDialogComponent } from '../tables/payment-dialog/payment-dialog.
 import { CancelOrderDialogComponent } from '../../../shared/components/cancel-order-dialog/cancel-order-dialog.component';
 import { BranchSelectionService } from '../../../core/services/branch-selection.service';
 import { OrdersBadgeService } from '../../../shared/services/orders-badge.service';
+import { OrdersLiveStore } from '../../../core/services/orders-live-store.service';
 import {
   AssignedUser,
   LoggedUser,
@@ -71,6 +72,7 @@ export class UserOrdersComponent implements OnInit {
   private branchSelection = inject(BranchSelectionService);
   private errorHandler = inject(ErrorHandlerService);
   private userService = inject(UserService);
+  private ordersStore = inject(OrdersLiveStore);
 
   branches = signal<BranchSummary[]>([]);
   loggedUser = signal<LoggedUser | null>(null);
@@ -136,7 +138,27 @@ export class UserOrdersComponent implements OnInit {
         this.loadOrders();
       }
     });
+    effect(() => {
+      const branchId = this.branchSelection.getEffectiveBranchId();
+      const ready = this.ordersStore.ready();
+      const liveOrders = this.ordersStore.ordersList();
+
+      if (!branchId || !ready) {
+        return;
+      }
+
+      const incoming = liveOrders
+        .filter((order) => order.branchId === branchId)
+        .filter((order) => this.shouldKeepOrder(order))
+        .sort((a, b) => this.compareOrders(a, b));
+
+      this.orders.set(incoming);
+      this.loading.set(false);
+      this.error.set(null);
+    });
+
   }
+
 
   ngOnInit(): void {
     this.loggedUser.set(this.auth.me());
@@ -213,10 +235,10 @@ export class UserOrdersComponent implements OnInit {
       (p) => p.status !== 'voided',
     );
     if (payments.length > 0) return false;
-    // Role restriction: only ADMIN, SUPER, CASHIER
+    // Role restriction: only ADMIN, SUPER, Cajero
     const roles = this.userRoles().map((r) => r.toUpperCase());
     const allowed = roles.some((r) =>
-      ['Admin', 'Super', 'CASHIER'].includes(r),
+      ['Admin', 'Super', 'Cajero'].includes(r),
     );
     if (!allowed) return false;
     return true;
@@ -2035,3 +2057,7 @@ export class UserOrdersComponent implements OnInit {
     return item.modifiers.map((m: any) => this.modifierLabel(m)).join(', ');
   }
 }
+
+
+
+

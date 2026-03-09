@@ -39,7 +39,7 @@ export class OrderNotificationService {
     if (!me) return;
     const roles = this.authService.getRole() || [];
     const internal = roles.some((r) =>
-      ['Super', 'Admin', 'CASHIER', 'KITCHEN'].includes(r.toUpperCase()),
+      ['SUPER', 'ADMIN', 'CAJERO', 'COCINA'].includes(r.toUpperCase()),
     );
     if (!internal) return;
     this.initialized = true;
@@ -183,3 +183,7 @@ export class OrderNotificationService {
     }
   }
 }
+
+
+
+

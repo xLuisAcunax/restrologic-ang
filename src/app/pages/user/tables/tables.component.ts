@@ -17,9 +17,14 @@ import { Dialog } from '@angular/cdk/dialog';
 import { TableDetailsComponent } from './table-details.component';
 import { LoggedUser } from '../../../core/models/user.model';
 import { Order, OrderStatus } from '../../../core/models/order.model';
-import { of } from 'rxjs';
+import { of, Subscription } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { TableStatusEnum } from '../../../core/enums/table-status.enum';
+import {
+  RealtimeService,
+  TablePresenceInfo,
+} from '../../../core/services/realtime.service';
+import { OrdersLiveStore } from '../../../core/services/orders-live-store.service';
 
 @Component({
   selector: 'app-user-tables',
@@ -32,11 +37,15 @@ export class UserTablesComponent implements OnInit, OnDestroy {
   private dialog = inject(Dialog);
   private branchSelection = inject(BranchSelectionService);
   private orderService = inject(OrderService);
+  private realtime = inject(RealtimeService);
+  private ordersStore = inject(OrdersLiveStore);
 
   loggedUser = signal<LoggedUser>(this.auth.me()!);
   branchId = signal<string>('');
   branch = signal<BranchSummary | null>(null);
   tables = signal<Table[]>([]);
+  lockMessage = signal<string | null>(null);
+  blockedTableId = signal<string | null>(null);
 
   // Map to store active orders by tableId
   tableOrders = signal<Map<string, Order>>(new Map());
@@ -45,6 +54,7 @@ export class UserTablesComponent implements OnInit, OnDestroy {
   private timerInterval: ReturnType<typeof setInterval> | null = null;
   // Signal to trigger UI updates for elapsed time
   private timerTick = signal(0);
+  private realtimeSubscription: Subscription | null = null;
 
   constructor() {
     effect(() => {
@@ -55,15 +65,76 @@ export class UserTablesComponent implements OnInit, OnDestroy {
         this.branch.set(selectedBranch);
         this.branchId.set(selectedBranchId);
         this.loadTables(selectedBranchId);
+        void this.syncTableLocks(selectedBranchId);
+      }
+    });
+
+    effect(() => {
+      const branchId = this.branchId();
+      const ready = this.ordersStore.ready();
+      const liveOrders = this.ordersStore.ordersList();
+
+      if (!branchId || !ready) {
+        return;
+      }
+
+      const nextOrders = new Map<string, Order>();
+      liveOrders
+        .filter((order) => order.branchId === branchId)
+        .filter((order) => !!order.tableId)
+        .forEach((order) => {
+          if (order.tableId) {
+            nextOrders.set(order.tableId, order);
+          }
+        });
+
+      this.tableOrders.set(nextOrders);
+      this.tables.update((tables) =>
+        tables.map((table) => {
+          const hasActiveOrder = nextOrders.has(table.id);
+          return {
+            ...table,
+            status: hasActiveOrder
+              ? TableStatusEnum.Occupied
+              : this.normalizeTableStatus(table.status) === TableStatusEnum.Occupied
+                ? TableStatusEnum.Free
+                : table.status,
+          };
+        }),
+      );
+    });
+
+    effect(() => {
+      const blockedTableId = this.blockedTableId();
+      const tables = this.tables();
+
+      if (!blockedTableId) {
+        return;
+      }
+
+      const blockedTable = tables.find((table) => table.id === blockedTableId);
+      if (!blockedTable || !blockedTable.locked) {
+        this.blockedTableId.set(null);
+        this.lockMessage.set(null);
       }
     });
   }
 
   ngOnInit(): void {
-    // Start timer to update elapsed time every minute
     this.timerInterval = setInterval(() => {
       this.timerTick.update((v) => v + 1);
-    }, 60000); // Update every minute
+    }, 60000);
+
+    this.realtimeSubscription = this.realtime.orderEvents$.subscribe((event) => {
+      const currentBranchId = this.branchId();
+      if (!currentBranchId || event.branchId !== currentBranchId) {
+        return;
+      }
+
+      if (event.name === 'TableLocked' || event.name === 'TableReleased') {
+        this.applyTablePresenceEvent(event.payload as TablePresenceInfo);
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -71,24 +142,24 @@ export class UserTablesComponent implements OnInit, OnDestroy {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
+
+    this.realtimeSubscription?.unsubscribe();
+    this.realtimeSubscription = null;
   }
 
   loadTables(branchId: string) {
     if (!branchId) return;
 
-    // First load tables
     this.tableService.getTables(branchId).subscribe({
       next: (tables) => {
-        this.tables.set(tables);
+        this.tables.set(this.reconcileTablesWithLiveOrders(tables || []));
 
-        // Load orders for all tables so we can detect active orders
-        // even if the backend status isn't 'Occupied'
-        if (tables.length === 0) {
+        if ((tables || []).length === 0) {
           this.tableOrders.set(new Map());
           return;
         }
 
-        this.loadOrdersForTables(tables);
+        this.loadOrdersForTables(tables || []);
       },
       error: (err) => {
         console.error('[loadTables] Error loading tables:', err);
@@ -96,9 +167,6 @@ export class UserTablesComponent implements OnInit, OnDestroy {
     });
   }
 
-  /**
-   * Load open orders for the given tables (occupied tables)
-   */
   private loadOrdersForTables(tables: Table[]) {
     const orderMap = new Map<string, Order>();
     const tablesToFree: Table[] = [];
@@ -112,26 +180,20 @@ export class UserTablesComponent implements OnInit, OnDestroy {
           next: (order) => {
             completed++;
             if (order) {
-              // Check if order is fully paid - if so, free the table
               const status = (order.status || '').toString().toLowerCase();
               const isFullyPaid = status === 'paid' || status === 'closed';
 
               if (isFullyPaid) {
-                // Order is paid, mark table for freeing
                 tablesToFree.push(table);
               } else {
-                // Order is still active, add to map
                 orderMap.set(table.id, order);
               }
             } else {
-              // No open order found for occupied table - mark for freeing
               tablesToFree.push(table);
             }
 
-            // When all requests complete, update the signal and free tables
             if (completed === tables.length) {
               this.tableOrders.set(orderMap);
-              // Free all tables that need to be freed
               for (const t of tablesToFree) {
                 this.freeTableAutomatically(t);
               }
@@ -141,9 +203,6 @@ export class UserTablesComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Automatically free a table that has a paid order or no order
-   */
   private freeTableAutomatically(table: Table) {
     const tenantId = this.loggedUser()?.tenantId;
     const branchId = this.branchId();
@@ -154,7 +213,6 @@ export class UserTablesComponent implements OnInit, OnDestroy {
         .subscribe({
           next: () => {
             console.log('[Tables] Auto-freed table:', table.id);
-            // Update local table status without reloading
             this.tables.update((tables) =>
               tables.map((t) =>
                 t.id === table.id ? { ...t, status: TableStatusEnum.Free } : t,
@@ -169,11 +227,14 @@ export class UserTablesComponent implements OnInit, OnDestroy {
   }
 
   getLockIndicator(table: Table): string | null {
-    return null;
+    if (!table.locked || !table.lockedBy?.userName) {
+      return null;
+    }
+
+    return `En uso por ${table.lockedBy.userName}`;
   }
 
   statusBadge(table: Table) {
-    // const s = String(table.status || '');
     const s = ''.toString();
     switch (s) {
       case 'Libre':
@@ -190,6 +251,18 @@ export class UserTablesComponent implements OnInit, OnDestroy {
   }
 
   openTableDetails(table: Table) {
+    if (this.isLockedByAnotherUser(table)) {
+      const lockedBy = table.lockedBy?.userName || 'otro usuario';
+      this.blockedTableId.set(table.id);
+      this.lockMessage.set(
+        `La mesa ${table.name || ''} está siendo atendida por ${lockedBy}.`,
+      );
+      return;
+    }
+
+    this.lockMessage.set(null);
+    this.blockedTableId.set(null);
+
     const dialogRef = this.dialog.open(TableDetailsComponent, {
       width: '75vw',
       height: '90vh',
@@ -202,25 +275,22 @@ export class UserTablesComponent implements OnInit, OnDestroy {
       },
     });
 
-    dialogRef.closed.subscribe((result) => {
-      // Reload tables to reflect any changes (order created, status changed, etc.)
+    dialogRef.closed.subscribe(() => {
       const currentBranchId = this.branchId();
       if (currentBranchId) {
         this.loadTables(currentBranchId);
+        void this.syncTableLocks(currentBranchId);
       }
     });
   }
 
   elapsedForTable(table: Table): string | null {
-    // Trigger reactivity on timer tick
     this.timerTick();
 
     const order = this.tableOrders().get(table.id);
     if (!order?.createdAt) return null;
 
     const start = new Date(order.createdAt).getTime();
-
-    // If order is served, freeze the timer at the time it was served (use updatedAt)
     const isServed = this.normalizeOrderStatus(order.status) === 'served';
     const end =
       isServed && order.updatedAt
@@ -237,15 +307,12 @@ export class UserTablesComponent implements OnInit, OnDestroy {
   }
 
   elapsedInfoForTable(table: Table): { time: string; class: string } | null {
-    // Trigger reactivity on timer tick
     this.timerTick();
 
     const order = this.tableOrders().get(table.id);
     if (!order?.createdAt) return null;
 
     const start = new Date(order.createdAt).getTime();
-
-    // If order is served, freeze the timer at the time it was served (use updatedAt)
     const isServed = this.normalizeOrderStatus(order.status) === 'served';
     const end =
       isServed && order.updatedAt
@@ -260,7 +327,6 @@ export class UserTablesComponent implements OnInit, OnDestroy {
     const minutes = totalMinutes % 60;
     const time = hours === 0 ? `${minutes}m` : `${hours}h ${minutes}m`;
 
-    // Color based on time elapsed (not affected by served status)
     let className = 'badge-success text-white';
     if (totalMinutes >= 30 && totalMinutes < 60) {
       className = 'badge-warning';
@@ -271,16 +337,10 @@ export class UserTablesComponent implements OnInit, OnDestroy {
     return { time, class: className };
   }
 
-  /**
-   * Get the order for a table (if any)
-   */
   getOrderForTable(table: Table): Order | undefined {
     return this.tableOrders().get(table.id);
   }
 
-  /**
-   * Check if order status is "served" (all items served)
-   */
   isOrderServed(table: Table): boolean {
     const order = this.tableOrders().get(table.id);
     if (!order) return false;
@@ -288,14 +348,9 @@ export class UserTablesComponent implements OnInit, OnDestroy {
     return status === 'served';
   }
 
-  /**
-   * Get a human-readable label for the order status
-   */
   getOrderStatusLabel(table: Table): string {
-    console.log('table', table);
     const order = this.tableOrders().get(table.id);
     if (!order) return '';
-    console.log('order', order);
     const status = this.normalizeOrderStatus(order.status);
     switch (status) {
       case 'created':
@@ -320,9 +375,6 @@ export class UserTablesComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Get badge class for order status
-   */
   getOrderStatusBadgeClass(table: Table): string {
     const order = this.tableOrders().get(table.id);
     if (!order) return 'badge-ghost';
@@ -349,10 +401,100 @@ export class UserTablesComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Normalize order status to lowercase
-   */
   private normalizeOrderStatus(status: OrderStatus | string): string {
     return String(status || '').toLowerCase();
   }
+
+  private reconcileTablesWithLiveOrders(tables: Table[]): Table[] {
+    const currentOrders = this.tableOrders();
+    return tables.map((table) => {
+      const hasActiveOrder = currentOrders.has(table.id);
+      return {
+        ...table,
+        status: hasActiveOrder
+          ? TableStatusEnum.Occupied
+          : this.normalizeTableStatus(table.status) === TableStatusEnum.Occupied
+            ? TableStatusEnum.Free
+            : table.status,
+      };
+    });
+  }
+
+  private normalizeTableStatus(status: Table['status']): TableStatusEnum {
+    if (typeof status === 'number') {
+      return status as TableStatusEnum;
+    }
+
+    const raw = String(status || '').toLowerCase().trim();
+    switch (raw) {
+      case 'occupied':
+      case 'ocupada':
+        return TableStatusEnum.Occupied;
+      case 'reserved':
+      case 'reservada':
+        return TableStatusEnum.Reserved;
+      case 'cleaning':
+      case 'limpiando':
+        return TableStatusEnum.Cleaning;
+      case 'disabled':
+      case 'inhabilitada':
+        return TableStatusEnum.Disabled;
+      default:
+        return TableStatusEnum.Free;
+    }
+  }
+
+  private async syncTableLocks(branchId: string): Promise<void> {
+    const locks = await this.realtime.getActiveTableLocks(branchId);
+    const lockMap = new Map(locks.map((lock) => [lock.tableId, lock]));
+    this.tables.update((tables) =>
+      tables.map((table) => {
+        const presence = lockMap.get(table.id);
+        if (!presence) {
+          return { ...table, locked: false, lockedBy: null, lockedAt: null };
+        }
+
+        return {
+          ...table,
+          locked: presence.locked,
+          lockedBy: presence.lockedBy ?? null,
+          lockedAt: presence.lockedAt ?? null,
+        };
+      }),
+    );
+  }
+
+  private applyTablePresenceEvent(presence: TablePresenceInfo): void {
+    if (!presence?.tableId) {
+      return;
+    }
+
+    this.tables.update((tables) =>
+      tables.map((table) => {
+        if (table.id !== presence.tableId) {
+          return table;
+        }
+
+        return {
+          ...table,
+          locked: presence.locked,
+          lockedBy: presence.locked ? presence.lockedBy ?? null : null,
+          lockedAt: presence.locked ? presence.lockedAt ?? null : null,
+        };
+      }),
+    );
+  }
+
+  private isLockedByAnotherUser(table: Table): boolean {
+    const currentUserId = this.loggedUser()?.id;
+    return (
+      !!table.locked &&
+      !!table.lockedBy?.userId &&
+      table.lockedBy.userId !== currentUserId
+    );
+  }
 }
+
+
+
+

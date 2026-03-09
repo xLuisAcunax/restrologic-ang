@@ -16,7 +16,7 @@ export const routes: Routes = [
         path: 'tables',
         component: UserTablesComponent,
         data: {
-          roles: ['WAITER', 'CASHIER', 'KITCHEN', 'DELIVERY', 'Admin', 'Super'],
+          roles: ['Mesero', 'Cajero', 'Cocina', 'Repartidor', 'Admin', 'Super'],
           title: 'Mesas',
         },
       },
@@ -24,24 +24,24 @@ export const routes: Routes = [
         path: 'orders',
         component: UserOrdersComponent,
         data: {
-          roles: ['WAITER', 'CASHIER', 'KITCHEN', 'DELIVERY', 'Admin', 'Super'],
+          roles: ['Mesero', 'Cajero', 'Cocina', 'Repartidor', 'Admin', 'Super'],
           title: 'Órdenes',
         },
       },
       {
         path: 'cash',
         component: UserCashComponent,
-        data: { roles: ['CASHIER', 'Admin', 'Super'], title: 'Caja' },
+        data: { roles: ['Cajero', 'Admin', 'Super'], title: 'Caja' },
       },
       {
         path: 'kitchen',
         component: UserKitchenComponent,
-        data: { roles: ['KITCHEN', 'Admin', 'Super'], title: 'Cocina' },
+        data: { roles: ['Cocina', 'Admin', 'Super'], title: 'Cocina' },
       },
       {
         path: 'reservations',
         component: UserReservationsComponent,
-        data: { roles: ['Admin', 'CASHIER'], title: 'Reservas' },
+        data: { roles: ['Admin', 'Cajero'], title: 'Reservas' },
       },
       { path: '**', redirectTo: '' },
     ],
@@ -53,3 +53,5 @@ export const routes: Routes = [
   exports: [RouterModule],
 })
 export class UserRoutes {}
+
+

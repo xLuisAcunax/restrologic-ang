@@ -44,6 +44,12 @@
     </div>
   </div>
 
+  @if (isLockedByAnotherUser()) {
+  <div class="mx-4 mt-3 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm font-medium text-warning-content">
+    Esta mesa está siendo atendida por {{ tablePresence()?.lockedBy?.userName }}. Puedes verla, pero no modificarla mientras el otro usuario siga activo.
+  </div>
+  }
+
   <!-- ======== MOBILE TAB BAR (visible < lg) ======== -->
   <div class="flex lg:hidden border-b border-base-200 bg-base-100">
     <button

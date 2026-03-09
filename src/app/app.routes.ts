@@ -67,7 +67,7 @@ export const routes: Routes = [
         data: { roles: ['Admin', 'Super'] },
       },
 
-      // User dashboard (WAITER, CASHIER, KITCHEN, DELIVERY + ADMIN + SUPER)
+      // User dashboard (Mesero, Cajero, Cocina, Repartidor + ADMIN + SUPER)
       {
         path: 'user',
         loadChildren: () =>
@@ -75,18 +75,18 @@ export const routes: Routes = [
             (m) => m.UserRoutes
           ),
         data: {
-          roles: ['WAITER', 'CASHIER', 'KITCHEN', 'Admin', 'Super'],
+          roles: ['Mesero', 'Cajero', 'Cocina', 'Admin', 'Super'],
         },
       },
 
-      // Delivery dashboard (exclusivo DELIVERY)
+      // Delivery dashboard (exclusivo Repartidor)
       {
         path: 'delivery',
         loadChildren: () =>
           import('./pages/dashboards/delivery/delivery.routes').then(
             (m) => m.DeliveryRoutes
           ),
-        data: { roles: ['DELIVERY'] },
+        data: { roles: ['Repartidor'] },
       },
     ],
   },
@@ -95,3 +95,5 @@ export const routes: Routes = [
   { path: 'notfound', component: NotFoundComponent },
   { path: '**', redirectTo: 'notfound' },
 ];
+
+

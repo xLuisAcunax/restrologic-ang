@@ -127,6 +127,11 @@ export class OrderService {
 
   private mapOrderFromApi(payload: any): Order {
     const status = this.normalizeStatus(payload?.status);
+    const hasDelivery = !!payload?.delivery;
+    const requiresDelivery =
+      typeof payload?.requiresDelivery === 'boolean'
+        ? payload.requiresDelivery
+        : hasDelivery || payload?.isTakeaway === false;
     const taxTotal =
       typeof payload?.taxTotal === 'number'
         ? payload.taxTotal
@@ -146,6 +151,7 @@ export class OrderService {
       total: typeof payload?.total === 'number' ? payload.total : 0,
       createdBy: payload?.createdBy || payload?.assignedToUserId || '',
       notes: payload?.notes ?? '',
+      requiresDelivery,
       customer: payload?.customer ?? undefined,
       delivery: this.mapDelivery(payload?.delivery),
       isTakeaway: !!payload?.isTakeaway,
@@ -569,3 +575,4 @@ export class OrderService {
     );
   }
 }
+

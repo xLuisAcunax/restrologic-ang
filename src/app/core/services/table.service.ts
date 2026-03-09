@@ -15,12 +15,9 @@ export type Table = {
   description: string | null; // optional description
   isActive: boolean;
   status: TableStatusEnum | string; // Can be number or string from backend
-  // occupiedBy?: Waiter | null; // waiter attending the table when occupied
   locked?: boolean; // Temporal: true if someone is currently viewing/editing
-  // lockedBy?: { userId: string; userName: string } | null; // Who has the lock
-  // // Reservation metadata (enriched client-side)
-  // reservationCustomerName?: string;
-  // reservationTime?: string; // ISO string
+  lockedBy?: { userId: string; userName: string } | null;
+  lockedAt?: string | null;
 };
 
 export type CreateTableDto = {
@@ -188,3 +185,4 @@ export class TableService {
     );
   }
 }
+

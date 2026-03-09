@@ -1,10 +1,9 @@
 <div class="w-full p-4 md:p-6 min-h-screen bg-base-200/30">
   @if (branch()) {
-  <!-- Header -->
   <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
     <div>
       <h2 class="text-3xl font-black text-base-content tracking-tight">
-        SalÃ³n
+        Salón
       </h2>
       <div class="flex items-center gap-2 text-base-content/60 mt-1">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -16,7 +15,6 @@
       </div>
     </div>
 
-    <!-- Status Legend Pill -->
     <div
       class="bg-base-100 border border-base-200 rounded-full px-5 py-2.5 flex items-center gap-5 shadow-sm text-xs font-bold uppercase tracking-wider">
       <div class="flex items-center gap-2">
@@ -35,20 +33,23 @@
   </div>
   }
 
+  @if (lockMessage()) {
+  <div class="mb-4 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm font-medium text-warning-content">
+    {{ lockMessage() }}
+  </div>
+  }
+
   @if (tables().length > 0) {
-  <!-- Cards Grid -->
   <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
     @for (t of tables(); track t.id) {
     <div
       class="relative bg-base-100 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden cursor-pointer border border-base-200/60 flex flex-col"
       (click)="openTableDetails(t)" role="button" [tabindex]="0"
-      [class.border-green-200]="t.status == 'Free' && !getOrderForTable(t)"
-      [class.border-red-200]="t.status == 'Occupied' || getOrderForTable(t)">
+      [class.border-green-200]="t.status == 'Free' && !getOrderForTable(t) && !t.locked"
+      [class.border-red-200]="(t.status == 'Occupied' || getOrderForTable(t)) && !t.locked"
+      [class.border-slate-300]="t.locked">
 
-      <!-- Card Body -->
       <div class="flex-1 flex flex-col items-center justify-center py-5 px-3 relative min-h-[140px]">
-
-        <!-- Order Status badge (top-right) -->
         @if (!t.locked && getOrderForTable(t)) {
         <div class="absolute top-2 right-2">
           <span class="badge badge-xs border-0 font-bold text-[10px] uppercase" [ngClass]="getOrderStatusBadgeClass(t)">
@@ -57,7 +58,6 @@
         </div>
         }
 
-        <!-- Elapsed time pill (top-left, only for occupied) -->
         @if (!t.locked && getOrderForTable(t) && !isOrderServed(t) &&
         elapsedInfoForTable(t); as ei) {
         <div class="absolute top-2 left-2">
@@ -73,7 +73,6 @@
         </div>
         }
 
-        <!-- Frozen timer for served orders (top-left) -->
         @if (!t.locked && getOrderForTable(t) && isOrderServed(t) &&
         elapsedInfoForTable(t); as ei) {
         <div class="absolute top-2 left-2">
@@ -89,7 +88,6 @@
         </div>
         }
 
-        <!-- Lock icon (top-right for locked tables) -->
         @if (t.locked) {
         <div class="absolute top-2 right-2">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-base-content/30" viewBox="0 0 20 20"
@@ -101,20 +99,15 @@
         </div>
         }
 
-
-
-        <!-- Table Name -->
         <h3 class="text-2xl md:text-3xl font-black text-base-content tracking-tighter leading-none">
           {{ t.name }}
         </h3>
 
-        <!-- Description / Category -->
         <p class="text-[11px] font-bold uppercase tracking-widest mt-1" [class.text-base-content/40]="t.status !== 1"
           [class.text-primary]="t.status !== 1 && t.description" [class.text-error/60]="t.status === 1">
           {{ t.description || 'GENERAL' }}
         </p>
 
-        <!-- Order Number -->
         @if (getOrderForTable(t); as order) {
         <div class="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full"
           style="background-color: #eff6ff; border: 1px solid #dbeafe;">
@@ -129,31 +122,39 @@
           </span>
         </div>
         }
+
+        @if (t.locked && t.lockedBy?.userName) {
+        <div class="absolute bottom-2 left-2 right-2 rounded-lg bg-slate-900/6 px-2 py-1 text-center text-[10px] font-semibold text-base-content/60">
+          {{ t.lockedBy?.userName }}
+        </div>
+        }
       </div>
 
-      <!-- Status Footer Bar -->
       <div class="h-10 flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-widest"
         [ngStyle]="{
-          'background-color': getOrderForTable(t) ? '#fef2f2' : (t.status === 'Free' ? '#f0fdf4' : '#f1f5f9'),
-          'color': getOrderForTable(t) ? '#ef4444' : (t.status === 'Free' ? '#16a34a' : '#64748b')
+          'background-color': t.locked ? '#f1f5f9' : (getOrderForTable(t) ? '#fef2f2' : (t.status === 'Free' ? '#f0fdf4' : '#f1f5f9')),
+          'color': t.locked ? '#64748b' : (getOrderForTable(t) ? '#ef4444' : (t.status === 'Free' ? '#16a34a' : '#64748b'))
         }">
 
-        @if (t.status == 'Occupied' || getOrderForTable(t)) {
-        <!-- Occupied -->
+        @if (t.locked) {
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd"
+            d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2V7a3 3 0 10-6 0v2h6z"
+            clip-rule="evenodd" />
+        </svg>
+        <span>{{ getLockIndicator(t) || 'Bloqueada' }}</span>
+        } @else if (t.status == 'Occupied' || getOrderForTable(t)) {
         <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
         </svg>
         <span>Ocupada</span>
         } @else if (t.status == 'Free') {
-        <!-- Available -->
         <span class="w-2 h-2 rounded-full bg-green-500"></span>
         <span>Disponible</span>
         } @else if (t.status == 'Reserved') {
-        <!-- Reserved -->
         <span class="w-2 h-2 rounded-full bg-amber-400"></span>
         <span>Reservada</span>
         } @else {
-        <!-- Other (Cleaning, Disabled) -->
         <span class="w-2 h-2 rounded-full bg-slate-400"></span>
         <span>Bloqueado</span>
         }
@@ -176,7 +177,7 @@
         No hay mesas asignadas
       </h3>
       <p class="text-sm">
-        Esta sucursal aÃºn no tiene configuraciÃ³n de salÃ³n.
+        Esta sucursal aún no tiene configuración de salón.
       </p>
     </div>
   </ng-template>

@@ -6,6 +6,7 @@ import {
   inject,
   signal,
   computed,
+  effect,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
@@ -34,6 +35,7 @@ type StatusOption = {
 
 import { Order, OrderItemStatusType } from '../../../core/models/order.model';
 import { ProductSizeService } from '../../../core/services/product-size.service';
+import { OrdersLiveStore } from '../../../core/services/orders-live-store.service';
 import { Size } from '../../../shared/services/size.service';
 
 @Component({
@@ -50,6 +52,7 @@ export class UserKitchenComponent implements OnInit, OnDestroy {
   private productService = inject(ProductService);
   private productSizeService = inject(ProductSizeService);
   private userService = inject(UserService);
+  private ordersStore = inject(OrdersLiveStore);
 
   tenantId = signal<string>('');
   branches = signal<BranchSummary[]>([]);
@@ -80,6 +83,26 @@ export class UserKitchenComponent implements OnInit, OnDestroy {
   ];
 
   readonly hasKitchenOrders = computed(() => this.kitchenOrders().length > 0);
+
+  constructor() {
+    effect(() => {
+      const branchId = this.branchSelection.getEffectiveBranchId();
+      const ready = this.ordersStore.ready();
+      const liveOrders = this.ordersStore.ordersList();
+
+      if (!branchId || !ready) {
+        return;
+      }
+
+      const relevant = liveOrders
+        .filter((order) => order.branchId === branchId)
+        .filter((order) => this.shouldKeepOrderForKitchen(order));
+      relevant.sort((a, b) => this.compareOrders(a, b));
+      this.kitchenOrders.set(relevant);
+      this.loading.set(false);
+      this.error.set(null);
+    });
+  }
 
   ngOnInit(): void {
     this.startClock();
@@ -1150,3 +1173,5 @@ export class UserKitchenComponent implements OnInit, OnDestroy {
     }
   }
 }
+
+

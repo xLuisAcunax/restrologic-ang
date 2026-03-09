@@ -14,12 +14,12 @@ export class OrdersRealtimeBootstrapService {
     // Keep OrdersLiveStore active globally once auth + branch are known
     effect(
       () => {
-        const tenantId = this.auth.me()?.id || null;
+        const tenantId = this.auth.me()?.tenantId || null;
         // Touch reactive branch selection even for non-admins to re-run on change
         const _selected = this.branches.selectedBranchId();
         const branchId = this.branches.getEffectiveBranchId();
         if (tenantId && branchId) {
-          // Ensure polling is running; realtime is wired inside the store effect
+          // Keep realtime live once auth + branch are available
           this.store.start();
           // Touch orders list to keep signal graph active
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -30,3 +30,4 @@ export class OrdersRealtimeBootstrapService {
     );
   }
 }
+

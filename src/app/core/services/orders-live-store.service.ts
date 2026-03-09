@@ -1,365 +1,228 @@
-import { Injectable, inject, signal, computed, effect } from '@angular/core';
-import { OrderService } from './order.service';
-import { BranchSelectionService } from './branch-selection.service';
+import { Injectable, Injector, computed, effect, inject, signal } from '@angular/core';
+import { forkJoin, of, Subscription } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { AuthService } from './auth.service';
-import { createDayRangeIso } from '../../shared/utils/date-range.utils';
-import { OrderEventsPollingService } from './order-events-polling.service';
-import { Subscription } from 'rxjs';
-import { RealtimeService } from './realtime.service';
+import { BranchSelectionService } from './branch-selection.service';
 import { Order } from '../models/order.model';
+import { OrderService } from './order.service';
+import { RealtimeService } from './realtime.service';
 
 @Injectable({ providedIn: 'root' })
 export class OrdersLiveStore {
-  private ordersMap = signal<Map<string, Order>>(new Map());
-  ordersList = computed(() =>
+  private readonly orderService = inject(OrderService);
+  private readonly branchSelection = inject(BranchSelectionService);
+  private readonly auth = inject(AuthService);
+  private readonly realtime = inject(RealtimeService);
+  private readonly injector = inject(Injector);
+
+  private readonly ordersMap = signal<Map<string, Order>>(new Map());
+  readonly ordersList = computed(() =>
     Array.from(this.ordersMap().values()).sort(
       (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        new Date(b.createdAt || 0).getTime() -
+        new Date(a.createdAt || 0).getTime(),
     ),
   );
-  ready = signal(false);
+  readonly ready = signal(false);
 
-  private orderService = inject(OrderService);
-  private branchSelection = inject(BranchSelectionService);
-  private auth = inject(AuthService);
-  private eventPolling = inject(OrderEventsPollingService);
-  private rt = inject(RealtimeService);
-  private STORAGE_KEY = 'orders_snapshot_v3'; // Bump version to clear stale cache
+  private readonly storageKey = 'orders_snapshot_v4';
   private currentKey: string | null = null;
-
-  // fetch queue for created/updated/payment events
+  private activationVersion = 0;
+  private readonly realtimeSubscription: Subscription;
   private fetchQueue = new Set<string>();
-  private fetchTimer: any = null;
-  private visibilityBound = false;
-  private pollingSubscription: Subscription | null = null;
-  private realtimeSubscriptions: Subscription[] = [];
+  private fetchTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
-    // DISABLED: Websocket/polling not implemented on backend yet
-    // The effect below was auto-loading orders and starting polling
-    // which calls endpoints that don't exist yet (404 errors)
-    /*
-    // React to branch changes and auth (load snapshot once per key)
-    effect(() => {
-      const tenantId = this.auth.me()?.tenantId;
-      // Touch the reactive selectedBranchId signal so this effect re-runs on branch changes
-      const _selected = this.branchSelection.selectedBranchId();
-      const branchId = this.branchSelection.getEffectiveBranchId();
-      const key = tenantId && branchId ? `${tenantId}:${branchId}` : null;
-      if (!key) {
-        this.reset();
-        return;
-      }
-
-      if (this.currentKey !== key) {
-        // New context: cleanup previous realtime and polling
-        this.currentKey = key;
-        // Try local restore first for instant UI
-        const restored = this.tryRestoreSnapshot(key);
-        if (restored) {
-          this.ordersMap.set(restored);
-          this.ready.set(true);
-        } else {
-          this.ready.set(false);
-        }
-        // Always fetch fresh in background
-        this.loadInitialSnapshot(tenantId!, branchId!, true);
-
-        // Setup realtime connection for new context and use polling until connected
-        const token = this.auth.token;
-      }
-
-      // SSE removed: no event wiring
+    this.realtimeSubscription = this.realtime.orderEvents$.subscribe((event) => {
+      this.handleRealtimeEvent(event);
     });
 
-    // Pause/resume polling based on tab visibility
-    try {
-      if (!this.visibilityBound && typeof document !== 'undefined') {
-        document.addEventListener('visibilitychange', () =>
-          this.handleVisibilityChange()
-        );
-        this.visibilityBound = true;
-      }
-    } catch {}
-    */
+    effect(
+      () => {
+        const tenantId = this.auth.me()?.tenantId || null;
+        const token = this.auth.token;
+        const _selectedBranchId = this.branchSelection.selectedBranchId();
+        const branchId = this.branchSelection.getEffectiveBranchId();
+        const key = tenantId && branchId && token ? `${tenantId}:${branchId}` : null;
+
+        if (!key || !tenantId || !branchId) {
+          this.currentKey = null;
+          this.activationVersion += 1;
+          this.reset();
+          void this.realtime.disconnect();
+          return;
+        }
+
+        if (this.currentKey !== key) {
+          void this.activateContext(tenantId, branchId, key);
+          return;
+        }
+
+        void this.realtime.connectToOrdersBranch(branchId);
+      },
+      { injector: this.injector },
+    );
   }
 
-  start() {
-    // DISABLED: Websocket/polling not implemented on backend yet
-    // this.beginPolling();
-  }
-
-  // --- Polling fallback/alternative ---
-  private pollingTimer: any = null;
-  private lastWatermark: string | null = null;
-  private pollingInFlight = false;
-
-  private beginPolling(immediate = true) {
-    if (this.pollingSubscription) return;
-    const tenantId = this.auth.me()?.tenantId;
+  start(): void {
     const branchId = this.branchSelection.getEffectiveBranchId();
-    if (!tenantId || !branchId) return;
-
-    this.pollingSubscription = this.eventPolling
-      .startPolling(tenantId, branchId)
-      .subscribe({
-        next: (response) => {
-          if (!response?.ok) return;
-
-          response.events?.forEach((event) => {
-            if (!event?.orderId) return;
-
-            switch (event.eventType) {
-              case 'order.created':
-              case 'order.updated':
-              case 'order.status_changed':
-              case 'order.item_added':
-              case 'order.payment_registered':
-                this.enqueue(event.orderId);
-                break;
-
-              case 'order.deleted':
-                this.remove(event.orderId);
-                break;
-
-              default:
-                this.enqueue(event.orderId);
-            }
-          });
-        },
-        error: (err) => {
-          // Silent error handling
-        },
-      });
-  }
-
-  private stopPolling() {
-    if (this.pollingSubscription) {
-      this.pollingSubscription.unsubscribe();
-      this.pollingSubscription = null;
-    }
-    const tenantId = this.auth.me()?.tenantId;
-    const branchId = this.branchSelection.getEffectiveBranchId();
-    if (tenantId && branchId) {
-      this.eventPolling.stopPolling(tenantId, branchId);
+    if (branchId) {
+      void this.realtime.connectToOrdersBranch(branchId);
     }
   }
 
-  private handleVisibilityChange() {
-    try {
-      const hidden = (document as any).hidden;
-      if (hidden) {
-        this.stopPolling();
-      } else {
-        this.beginPolling(true);
-      }
-    } catch {}
-  }
-
-  // Public helpers for consumers
   getById(id: string): Order | undefined {
     return this.ordersMap().get(id);
   }
-  ensureById(id: string) {
+
+  ensureById(id: string): void {
     this.enqueue(id);
   }
-  ensureMany(ids: string[]) {
+
+  ensureMany(ids: string[]): void {
     ids.forEach((id) => this.enqueue(id));
   }
 
-  private loadInitialSnapshot(
+  private async activateContext(
     tenantId: string,
     branchId: string,
-    background = false,
-  ) {
-    // Intento 1: cargar sólo órdenes activas (mucho más liviano)
-    if (!background) this.ready.set(false);
-    this.orderService.getActiveOrders(tenantId, branchId).subscribe({
-      next: (activeRes) => {
-        const activeList = activeRes.data || [];
-        // Si vienen órdenes activas, usar esas y finalizar
-        if (activeList.length > 0) {
-          const map = new Map<string, Order>();
-          activeList.forEach((o) => o?.id && map.set(o.id, o));
-          this.ordersMap.set(map);
-          this.ready.set(true);
-          this.persistSnapshot(map, `${tenantId}:${branchId}`);
-          this.beginPolling();
+    key: string,
+  ): Promise<void> {
+    const version = ++this.activationVersion;
+    this.currentKey = key;
+
+    const restored = this.tryRestoreSnapshot(key);
+    if (restored) {
+      this.ordersMap.set(restored);
+      this.ready.set(true);
+    } else {
+      this.ordersMap.set(new Map());
+      this.ready.set(false);
+    }
+
+    try {
+      await this.realtime.connectToOrdersBranch(branchId);
+    } catch {
+      // Keep the snapshot or empty state; API refresh below still runs.
+    }
+
+    this.loadInitialSnapshot(branchId, version);
+  }
+
+  private loadInitialSnapshot(branchId: string, version: number): void {
+    this.orderService.listOpenOrders({ branchId, expand: 'items' }).subscribe({
+      next: (orders) => {
+        if (version !== this.activationVersion) {
           return;
         }
-        // Fallback: rango ampliado para capturar históricas recientes (incluye públicas)
-        this.loadFallbackRange(tenantId, branchId, background);
+
+        const map = new Map<string, Order>();
+        (orders || []).forEach((order) => {
+          if (order?.id && !this.isTerminalOrder(order)) {
+            map.set(order.id, order);
+          }
+        });
+
+        this.ordersMap.set(map);
+        this.ready.set(true);
+        this.persistSnapshot(map, this.currentKey || '');
       },
       error: () => {
-        // Error en activo => fallback directo
-        this.loadFallbackRange(tenantId, branchId, background);
+        if (version !== this.activationVersion) {
+          return;
+        }
+
+        if (!this.ready()) {
+          this.ordersMap.set(new Map());
+          this.ready.set(true);
+        }
       },
     });
   }
 
-  private loadFallbackRange(
-    tenantId: string,
-    branchId: string,
-    background: boolean,
-  ) {
-    // Cargar últimos 7 días para capturar órdenes recientes (incluyendo públicas)
-    const todayLocal = new Date();
-    const sevenDaysAgo = new Date(todayLocal);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  private handleRealtimeEvent(event: {
+    name: string;
+    orderId?: string;
+    branchId?: string;
+  }): void {
+    const currentBranchId = this.branchSelection.getEffectiveBranchId();
+    if (!currentBranchId) {
+      return;
+    }
 
-    const startRange = createDayRangeIso(this.formatLocalDate(sevenDaysAgo));
-    const endRange = createDayRangeIso(this.formatLocalDate(todayLocal));
+    if (event.branchId && event.branchId !== currentBranchId) {
+      return;
+    }
 
-    // Mantener ready false si era carga inicial
-    const controller = new AbortController();
-    const timeoutMs = 3000; // Slightly longer timeout for wider range
-    const timeoutId = setTimeout(() => {
-      controller.abort();
-      // Mark ready with empty data; UI can show retry
-      if (!this.ready()) {
-        this.ordersMap.set(new Map());
-        this.ready.set(true);
-        this.beginPolling();
-      }
-    }, timeoutMs);
+    if (!event.orderId) {
+      return;
+    }
 
-    this.orderService
-      .getOrders(tenantId, branchId, {
-        start: startRange?.start,
-        end: endRange?.end,
-      })
-      .subscribe({
-        next: (res) => {
-          clearTimeout(timeoutId);
-          const map = new Map<string, Order>();
-          const rawCount = res.data?.length || 0;
-          (res.data || []).forEach((o) => {
-            if (o?.id) map.set(o.id, o);
-          });
-          this.ordersMap.set(map);
-          this.ready.set(true);
-          this.persistSnapshot(map, `${tenantId}:${branchId}`);
-          this.beginPolling();
-        },
-        error: (err) => {
-          clearTimeout(timeoutId);
-          this.ordersMap.set(new Map());
-          this.ready.set(true);
-          this.beginPolling();
-        },
-      });
+    if (event.name === 'OrderDeleted') {
+      this.remove(event.orderId);
+      return;
+    }
+
+    this.enqueue(event.orderId);
   }
 
-  private enqueue(orderId: string) {
-    if (!orderId) return;
-    console.log('[OrdersLiveStore] Enqueueing order:', orderId);
+  private enqueue(orderId: string): void {
+    if (!orderId) {
+      return;
+    }
+
     this.fetchQueue.add(orderId);
-    if (this.fetchTimer) return;
-    // Debounce small bursts
+    if (this.fetchTimer) {
+      return;
+    }
+
     this.fetchTimer = setTimeout(() => {
       const ids = Array.from(this.fetchQueue);
-      console.log('[OrdersLiveStore] Fetching queue:', ids);
       this.fetchQueue.clear();
       this.fetchTimer = null;
       this.fetchMany(ids);
-    }, 400);
+    }, 250);
   }
 
-  private fetchMany(ids: string[]) {
-    const tenantId = this.auth.me()?.tenantId;
-    const branchId = this.branchSelection.getEffectiveBranchId();
-    if (!tenantId || !branchId) return;
+  private fetchMany(ids: string[]): void {
+    const next = (index: number) => {
+      if (index >= ids.length) {
+        return;
+      }
 
-    // Fetch sequentially to avoid spikes
-    const next = (i: number) => {
-      if (i >= ids.length) return;
-      const id = ids[i];
-      this.orderService.getOrder(tenantId, branchId, id).subscribe({
-        next: (res) => {
-          if (res?.data?.id) {
-            this.upsert(res.data);
-          } else {
-            // Try public endpoint as fallback
-            this.orderService.getPublicOrder(id, tenantId, branchId).subscribe({
-              next: (pub) => {
-                if (pub?.data) {
-                  const reconstructed: Order = {
-                    id: id,
-                    tenantId,
-                    branchId,
-                    tableId: '',
-                    status:
-                      (pub.data.status as any)?.type ||
-                      (pub.data.status as any) ||
-                      'created',
-                    items: (pub.data as any).items || [],
-                    subtotal: (pub.data as any).subtotal || 0,
-                    total: (pub.data as any).total || 0,
-                    createdBy: (pub.data as any).createdBy || 'public',
-                    createdAt:
-                      (pub.data as any).createdAt || new Date().toISOString(),
-                    source: 'public-menu',
-                    customer: (pub.data as any).customer,
-                    orderNumber: (pub.data as any).orderNumber,
-                  } as any;
-                  this.upsert(reconstructed);
-                }
-              },
-              error: (err) => {
-                // Silent error
-              },
-            });
-          }
-          next(i + 1);
+      const orderId = ids[index];
+      forkJoin({
+        order: this.orderService.getOrder(orderId),
+        items: this.orderService
+          .listOrderItems(orderId)
+          .pipe(catchError(() => of([] as any[]))),
+      }).subscribe({
+        next: ({ order, items }) => {
+          const merged: Order = {
+            ...order,
+            items: Array.isArray(items) ? (items as any) : [],
+          };
+          this.upsert(merged);
+          next(index + 1);
         },
-        error: (err) => {
-          // Try public endpoint on error
-          this.orderService.getPublicOrder(id, tenantId, branchId).subscribe({
-            next: (pub) => {
-              if (pub?.data) {
-                const reconstructed: Order = {
-                  id: id,
-                  tenantId,
-                  branchId,
-                  tableId: '',
-                  status:
-                    (pub.data.status as any)?.type ||
-                    (pub.data.status as any) ||
-                    'created',
-                  items: (pub.data as any).items || [],
-                  subtotal: (pub.data as any).subtotal || 0,
-                  total: (pub.data as any).total || 0,
-                  createdBy: (pub.data as any).createdBy || 'public',
-                  createdAt:
-                    (pub.data as any).createdAt || new Date().toISOString(),
-                  source: 'public-menu',
-                  customer: (pub.data as any).customer,
-                  orderNumber: (pub.data as any).orderNumber,
-                } as any;
-                this.upsert(reconstructed);
-              }
-            },
-            error: () => {
-              // Silent error
-            },
-          });
-          next(i + 1);
+        error: () => {
+          next(index + 1);
         },
       });
     };
+
     next(0);
   }
 
-  private upsert(order: Order) {
-    console.log('[OrdersLiveStore] Upserting order:', {
-      id: order.id,
-      source: order.source,
-      status: order.status,
-      itemsCount: order.items?.length || 0,
-    });
+  private upsert(order: Order): void {
+    if (this.isTerminalOrder(order)) {
+      this.remove(order.id);
+      return;
+    }
+
     const map = new Map(this.ordersMap());
     const existing = map.get(order.id);
-    // Si la actualización llega sin ítems (algunos eventos mínimos) conservar los anteriores
+
     if (
       existing &&
       (!order.items || order.items.length === 0) &&
@@ -367,62 +230,73 @@ export class OrdersLiveStore {
     ) {
       order = { ...order, items: existing.items };
     }
+
     map.set(order.id, order);
     this.ordersMap.set(map);
-    this.schedulePersist(map);
+    this.persistSnapshot(map, this.currentKey || '');
   }
 
-  private remove(orderId: string) {
+  private remove(orderId: string): void {
     const map = new Map(this.ordersMap());
     map.delete(orderId);
     this.ordersMap.set(map);
-    this.schedulePersist(map);
+    this.persistSnapshot(map, this.currentKey || '');
   }
 
-  private reset() {
+  private isTerminalOrder(order: Order): boolean {
+    const status = String(order?.status || '').trim().toLowerCase();
+    return ['paid', 'closed', 'cancelled'].includes(status);
+  }
+
+  private reset(): void {
     this.ordersMap.set(new Map());
     this.ready.set(false);
+    this.fetchQueue.clear();
+    if (this.fetchTimer) {
+      clearTimeout(this.fetchTimer);
+      this.fetchTimer = null;
+    }
   }
 
-  private formatLocalDate(date: Date) {
-    const year = date.getFullYear();
-    const m = (date.getMonth() + 1).toString().padStart(2, '0');
-    const d = date.getDate().toString().padStart(2, '0');
-    return `${year}-${m}-${d}`;
-  }
+  private persistSnapshot(map: Map<string, Order>, key: string): void {
+    if (!key) {
+      return;
+    }
 
-  // Snapshot persistence
-  private persistTimer: any = null;
-  private schedulePersist(map: Map<string, Order>) {
-    if (this.persistTimer) return;
-    this.persistTimer = setTimeout(() => {
-      this.persistTimer = null;
-      this.persistSnapshot(map, this.currentKey || '');
-    }, 500); // debounce writes
-  }
-
-  private persistSnapshot(map: Map<string, Order>, key: string) {
-    if (!key) return;
     try {
-      const arr = Array.from(map.values()).slice(0, 300); // cap to 300 orders
-      const payload = JSON.stringify({ key, data: arr, ts: Date.now() });
-      localStorage.setItem(this.STORAGE_KEY, payload);
+      const payload = JSON.stringify({
+        key,
+        ts: Date.now(),
+        data: Array.from(map.values()).slice(0, 300),
+      });
+      localStorage.setItem(this.storageKey, payload);
     } catch {}
   }
 
   private tryRestoreSnapshot(key: string): Map<string, Order> | null {
     try {
-      const raw = localStorage.getItem(this.STORAGE_KEY);
-      if (!raw) return null;
+      const raw = localStorage.getItem(this.storageKey);
+      if (!raw) {
+        return null;
+      }
+
       const parsed = JSON.parse(raw);
-      if (!parsed || parsed.key !== key) return null;
-      // Optional staleness check (6h)
-      if (Date.now() - (parsed.ts || 0) > 6 * 60 * 60 * 1000) return null;
-      const orders: Order[] = Array.isArray(parsed.data) ? parsed.data : [];
+      if (!parsed || parsed.key !== key) {
+        return null;
+      }
+
+      if (Date.now() - (parsed.ts || 0) > 6 * 60 * 60 * 1000) {
+        return null;
+      }
+
       const map = new Map<string, Order>();
-      orders.forEach((o) => {
-        if (o?.id) map.set(o.id, o);
+      const list: Order[] = Array.isArray(parsed.data) ? parsed.data : [];
+      list.forEach((order) => {
+        if (order?.id && !this.isTerminalOrder(order)) {
+          map.set(order.id, order);
+        }
       });
+
       return map;
     } catch {
       return null;

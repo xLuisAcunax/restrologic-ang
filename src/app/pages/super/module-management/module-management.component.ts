@@ -125,8 +125,8 @@ export class ModuleManagementComponent implements OnInit {
     });
   }
 
-  loadBranches() {
-    this.businessService.getBranches().subscribe({
+  loadBranches(tenantId: string) {
+    this.businessService.getBranches(tenantId).subscribe({
       next: (result) => {
         this.tenantBranches.set(result ?? []);
       },
@@ -266,13 +266,18 @@ export class ModuleManagementComponent implements OnInit {
 
   onTenantChange(tenantId: string) {
     this.assignmentForm.update((prev) => ({ ...prev, tenantId, branchId: '' }));
-    this.loadBranches();
+    this.loadBranches(tenantId);
   }
 
   onScopeChange(scope: ModuleScope) {
     this.assignmentForm.update((prev) => ({ ...prev, scope, branchId: '' }));
     if (scope === 'BRANCH') {
-      this.loadBranches();
+      const tenantId = this.assignmentForm().tenantId;
+      if (tenantId) {
+        this.loadBranches(tenantId);
+      } else {
+        this.tenantBranches.set([]);
+      }
     } else {
       this.tenantBranches.set([]);
     }
@@ -335,3 +340,7 @@ export class ModuleManagementComponent implements OnInit {
     this.tenantBranches.set([]);
   }
 }
+
+
+
+

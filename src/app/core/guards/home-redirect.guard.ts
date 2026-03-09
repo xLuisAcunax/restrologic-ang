@@ -27,7 +27,7 @@ export class HomeRedirectGuard implements CanActivate {
 
         if (role.includes('Super')) this.router.navigate(['/super']);
         else if (role.includes('Admin')) this.router.navigate(['/admin']);
-        else if (role.includes('DELIVERY')) this.router.navigate(['/delivery']);
+        else if (role.includes('Repartidor')) this.router.navigate(['/delivery']);
         else this.router.navigate(['/user']);
 
         return false;
@@ -35,3 +35,4 @@ export class HomeRedirectGuard implements CanActivate {
     );
   }
 }
+

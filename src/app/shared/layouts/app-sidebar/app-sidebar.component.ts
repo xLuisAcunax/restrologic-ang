@@ -158,7 +158,7 @@ export class AppSidebarComponent {
       name: 'Cocina',
       path: '/user/kitchen',
     },
-    // Placeholder: Reservations will be conditionally added in renderMenu for ADMIN/CASHIER
+    // Placeholder: Reservations will be conditionally added in renderMenu for ADMIN/Cajero
   ];
 
   openSubmenu: string | null | number = null;
@@ -297,8 +297,8 @@ export class AppSidebarComponent {
   renderMenu(branchId?: string) {
     let myMenu: NavItem[] = [];
 
-    // Special case: DELIVERY role users get custom menu
-    if (this.myRole.includes('DELIVERY') && this.myRole.length === 1) {
+    // Special case: Repartidor role users get custom menu
+    if (this.myRole.includes('Repartidor') && this.myRole.length === 1) {
       myMenu = [
         {
           icon: `<svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"><path d="M12 10h24l4 8H8l4-8Zm-4 8h32v18a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4V18Zm8 6h12m-12 7h8"/></g></svg>`,
@@ -315,7 +315,7 @@ export class AppSidebarComponent {
       return;
     }
 
-    const regularUserRoles = ['WAITER', 'CASHIER', 'KITCHEN'];
+    const regularUserRoles = ['Mesero', 'Cajero', 'Cocina'];
     const hasRegularUserRole = this.myRole.some((role) =>
       regularUserRoles.includes(role),
     );
@@ -346,9 +346,9 @@ export class AppSidebarComponent {
         appendNavItems(this.userNavItems);
       }
 
-      // Conditionally inject Reservations (ADMIN & CASHIER only)
+      // Conditionally inject Reservations (ADMIN & Cajero only)
       const hasReservationRole =
-        this.myRole.includes('Admin') || this.myRole.includes('CASHIER');
+        this.myRole.includes('Admin') || this.myRole.includes('Cajero');
       if (hasReservationRole) {
         const reservationsKey = '/user/reservations';
         const exists = myMenu.some(
@@ -366,3 +366,5 @@ export class AppSidebarComponent {
     this.navItems.set(myMenu);
   }
 }
+
+

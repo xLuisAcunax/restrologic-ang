@@ -75,10 +75,22 @@ export class BusinessService {
     ok: boolean;
     data: BusinessItem[];
   }> {
-    return this.http.get<{
-      ok: boolean;
-      data: BusinessItem[];
-    }>(`${this.base}/tenant`);
+    return this.http
+      .get<BusinessItem[] | { ok: boolean; data: BusinessItem[] }>(
+        `${this.base}/Tenants`
+      )
+      .pipe(
+        map((response) => {
+          if (Array.isArray(response)) {
+            return { ok: true, data: response };
+          }
+
+          return {
+            ok: response.ok ?? true,
+            data: response.data ?? [],
+          };
+        })
+      );
   }
 
   getBusiness(tenantId: string): Observable<{
@@ -90,8 +102,12 @@ export class BusinessService {
     );
   }
 
-  getBranches(): Observable<BranchSummary[]> {
-    return this.http.get<BranchSummary[]>(`${this.base}/Branches`);
+  getBranches(tenantId?: string): Observable<BranchSummary[]> {
+    const url = tenantId
+      ? `${this.base}/Tenants/${tenantId}/branches`
+      : `${this.base}/Branches`;
+
+    return this.http.get<BranchSummary[]>(url);
   }
 
   getBranch(branchId: string): Observable<BranchSummary> {

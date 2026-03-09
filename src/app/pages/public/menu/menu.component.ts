@@ -753,9 +753,10 @@ export class PublicMenuComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    // Check bundles and sizes
-    const price = this.getProductPrice(product) ?? product.price ?? 0;
-    const isVariableSize = this.getPortionPrices(product).length > 0;
+    // Keep public-menu behavior aligned with table-details:
+    // if pricing says a portion/size must be chosen, force the portion selector
+    // before opening bundle selection so the resulting order item keeps its size.
+    const resolvedPrice = this.getProductPrice(product);
 
     const productLike = {
       ...product,
@@ -763,13 +764,13 @@ export class PublicMenuComponent implements OnInit, AfterViewInit, OnDestroy {
       subcategoryId: product.subcategory?.id ?? (product as any).subcategoryId,
     } as any;
 
-    if (isVariableSize) {
+    if (resolvedPrice === null) {
       this.openPortionSelector(productLike);
       return;
     }
 
     // Default to seeing if product needs dynamic bundle
-    this.checkAndAddProduct(productLike, price, null);
+    this.checkAndAddProduct(productLike, resolvedPrice, null);
   }
 
   // ===== Modifier Selector Modal =====
@@ -937,3 +938,4 @@ export class PublicMenuComponent implements OnInit, AfterViewInit, OnDestroy {
     this.closeModifierSelector();
   }
 }
+

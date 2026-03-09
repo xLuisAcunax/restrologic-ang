@@ -51,6 +51,10 @@ import {
   BundleGroupSelection,
 } from './bundle-selection-modal/bundle-selection-modal.component';
 import { ProductBundleService } from '../../../core/services/product-bundle.service';
+import {
+  RealtimeService,
+  TablePresenceInfo,
+} from '../../../core/services/realtime.service';
 
 export type TableDetailsData = {
   table: Table;
@@ -91,6 +95,7 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
   private priceAdjustmentService = inject(PriceAdjustmentService);
   private tableService = inject(TableService);
   private bundleService = inject(ProductBundleService);
+  private realtime = inject(RealtimeService);
   private dialog = inject(Dialog);
   private dialogRef = inject(DialogRef<TableDetailsComponent>);
   readonly data: TableDetailsData = inject(DIALOG_DATA);
@@ -106,10 +111,16 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
   cart = signal<CartItem[]>([]);
   currentOrder = signal<Order | null>(null);
   error = signal<string | null>(null);
+  tablePresence = signal<TablePresenceInfo | null>(null);
 
   /** Mobile tab: 'menu' shows product browser, 'order' shows order summary */
   activeTab = signal<'menu' | 'order'>('menu');
   cartCount = computed(() => this.cart().reduce((sum, i) => sum + i.quantity, 0));
+  isLockedByAnotherUser = computed(() => {
+    const presence = this.tablePresence();
+    const me = this.auth.me()?.id;
+    return !!presence?.locked && !!presence.lockedBy?.userId && presence.lockedBy.userId !== me;
+  });
 
   /** Categories that have at least one product in the current product list */
   availableCategories = computed(() => {
@@ -142,6 +153,7 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
+    void this.enterTablePresence();
     this.loadProducts();
     this.loadCategories();
     this.loadProductSizes();
@@ -149,7 +161,9 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
     this.loadActiveOrder();
   }
 
-  ngOnDestroy(): void { }
+  ngOnDestroy(): void {
+    void this.leaveTablePresence();
+  }
 
   // ---------- Data loaders ----------
   private loadProducts() {
@@ -479,6 +493,12 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
 
   // ---------- Persistence ----------
   saveOrder() {
+    if (this.isLockedByAnotherUser()) {
+      const lockedBy = this.tablePresence()?.lockedBy?.userName || 'otro usuario';
+      this.error.set('Esta mesa está siendo atendida por ' + lockedBy + '.');
+      return;
+    }
+
     if (this.cart().length === 0) {
       this.error.set('Agrega al menos un producto para guardar la orden.');
       return;
@@ -658,6 +678,12 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
 
   // ---------- Payments ----------
   openPaymentDialog() {
+    if (this.isLockedByAnotherUser()) {
+      const lockedBy = this.tablePresence()?.lockedBy?.userName || 'otro usuario';
+      this.error.set('Esta mesa está siendo atendida por ' + lockedBy + '.');
+      return;
+    }
+
     const order = this.currentOrder();
     if (!order) return;
     const total = order.total ?? this.totals.total;
@@ -795,7 +821,45 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
     );
   }
 
+  private async enterTablePresence(): Promise<void> {
+    const branchId = this.getBranchId();
+    const tableId = this.data.table.id;
+    const user = this.auth.me();
+
+    if (!branchId || !tableId || !user?.id || !user.fullName) {
+      return;
+    }
+
+    try {
+      const presence = await this.realtime.enterTablePresence(
+        branchId,
+        tableId,
+        user.id,
+        user.fullName,
+      );
+      this.tablePresence.set(presence);
+    } catch {}
+  }
+
+  private async leaveTablePresence(): Promise<void> {
+    const branchId = this.getBranchId();
+    const tableId = this.data.table.id;
+    const userId = this.auth.me()?.id;
+
+    if (!branchId || !tableId || !userId) {
+      return;
+    }
+
+    await this.realtime.leaveTablePresence(branchId, tableId, userId);
+  }
+
   onProductClick(product: Product) {
+    if (this.isLockedByAnotherUser()) {
+      const lockedBy = this.tablePresence()?.lockedBy?.userName || 'otro usuario';
+      this.error.set('Esta mesa está siendo atendida por ' + lockedBy + '.');
+      return;
+    }
+
     // Check if product has options (modifiers)
     if (product.hasOptions) {
       this.openProductConfigurator(product);
@@ -1174,3 +1238,6 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
     window.open(pdfUrl, '_blank');
   }
 }
+
+
+

@@ -126,6 +126,35 @@
                   order()!.requiresDelivery ? "Domicilio" : "Consumo en Mesa"
                 }}
               </div>
+              @if (order()!.requiresDelivery && order()!.delivery?.address) {
+                <div class="text-xs text-base-content/60 mt-1 max-w-xs">
+                  {{ order()!.delivery!.address }}
+                </div>
+              }
+              @if (order()!.requiresDelivery && order()!.delivery?.status) {
+                <div class="text-xs text-base-content/50 mt-1">
+                  Estado entrega:
+                  {{ order()!.delivery!.status | titlecase }}
+                </div>
+              }
+              @if (
+                order()!.requiresDelivery &&
+                order()!.delivery?.distanceKm !== null &&
+                order()!.delivery?.distanceKm !== undefined
+              ) {
+                <div class="text-xs text-base-content/50 mt-1">
+                  Distancia: {{ order()!.delivery!.distanceKm }} km
+                </div>
+              }
+              @if (
+                order()!.requiresDelivery &&
+                order()!.delivery?.fee !== null &&
+                order()!.delivery?.fee !== undefined
+              ) {
+                <div class="text-xs text-base-content/50 mt-1">
+                  Domicilio: {{ formatCurrency(order()!.delivery!.fee!) }}
+                </div>
+              }
               <div class="text-base-content/40 text-xs mt-1">
                 {{ branchName() }}
               </div>
@@ -161,6 +190,11 @@
                     class="text-xs text-base-content/50 mt-1 truncate max-w-xs"
                   >
                     {{ order()!.customer!.address }}
+                  </div>
+                }
+                @if (order()!.customer!.notes) {
+                  <div class="text-xs text-base-content/50 mt-1 max-w-xs">
+                    Nota: {{ order()!.customer!.notes }}
                   </div>
                 }
               </div>
@@ -452,3 +486,5 @@
     </div>
   }
 </div>
+
+

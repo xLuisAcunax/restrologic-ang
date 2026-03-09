@@ -41,7 +41,7 @@ export class DriverService {
       switchMap((res) => {
         const list = res?.data || [];
         if (list.length > 0) return of(list);
-        // Fallback: derive drivers from branch users with DELIVERY role
+        // Fallback: derive drivers from branch users with Repartidor role
         return this.http
           .get<{ ok: boolean; data: any[] }>(
             `${this.base}/users/branch/${branchId}`
@@ -52,7 +52,7 @@ export class DriverService {
               return users
                 .filter(
                   (u: any) =>
-                    Array.isArray(u.roles) && u.roles.includes('DELIVERY')
+                    Array.isArray(u.roles) && u.roles.includes('Repartidor')
                 )
                 .map(
                   (u: any): Driver => ({
@@ -82,7 +82,7 @@ export class DriverService {
               return users
                 .filter(
                   (u: any) =>
-                    Array.isArray(u.roles) && u.roles.includes('DELIVERY')
+                    Array.isArray(u.roles) && u.roles.includes('Repartidor')
                 )
                 .map(
                   (u: any): Driver => ({
@@ -109,3 +109,4 @@ export class DriverService {
     return this.http.get<ApiResponse<Driver>>(url).pipe(map((res) => res.data));
   }
 }
+
