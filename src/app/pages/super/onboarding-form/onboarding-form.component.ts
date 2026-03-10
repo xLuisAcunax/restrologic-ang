@@ -47,19 +47,12 @@ export class OnboardingFormComponent {
       this.form.markAllAsTouched();
       return;
     }
-
-    const currentUser = this.me();
-    if (!currentUser?.id) {
-      this.errorMessage.set('No se encontró la sesión actual.');
-      return;
-    }
-
-    const { owner, business } = this.form.getRawValue();
+const { owner, business } = this.form.getRawValue();
     const ownerGroup = owner!;
     const businessGroup = business!;
 
     const payload: BusinessOwnerOnboardingPayload = {
-      createdBy: currentUser.id,
+      createdBy: this.me()?.id ?? '',
       owner: {
         firstName: ownerGroup.firstName!,
         lastName: ownerGroup.lastName!,
@@ -94,3 +87,4 @@ export class OnboardingFormComponent {
     });
   }
 }
+
