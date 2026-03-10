@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
@@ -82,6 +82,17 @@ export class BusinessService {
 
   constructor(private http: HttpClient) {}
 
+  private buildTenantHeaders(tenantId?: string): HttpHeaders | undefined {
+    const normalizedTenantId = tenantId?.trim();
+    if (!normalizedTenantId) {
+      return undefined;
+    }
+
+    return new HttpHeaders({
+      'X-Tenant-ID': normalizedTenantId,
+    });
+  }
+
   list(): Observable<{
     ok: boolean;
     data: BusinessItem[];
@@ -128,8 +139,11 @@ export class BusinessService {
     return this.http.get<BranchSummary[]>(url);
   }
 
-  getBranch(branchId: string): Observable<BranchSummary> {
-    return this.http.get<BranchSummary>(`${this.base}/Branches/${branchId}`);
+  getBranch(branchId: string, tenantId?: string): Observable<BranchSummary> {
+    const headers = this.buildTenantHeaders(tenantId);
+    return this.http.get<BranchSummary>(`${this.base}/Branches/${branchId}`, {
+      headers,
+    });
   }
 
   updateBusiness(
@@ -141,10 +155,12 @@ export class BusinessService {
     );
   }
 
-  updateBranch(branchId: string, dto: UpdateBranchDto) {
+  updateBranch(branchId: string, dto: UpdateBranchDto, tenantId?: string) {
+    const headers = this.buildTenantHeaders(tenantId);
     return this.http.put<{ ok: boolean; data: BranchSummary }>(
       `${this.base}/Branches/${branchId}`,
-      dto
+      dto,
+      { headers }
     );
   }
 
@@ -152,9 +168,11 @@ export class BusinessService {
     tenantId: string,
     dto: CreateBranchDto
   ): Observable<{ ok: boolean; data: BranchSummary }> {
+    const headers = this.buildTenantHeaders(tenantId);
     return this.http.post<{ ok: boolean; data: BranchSummary }>(
       `${this.base}/Branches`,
-      dto
+      dto,
+      { headers }
     );
   }
 

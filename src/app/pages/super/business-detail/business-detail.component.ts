@@ -47,7 +47,7 @@ export class BusinessDetailComponent implements OnInit {
       },
     });
 
-    this.tenantService.getBranches().subscribe({
+    this.tenantService.getBranches(id).subscribe({
       next: (res: any) => {
         const branches = res?.data || [];
         this.branches.set(branches);
@@ -99,3 +99,4 @@ export class BusinessDetailComponent implements OnInit {
     return 'badge badge-error';
   }
 }
+

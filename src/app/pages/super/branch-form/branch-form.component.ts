@@ -86,7 +86,7 @@ export class BranchFormComponent {
       };
 
       this.businessService
-        .updateBranch(this.data.branchId, updateBranchDto)
+        .updateBranch(this.data.branchId, updateBranchDto, this.data.tenantId)
         .subscribe((resp) => {
           console.log('branch updated successful:', JSON.stringify(resp));
           this.dialogRef.close('Confirmed');
@@ -116,3 +116,4 @@ export class BranchFormComponent {
     }
   }
 }
+
