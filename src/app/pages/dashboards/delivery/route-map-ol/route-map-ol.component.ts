@@ -272,19 +272,30 @@ export class RouteMapOlComponent implements OnInit, AfterViewInit, OnDestroy {
     // No longer needed since we use real geocoding
   }
 
+  private isWithinBranchRadius(coords: Coordinates, maxKm: number = 20): boolean {
+    if (!this.branchCenter) return true;
+    return this.geoService.calculateDistance(this.branchCenter, coords) <= maxKm;
+  }
+
   private async geocodeAddress(address: string): Promise<Coordinates> {
     if (!address || address.trim() === '') {
-      // Fallback to current position if no address
       const current = this.currentPosition();
       return current || { latitude: 4.6097, longitude: -74.0817 };
     }
 
     try {
-      // Prefer branch city/center; if far from driver, retry with driver city
       const current = this.currentPosition();
-      const branchCity = null;
-      const driverCity = await this.getCurrentCity();
+      const branchCity = this.branchInfo?.city || this.cachedCity || null;
       const baseBranch = this.branchCenter || current || null;
+
+      // First try the provider service (Google when enabled) with branch city bias.
+      const providerResult = await this.geocoder.geocodeAddress(
+        address,
+        branchCity || undefined
+      );
+      if (providerResult && this.isWithinBranchRadius(providerResult, 20)) {
+        return providerResult;
+      }
 
       const candidates = this.generateAddressCandidates(address);
       let firstTry: Coordinates | null = null;
@@ -294,50 +305,10 @@ export class RouteMapOlComponent implements OnInit, AfterViewInit, OnDestroy {
       }
 
       if (firstTry) {
-        // If driver exists and result is very far from driver while driver and branch are far apart, retry driver city
-        if (current && this.branchCenter) {
-          const driverVsBranch = this.geoService.calculateDistance(
-            current,
-            this.branchCenter
-          );
-          const toDriver = this.geoService.calculateDistance(current, firstTry);
-          if (driverVsBranch > 80 && toDriver > 40 && driverCity) {
-            const secondTry = await this.searchNominatim(
-              address,
-              driverCity,
-              current
-            );
-            if (secondTry) {
-              const secondToDriver = this.geoService.calculateDistance(
-                current,
-                secondTry
-              );
-              // Prefer the closer to the driver
-              if (secondToDriver + 5 < toDriver) {
-                console.warn(
-                  '[RouteMapOL] Switched geocode to driver city due to distance'
-                );
-                return secondTry;
-              }
-            }
-          }
-        }
         return firstTry;
       }
 
-      // Branch attempt failed; try driver city if available
-      if (driverCity) {
-        for (const cand of candidates) {
-          const alt = await this.searchNominatim(
-            cand,
-            driverCity,
-            current || null
-          );
-          if (alt) return alt;
-        }
-      }
 
-      // Fallback to base location with small offset (avoid driver position)
       const cur = this.branchCenter || {
         latitude: 4.6097,
         longitude: -74.0817,
@@ -352,7 +323,6 @@ export class RouteMapOlComponent implements OnInit, AfterViewInit, OnDestroy {
       };
     } catch (error) {
       console.error('[RouteMapOL] Geocoding error for', address, error);
-      // Fallback to branch center instead of driver position
       return this.branchCenter || { latitude: 4.6097, longitude: -74.0817 };
     }
   }
@@ -364,7 +334,17 @@ export class RouteMapOlComponent implements OnInit, AfterViewInit, OnDestroy {
       if (!tid || !bid) return;
       const resp = await firstValueFrom(this.businessService.getBranch(bid));
       this.branchInfo = resp ?? null;
-      const hint = [this.branchInfo?.address, null, 'Colombia']
+      if (
+        typeof this.branchInfo?.latitude === 'number' &&
+        typeof this.branchInfo?.longitude === 'number'
+      ) {
+        this.branchCenter = {
+          latitude: this.branchInfo.latitude,
+          longitude: this.branchInfo.longitude,
+        };
+        return;
+      }
+      const hint = [this.branchInfo?.address, this.branchInfo?.city, this.branchInfo?.country || 'Colombia']
         .filter(Boolean)
         .join(', ');
       if (!hint) return;
@@ -386,31 +366,6 @@ export class RouteMapOlComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private async getCurrentCity(): Promise<string | null> {
-    if (this.cachedCity) return this.cachedCity;
-    const current = this.currentPosition();
-    if (!current) return null;
-    try {
-      const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${current.latitude}&lon=${current.longitude}&zoom=10&addressdetails=1&accept-language=es`;
-      const res = await fetch(url, {
-        headers: { 'User-Agent': 'RestroLogic-Delivery-App/1.0' },
-      });
-      const json = await res.json();
-      const addr = json?.address || {};
-      const city =
-        addr.city ||
-        addr.town ||
-        addr.village ||
-        addr.municipality ||
-        addr.county ||
-        null;
-      this.cachedCity = city;
-      return city;
-    } catch {
-      return null;
-    }
-  }
-
   private async searchNominatim(
     address: string,
     city: string | null,
@@ -428,7 +383,7 @@ export class RouteMapOlComponent implements OnInit, AfterViewInit, OnDestroy {
     const withinBounds = (coords: Coordinates): boolean => {
       if (!base) return true;
       const km = this.geoService.calculateDistance(base, coords);
-      return km <= 60; // tighten city radius to ~60km
+      return km <= 20; // keep results close to the active branch/city
     };
 
     const sameCity = (addr: any, expectedCity: string | null): boolean => {
@@ -712,7 +667,7 @@ export class RouteMapOlComponent implements OnInit, AfterViewInit, OnDestroy {
                 );
                 return null;
               }
-              const cityHint = null;
+              const cityHint = this.branchInfo?.city || this.cachedCity || undefined;
               const g = await this.geocoder.geocodeAddress(
                 address,
                 cityHint || undefined
@@ -740,7 +695,7 @@ export class RouteMapOlComponent implements OnInit, AfterViewInit, OnDestroy {
 
         // ALWAYS geocode branch address as the origin (restaurant/sucursal)
         const branchAddress = this.branchInfo?.address || '';
-        const branchCity = undefined;
+        const branchCity = this.branchInfo?.city || this.cachedCity || undefined;
         console.log(
           '[RouteMapOL] Geocoding branch address:',
           branchAddress,
@@ -854,6 +809,14 @@ export class RouteMapOlComponent implements OnInit, AfterViewInit, OnDestroy {
     setTimeout(() => this.map?.updateSize(), 80);
   }
 
+  private normalizeAddressForComparison(address: string | undefined): string {
+    return this.normalizeColAddress(address || '')
+      .replace(/,.*$/, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+  }
+
   private normalizeTxt(s: string | undefined): string {
     return (s || '')
       .toString()
@@ -878,9 +841,9 @@ export class RouteMapOlComponent implements OnInit, AfterViewInit, OnDestroy {
     // ALWAYS determine origin from branch address, NOT device position
     const branchAddress = this.branchInfo?.address || '';
 
-    let origin: Coordinates | null = null;
-    if (branchAddress && branchAddress.trim() !== '') {
-      origin = await this.geocoder.geocodeAddress(branchAddress, '');
+    let origin: Coordinates | null = this.branchCenter;
+    if (!origin && branchAddress && branchAddress.trim() !== '') {
+      origin = await this.geocoder.geocodeAddress(branchAddress, this.branchInfo?.city || this.cachedCity || undefined);
       console.log('[RouteMapOL] Branch geocoding result:', origin);
     }
 
@@ -999,3 +962,10 @@ export class RouteMapOlComponent implements OnInit, AfterViewInit, OnDestroy {
     };
   }
 }
+
+
+
+
+
+
+

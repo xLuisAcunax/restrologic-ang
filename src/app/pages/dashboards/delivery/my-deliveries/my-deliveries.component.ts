@@ -1,16 +1,10 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  signal,
-  computed,
-  inject,
-} from '@angular/core';
+import { Component, OnInit, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../../core/services/auth.service';
 import { OrderService } from '../../../../core/services/order.service';
 import { DeliveryStatusBadge } from '../../../../shared/components/delivery-status-badge/delivery-status-badge.component';
-import { DeliveryStatus, Order } from '../../../../core/models/order.model';
+import { DeliveryStatus } from '../../../../core/models/order.model';
+import { OrdersLiveStore } from '../../../../core/services/orders-live-store.service';
 
 @Component({
   selector: 'app-my-deliveries',
@@ -19,27 +13,45 @@ import { DeliveryStatus, Order } from '../../../../core/models/order.model';
   templateUrl: './my-deliveries.component.html',
   styleUrls: ['./my-deliveries.component.css'],
 })
-export class MyDeliveriesComponent implements OnInit, OnDestroy {
+export class MyDeliveriesComponent implements OnInit {
   private auth = inject(AuthService);
   private orderService = inject(OrderService);
+  private ordersStore = inject(OrdersLiveStore);
 
-  orders = signal<Order[]>([]);
-  loading = signal(true);
-  autoRefreshInterval: any = null;
+  loading = computed(
+    () => !!this.branchId() && !!this.driverId() && !this.ordersStore.ready(),
+  );
 
   tenantId = computed(() => this.auth.me()?.tenantId || '');
   branchId = computed(() => this.auth.me()?.branchId || '');
   driverId = computed(() => this.auth.me()?.id || '');
 
+  myOrders = computed(() => {
+    const branchId = this.branchId();
+    const driverId = this.driverId();
+
+    return this.ordersStore.ordersList().filter((order) => {
+      if (!branchId || !driverId) {
+        return false;
+      }
+
+      return (
+        order.branchId === branchId &&
+        order.delivery?.driverId === driverId &&
+        !!order.delivery
+      );
+    });
+  });
+
   pendingOrders = computed(() =>
-    this.orders().filter(
+    this.myOrders().filter(
       (o) =>
         o.delivery?.status === 'pending' || o.delivery?.status === 'assigned',
     ),
   );
 
   activeOrders = computed(() =>
-    this.orders().filter(
+    this.myOrders().filter(
       (o) =>
         o.delivery?.status === 'accepted' ||
         o.delivery?.status === 'picked_up' ||
@@ -48,7 +60,7 @@ export class MyDeliveriesComponent implements OnInit, OnDestroy {
   );
 
   completedOrders = computed(() =>
-    this.orders().filter(
+    this.myOrders().filter(
       (o) =>
         o.delivery?.status === 'delivered' ||
         o.delivery?.status === 'cancelled' ||
@@ -57,78 +69,20 @@ export class MyDeliveriesComponent implements OnInit, OnDestroy {
   );
 
   ngOnInit() {
-    if (this.tenantId() && this.branchId() && this.driverId()) {
-      this.loadMyDeliveries();
-      this.startAutoRefresh();
-    } else {
-      this.loading.set(false);
-    }
+    this.ordersStore.start();
   }
 
-  ngOnDestroy() {
-    this.stopAutoRefresh();
-  }
-
-  loadMyDeliveries() {
-    const tid = this.tenantId();
-    const bid = this.branchId();
-    const did = this.driverId();
-
-    if (!tid || !bid || !did) {
-      console.warn('[MyDeliveries] Missing required IDs');
-      this.loading.set(false);
-      return;
-    }
-
-    this.loading.set(true);
-    console.log('[MyDeliveries] Loading deliveries for driver:', did);
-    console.log('[MyDeliveries] TenantId:', tid, 'BranchId:', bid);
-
-    // Use the new driver-specific endpoint
-    this.orderService.getDriverOrders(tid, bid, did).subscribe({
-      next: (orders) => {
-        console.log('[MyDeliveries] Orders received:', orders.length);
-        console.log('[MyDeliveries] Orders:', orders);
-
-        this.orders.set(orders);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        console.error('[MyDeliveries] Error loading deliveries:', err);
-        this.loading.set(false);
-      },
-    });
-  }
-
-  startAutoRefresh() {
-    this.autoRefreshInterval = setInterval(() => {
-      if (this.tenantId() && this.branchId() && this.driverId()) {
-        this.loadMyDeliveries();
-      }
-    }, 10000);
-  }
-
-  stopAutoRefresh() {
-    if (this.autoRefreshInterval) {
-      clearInterval(this.autoRefreshInterval);
-    }
-  }
-
-  updateStatus(order: Order, newStatus: DeliveryStatus) {
+  updateStatus(orderId: string, newStatus: DeliveryStatus) {
     const tid = this.tenantId();
     const bid = this.branchId();
 
     if (!tid || !bid) return;
 
     this.orderService
-      .updateDeliveryStatus(tid, bid, order.id, { status: newStatus })
+      .updateDeliveryStatus(tid, bid, orderId, { status: newStatus })
       .subscribe({
-        next: (updatedOrder) => {
-          console.log('[MyDeliveries] Status updated:', updatedOrder);
-          this.loadMyDeliveries();
-        },
-        error: (err) => {
-          console.error('[MyDeliveries] Error updating status:', err);
+        next: () => {
+          this.ordersStore.ensureById(orderId);
         },
       });
   }
@@ -147,3 +101,4 @@ export class MyDeliveriesComponent implements OnInit, OnDestroy {
     return `$${amount.toLocaleString('es-CO')}`;
   }
 }
+

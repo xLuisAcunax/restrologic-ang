@@ -11,15 +11,19 @@ export type BusinessItem = {
   description?: string;
   isActive?: boolean;
   createdAt?: string;
-  modules?: string[]; // e.g., ['SALES', 'INVENTORY']
+  modules?: string[];
 };
 
 export type BranchSummary = {
   id: string;
   name: string;
   address?: string | null;
+  city?: string | null;
+  country?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   description?: string | null;
-  modules?: string[]; // e.g., ['SALES', 'INVENTORY']
+  modules?: string[];
   isActive?: boolean;
 };
 
@@ -39,7 +43,7 @@ export type UpdateBusinessDto = {
   name?: string;
   description?: string;
   isActive?: boolean;
-  modules?: string[]; // e.g., ['SALES', 'INVENTORY']
+  modules?: string[];
   createdBy?: string;
 };
 
@@ -57,12 +61,23 @@ export type CreateBranchDto = {
   name: string;
   code?: string | null;
   address?: string | null;
+  city?: string | null;
+  country?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  description?: string | null;
+  isActive?: boolean;
 };
 
 export type UpdateBranchDto = {
   name?: string;
   address?: string | null;
+  city?: string | null;
+  country?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   description?: string | null;
+  isActive?: boolean;
 };
 
 @Injectable({ providedIn: 'root' })
@@ -111,21 +126,9 @@ export class BusinessService {
   }
 
   getBranch(branchId: string): Observable<BranchSummary> {
-    return this.http
-      .get<BranchSummary[]>(`${this.base}/Branches`, {
-        params: new HttpParams().set('branchId', branchId),
-      })
-      .pipe(
-        map((branches) => {
-          if (!branches || branches.length === 0) {
-            throw new Error(`Branch with id ${branchId} not found`);
-          }
-          return branches[0]; // Return the first (and only) branch from the array
-        })
-      );
+    return this.http.get<BranchSummary>(`${this.base}/Branches/${branchId}`);
   }
 
-  // Update business (PATCH). Server requires Authorization + SUPER|ADMIN role.
   updateBusiness(
     id: string,
     dto: UpdateBusinessDto
@@ -136,7 +139,6 @@ export class BusinessService {
     );
   }
 
-  // Update branch (PATCH). Server requires Authorization + SUPER|ADMIN role.
   updateBranch(branchId: string, dto: UpdateBranchDto) {
     console.log('Updating branch with ID:', branchId, 'and DTO:', dto);
     return this.http.put<{ ok: boolean; data: BranchSummary }>(
@@ -147,7 +149,7 @@ export class BusinessService {
 
   createBranch(
     tenantId: string,
-    dto: UpdateBranchDto
+    dto: CreateBranchDto
   ): Observable<{ ok: boolean; data: BranchSummary }> {
     return this.http.post<{ ok: boolean; data: BranchSummary }>(
       `${this.base}/Branches`,
@@ -164,3 +166,5 @@ export class BusinessService {
     );
   }
 }
+
+

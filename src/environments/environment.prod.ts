@@ -1,7 +1,7 @@
 export const environment = {
   production: true,
-  apiBaseUrl: 'https://restrologic-api.fly.dev/api/v1',
-  publicMenuBaseUrl: 'https://restrologic-web.vercel.app/',
+  apiBaseUrl: 'http://dgcc08o0s8co80sgscosggcw.178.156.239.65.sslip.io/api/v1',
+  publicMenuBaseUrl: 'https://restrologic-ang.pages.dev/',
   features: {
     ordersSseEnabled: true,
     ordersPollingIntervalMs: 3000,

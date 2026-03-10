@@ -1,21 +1,14 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  signal,
-  computed,
-  inject,
-} from '@angular/core';
+import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
-import { OrderService } from '../../../core/services/order.service';
 import { DriverService, Driver } from '../../../core/services/driver.service';
 import { Dialog } from '@angular/cdk/dialog';
 import { DeliveryAssignmentModal } from '../../../shared/components/delivery-assignment-modal/delivery-assignment-modal.component';
 import { DeliveryStatusBadge } from '../../../shared/components/delivery-status-badge/delivery-status-badge.component';
 import { BranchSelectionService } from '../../../core/services/branch-selection.service';
 import { DeliveryStatus, Order } from '../../../core/models/order.model';
+import { OrdersLiveStore } from '../../../core/services/orders-live-store.service';
 
 interface OptimisticAssignmentResult {
   status: 'optimistic';
@@ -39,202 +32,80 @@ function isOptimisticAssignmentResult(r: any): r is OptimisticAssignmentResult {
   templateUrl: './deliveries.component.html',
   styleUrl: './deliveries.component.css',
 })
-export class DeliveriesComponent implements OnInit, OnDestroy {
+export class DeliveriesComponent implements OnInit {
   private auth = inject(AuthService);
-  private orderService = inject(OrderService);
   private driverService = inject(DriverService);
   private dialog = inject(Dialog);
   private branchSelection = inject(BranchSelectionService);
+  private ordersStore = inject(OrdersLiveStore);
 
-  // State
-  orders = signal<Order[]>([]);
   drivers = signal<Driver[]>([]);
-  loading = signal(true);
   selectedStatus = signal<DeliveryStatus | 'all'>('all');
   selectedDriver = signal<string | 'all'>('all');
-  autoRefreshInterval: any = null;
 
-  // Computed
   tenantId = computed(() => this.auth.me()?.tenantId || '');
   branchId = computed(() => {
-    // Para usuarios admin, usar la sucursal seleccionada en el header (BranchSelectionService)
     const explicit = this.branchSelection.selectedBranchId();
     if (explicit) return explicit;
-    // Usuarios regulares tienen branchId en su perfil
     return this.auth.me()?.branchId || '';
   });
 
+  loading = computed(() => !!this.branchId() && !this.ordersStore.ready());
+
+  private dispatchableOrders = computed(() => {
+    const branchId = this.branchId();
+    const orders = this.ordersStore.ordersList();
+
+    return orders.filter((order) => this.isDispatchableDelivery(order, branchId));
+  });
+
   filteredOrders = computed(() => {
-    let result = this.orders();
+    let result = this.dispatchableOrders();
 
     if (this.selectedStatus() !== 'all') {
-      result = result.filter(
-        (o) => o.delivery?.status === this.selectedStatus(),
-      );
+      result = result.filter((o) => o.delivery?.status === this.selectedStatus());
     }
 
     if (this.selectedDriver() !== 'all') {
-      result = result.filter(
-        (o) => o.delivery?.driverId === this.selectedDriver(),
-      );
+      result = result.filter((o) => o.delivery?.driverId === this.selectedDriver());
     }
 
     return result;
   });
 
   pendingCount = computed(
-    () => this.orders().filter((o) => o.delivery?.status === 'pending').length,
+    () =>
+      this.dispatchableOrders().filter((o) => o.delivery?.status === 'pending')
+        .length,
   );
 
+  constructor() {
+    effect(() => {
+      const branchId = this.branchId();
+      const tenantId = this.tenantId();
+
+      if (!branchId || !tenantId) {
+        this.drivers.set([]);
+        return;
+      }
+
+      this.ordersStore.start();
+      this.loadDrivers(tenantId, branchId);
+    });
+  }
+
   ngOnInit() {
-    // Solo cargar si hay sucursal seleccionada
-    if (this.branchId()) {
-      this.loadOrders();
-      this.loadDrivers();
-      this.startAutoRefresh();
-    } else {
-      this.loading.set(false);
-    }
+    this.ordersStore.start();
   }
 
-  ngOnDestroy() {
-    this.stopAutoRefresh();
-  }
-
-  loadOrders() {
-    const tid = this.tenantId();
-    const bid = this.branchId();
-    if (!tid) {
-      console.warn('[Deliveries] Missing tenant ID');
-      return;
-    }
-    if (!bid) {
-      console.warn('[Deliveries] No branch selected.');
-      this.loading.set(false);
-      this.orders.set([]);
-      return;
-    }
-
-    this.loading.set(true);
-    console.log('[Deliveries] Loading orders for:', { tid, bid });
-    // Primer intento: endpoint filtrado por requiresDelivery
-    this.orderService.getDeliveryOrders(tid, bid).subscribe({
-      next: (response) => {
-        const orders = response?.data || [];
-        console.log(
-          '[Deliveries] Primary endpoint result (requiresDelivery=true):',
-          orders,
-        );
-        if (!orders || orders.length === 0) {
-          console.warn(
-            '[Deliveries] Empty result. Fallback: loading all orders and filtering manually.',
-          );
-          this.loadOrdersFallback(tid, bid);
-          return;
-        }
-        orders.forEach((order: Order, idx: number) => {
-          console.log(`[Deliveries] (Primary) Order ${idx}:`, {
-            id: order.id,
-            orderNumber: order.code,
-            source: order.source,
-            status: order.status,
-            hasDelivery: !!order.delivery,
-            requiresDelivery: order.delivery?.requiresDelivery,
-            deliveryStatus: order.delivery?.status,
-            deliveryDriverId: order.delivery?.driverId,
-          });
-        });
-        this.orders.set(orders);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        console.error('[Deliveries] Primary endpoint error:', err);
-        console.warn(
-          '[Deliveries] Fallback after error: loading all orders and filtering manually.',
-        );
-        this.loadOrdersFallback(tid, bid);
-      },
-    });
-  }
-
-  private loadOrdersFallback(tid: string, bid: string) {
-    this.orderService.getOrders(tid, bid).subscribe({
-      next: (resp) => {
-        const all = resp.data || [];
-        console.log('[Deliveries][Fallback] All orders count:', all.length);
-        const deliveryCandidates = all.filter((o: any) => {
-          // Solo incluir órdenes que explícitamente requieren delivery
-          return (
-            (o.delivery && o.delivery.requiresDelivery === true) ||
-            o.requiresDelivery === true
-          );
-        });
-        console.log(
-          '[Deliveries][Fallback] Candidates count:',
-          deliveryCandidates.length,
-        );
-        // Construir delivery object mínimo si falta
-        const normalized = deliveryCandidates.map((o: any) => {
-          if (!o.delivery) {
-            o.delivery = {
-              requiresDelivery: true,
-              address: o.customer?.address,
-              distanceKm: o.distanceKm ?? null,
-              fee: o.deliveryFee ?? null,
-              driverId: o.deliveryDriverId ?? null,
-              status: (o.deliveryStatus as DeliveryStatus) || 'pending',
-              assignedAt: null,
-              pickedUpAt: null,
-              deliveredAt: null,
-              cancelledAt: null,
-              failedAt: null,
-              eta: null,
-              location: null,
-              routeEtaMinutes: null,
-              trackingId: o.deliveryTracking?.id ?? null,
-              notes: o.customer?.notes ?? null,
-            };
-          }
-          return o as Order;
-        });
-        normalized.forEach((o, i) => {
-          console.log(`[Deliveries][Fallback] Normalized ${i}:`, {
-            id: o.id,
-            orderNumber: o.code,
-            deliveryStatus: o.delivery?.status,
-            address: o.delivery?.address,
-          });
-        });
-        this.orders.set(normalized);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        console.error('[Deliveries][Fallback] Error loading all orders:', err);
-        this.loading.set(false);
-      },
-    });
-  }
-
-  loadDrivers() {
-    const tid = this.tenantId();
-    const bid = this.branchId();
-    if (!tid || !bid) return;
-
-    this.driverService.getAvailableDrivers(tid, bid, true).subscribe({
-      next: (drivers) => this.drivers.set(drivers),
-      error: (err) => console.error('Error loading drivers:', err),
-    });
+  refresh() {
+    const tenantId = this.tenantId();
+    const branchId = this.branchId();
+    if (!tenantId || !branchId) return;
+    this.loadDrivers(tenantId, branchId);
   }
 
   openAssignmentModal(order: Order) {
-    console.log('[Deliveries] Opening assignment modal for order:', {
-      id: order.id,
-      orderNumber: order.code,
-      branchId: order.branchId,
-      delivery: order.delivery,
-      requiresDelivery: order.delivery?.requiresDelivery,
-    });
-
     const dialogRef = this.dialog.open(DeliveryAssignmentModal, {
       data: {
         orderId: order.id,
@@ -247,57 +118,11 @@ export class DeliveriesComponent implements OnInit, OnDestroy {
 
     dialogRef.closed.subscribe((result) => {
       if (result === 'assigned') {
-        this.loadOrders(); // Refresh after assignment
+        this.ordersStore.ensureById(order.id);
       } else if (isOptimisticAssignmentResult(result)) {
-        const updated = this.orders().map((o) => {
-          if (o.id !== order.id) return o;
-          const now = new Date().toISOString();
-          const raw: any = o; // acceso a campos planos si existen
-          if (!o.delivery) {
-            o.delivery = {
-              requiresDelivery: true,
-              address: raw.customer?.address,
-              distanceKm: raw.distanceKm ?? null,
-              fee: raw.deliveryFee ?? raw.delivery?.fee ?? null,
-              driverId: result.driverId,
-              status: 'pending',
-              assignedAt: now,
-              pickedUpAt: null,
-              deliveredAt: null,
-              cancelledAt: null,
-              failedAt: null,
-              eta: null,
-              location: null,
-              routeEtaMinutes: null,
-              trackingId: raw.deliveryTracking?.id ?? null,
-              notes: result.notes ?? raw.customer?.notes ?? null,
-            };
-          } else {
-            o.delivery.driverId = result.driverId;
-            o.delivery.assignedAt = now;
-            if (result.notes) o.delivery.notes = result.notes;
-          }
-          return { ...o };
-        });
-        this.orders.set(updated);
+        this.ordersStore.ensureById(order.id);
       }
     });
-  }
-
-  startAutoRefresh() {
-    // Refresh every 10 seconds
-    if (!this.branchId()) return; // Evitar polling sin sucursal
-    this.autoRefreshInterval = setInterval(() => {
-      if (this.branchId()) {
-        this.loadOrders();
-      }
-    }, 10000);
-  }
-
-  stopAutoRefresh() {
-    if (this.autoRefreshInterval) {
-      clearInterval(this.autoRefreshInterval);
-    }
   }
 
   onStatusFilterChange(status: DeliveryStatus | 'all') {
@@ -326,5 +151,59 @@ export class DeliveriesComponent implements OnInit, OnDestroy {
   formatCurrency(amount: number | null | undefined): string {
     if (!amount) return '$0';
     return `$${amount.toLocaleString('es-CO')}`;
+  }
+
+  private loadDrivers(tenantId: string, branchId: string) {
+    this.driverService.getAvailableDrivers(tenantId, branchId, true).subscribe({
+      next: (drivers) => this.drivers.set(drivers),
+      error: () => this.drivers.set([]),
+    });
+  }
+
+  private isDispatchableDelivery(order: Order, branchId: string): boolean {
+    if (!order || !branchId || order.branchId !== branchId) {
+      return false;
+    }
+
+    const orderStatus = this.orderDispatchStatus(order);
+    const deliveryStatus = String(order.delivery?.status || 'pending')
+      .trim()
+      .toLowerCase();
+    const isDelivery = !!order.delivery || order.requiresDelivery === true;
+    const isReadyForDispatch = ['ready', 'served'].includes(orderStatus);
+    const isDeliveryOpen = !['delivered', 'cancelled', 'failed'].includes(
+      deliveryStatus,
+    );
+
+    return isDelivery && isReadyForDispatch && isDeliveryOpen;
+  }
+
+  private orderDispatchStatus(order: Order): string {
+    const itemStatuses = (order.items || [])
+      .map((item) => this.normalizeItemStatus(item.status ?? ''))
+      .filter((status) => status !== 'cancelled');
+
+    if (itemStatuses.length > 0) {
+      if (itemStatuses.every((status) => status === 'served')) {
+        return 'served';
+      }
+
+      if (itemStatuses.every((status) => ['ready', 'served'].includes(status))) {
+        return 'ready';
+      }
+    }
+
+    return String(order.status || '').trim().toLowerCase();
+  }
+
+  private normalizeItemStatus(status: string): string {
+    const normalized = String(status || '').trim().toLowerCase();
+
+    switch (normalized) {
+      case 'inpreparation':
+        return 'preparing';
+      default:
+        return normalized;
+    }
   }
 }

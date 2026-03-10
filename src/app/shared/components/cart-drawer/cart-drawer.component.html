@@ -166,7 +166,7 @@
           <div class="form-control">
             <label class="label text-xs font-bold uppercase text-base-content/50 pb-1">Dirección de Entrega</label>
             <textarea class="textarea textarea-bordered h-20 bg-base-200/50 focus:bg-base-100 transition-all"
-              [ngModel]="customerAddress()" (ngModelChange)="customerAddress.set($event)"
+              [ngModel]="customerAddress()" (ngModelChange)="onCustomerAddressChange($event)"
               placeholder="Calle, número, apto, conjunto..."></textarea>
             @if (
             !addressOk() && (submitted() || customerAddress().length > 0)
@@ -176,38 +176,48 @@
           </div>
 
           @if (hasAddress()) {
-          <div class="bg-base-200/50 p-4 rounded-xl border border-base-200">
-            <label class="label text-xs font-bold uppercase text-base-content/50 pt-0">Calculadora de Domicilio</label>
-            <div class="flex gap-2 items-start">
-              <div class="flex-1">
-                <input type="number" class="input input-sm input-bordered w-full" [ngModel]="estimatedDistanceKm()"
-                  (ngModelChange)="computeFeePreview($event || 0)" placeholder="KM de distancia" />
-                <div class="text-[10px] opacity-50 mt-1">
-                  Distancia estimada en km
-                </div>
-              </div>
+          <div class="bg-base-200/50 p-4 rounded-xl border border-base-200 space-y-3">
+            <label class="label text-xs font-bold uppercase text-base-content/50 pt-0">Validación de domicilio</label>
 
-              <div class="text-right">
-                @if (calculatingFee()) {
-                <span class="loading loading-spinner loading-sm"></span>
-                } @else if (radiusExceeded()) {
-                <div class="badge badge-error badge-sm">
-                  Fuera de rango
-                </div>
-                } @else if (showDeliveryPreview()) {
-                <div class="font-bold text-base-content">
-                  ${{ deliveryFee() | number: "1.0-0" }}
-                </div>
-                <div class="text-xs text-success font-medium">
-                  Tarifa aplicada
-                </div>
-                }
+            <div class="flex items-center justify-between gap-3">
+              <div class="text-sm text-base-content/60">
+                Pulsa el botón para validar la dirección y calcular el domicilio.
+              </div>
+              <button
+                type="button"
+                class="btn btn-sm btn-primary"
+                [disabled]="!canValidateAddress()"
+                (click)="validateDeliveryAddress()">
+                Validar dirección
+              </button>
+            </div>
+
+            @if (loadingCheckoutConfig() || calculatingDistance()) {
+            <div class="flex items-center gap-3 text-sm text-base-content/70">
+              <span class="loading loading-spinner loading-sm"></span>
+              <span>Validando dirección y calculando cobertura...</span>
+            </div>
+            } @else if (deliveryBlockedMessage()) {
+            <div class="rounded-lg border border-error/30 bg-error/5 px-3 py-2 text-sm text-error">
+              {{ deliveryBlockedMessage() }}
+            </div>
+            } @else if (showDeliveryPreview()) {
+            <div class="grid grid-cols-2 gap-3 text-sm">
+              <div class="rounded-lg bg-base-100 px-3 py-2 border border-base-200">
+                <div class="text-[11px] uppercase tracking-wide text-base-content/50 font-bold">Distancia</div>
+                <div class="font-bold text-base-content">{{ estimatedDistanceKm() | number: '1.1-2' }} km</div>
+              </div>
+              <div class="rounded-lg bg-base-100 px-3 py-2 border border-base-200 text-right">
+                <div class="text-[11px] uppercase tracking-wide text-base-content/50 font-bold">Domicilio</div>
+                <div class="font-bold text-primary">${{ deliveryFee() | number: '1.0-0' }}</div>
               </div>
             </div>
-            @if (radiusExceeded()) {
-            <div class="text-error text-xs mt-2 font-medium">
-              ⚠️ La distancia excede el límite de
-              {{ deliveriesConfig()?.deliveryRadiusKm }} km.
+            <div class="text-[11px] text-success font-medium">
+              La dirección está validada y dentro del rango permitido para esta sucursal.
+            </div>
+            } @else {
+            <div class="text-sm text-base-content/60">
+              Ingresa una dirección completa y luego pulsa <span class="font-semibold">Validar dirección</span>.
             </div>
             }
           </div>
@@ -275,3 +285,4 @@
   </div>
 </div>
 }
+

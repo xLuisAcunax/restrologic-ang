@@ -108,6 +108,30 @@ export class OrderService {
     }
   }
 
+  private normalizeDeliveryStatus(status: unknown): DeliveryStatus | undefined {
+    const raw = String(status ?? '').trim().toLowerCase();
+
+    switch (raw) {
+      case 'pickedup':
+      case 'picked_up':
+        return 'picked_up';
+      case 'intransit':
+      case 'in_transit':
+        return 'in_transit';
+      case 'pending':
+      case 'assigned':
+      case 'accepted':
+      case 'preparing':
+      case 'ready':
+      case 'delivered':
+      case 'cancelled':
+      case 'failed':
+        return raw as DeliveryStatus;
+      default:
+        return undefined;
+    }
+  }
+
   private mapDelivery(delivery: any): DeliveryInfo | null {
     if (!delivery || typeof delivery !== 'object') {
       return null;
@@ -119,9 +143,24 @@ export class OrderService {
       distanceKm:
         typeof delivery.distanceKm === 'number' ? delivery.distanceKm : null,
       fee: typeof delivery.fee === 'number' ? delivery.fee : null,
-      status: delivery.status
-        ? (String(delivery.status).toLowerCase() as DeliveryStatus)
-        : undefined,
+      driverId: delivery.driverId ?? null,
+      status: this.normalizeDeliveryStatus(delivery.status),
+      assignedAt: delivery.assignedAt ?? null,
+      pickedUpAt: delivery.pickedUpAt ?? null,
+      deliveredAt: delivery.deliveredAt ?? null,
+      cancelledAt: delivery.cancelledAt ?? null,
+      failedAt: delivery.failedAt ?? null,
+      trackingId: delivery.trackingId ?? null,
+      location:
+        typeof delivery.latitude === 'number' &&
+        typeof delivery.longitude === 'number'
+          ? { lat: delivery.latitude, lng: delivery.longitude }
+          : delivery.location &&
+              typeof delivery.location.lat === 'number' &&
+              typeof delivery.location.lng === 'number'
+            ? { lat: delivery.location.lat, lng: delivery.location.lng }
+            : null,
+      notes: delivery.notes ?? null,
     };
   }
 
@@ -444,9 +483,24 @@ export class OrderService {
     branchId: string,
     params?: HttpParams | { [param: string]: any },
   ): Observable<OrdersResponse> {
-    return this.http.get<OrdersResponse>(
-      `${this.base}/tenant/${tenantId}/branch/${branchId}/order`,
-      { params },
+    let filters = { branchId } as {
+      branchId?: string;
+      status?: string;
+    };
+
+    const status =
+      params instanceof HttpParams
+        ? params.get('status')
+        : params && typeof params === 'object'
+          ? params['status']
+          : null;
+
+    if (status) {
+      filters = { ...filters, status: String(status) };
+    }
+
+    return this.listOrders(filters).pipe(
+      map((orders) => ({ ok: true, data: orders })),
     );
   }
 
@@ -455,10 +509,9 @@ export class OrderService {
     branchId: string,
     since: string,
   ): Observable<OrdersSinceResponse> {
-    const params = new HttpParams().set('since', since);
-    return this.http.get<OrdersSinceResponse>(
-      `${this.base}/tenant/${tenantId}/branch/${branchId}/order`,
-      { params },
+    const sinceDate = new Date(since);
+    return this.listOrders({ branchId, from: sinceDate.toISOString() }).pipe(
+      map((orders) => ({ ok: true, data: orders } as OrdersSinceResponse)),
     );
   }
 
@@ -466,10 +519,13 @@ export class OrderService {
     tenantId: string,
     branchId: string,
   ): Observable<OrdersResponse> {
-    const params = new HttpParams().set('active', 'true');
-    return this.http.get<OrdersResponse>(
-      `${this.base}/tenant/${tenantId}/branch/${branchId}/order`,
-      { params },
+    return this.listOrders({ branchId }).pipe(
+      map((orders) => ({
+        ok: true,
+        data: orders.filter(
+          (order) => !['paid', 'closed', 'cancelled'].includes(order.status),
+        ),
+      })),
     );
   }
 
@@ -477,10 +533,11 @@ export class OrderService {
     tenantId: string,
     branchId: string,
   ): Observable<OrdersResponse> {
-    const params = new HttpParams().set('deliveryOnly', 'true');
-    return this.http.get<OrdersResponse>(
-      `${this.base}/tenant/${tenantId}/branch/${branchId}/order`,
-      { params },
+    return this.listOrders({ branchId }).pipe(
+      map((orders) => ({
+        ok: true,
+        data: orders.filter((order) => !!order.delivery || order.requiresDelivery),
+      })),
     );
   }
 
@@ -489,10 +546,8 @@ export class OrderService {
     branchId: string,
     status: OrderStatus,
   ): Observable<OrdersResponse> {
-    const params = new HttpParams().set('status', status);
-    return this.http.get<OrdersResponse>(
-      `${this.base}/tenant/${tenantId}/branch/${branchId}/order`,
-      { params },
+    return this.listOrders({ branchId, status: String(status) }).pipe(
+      map((orders) => ({ ok: true, data: orders })),
     );
   }
 
@@ -516,10 +571,13 @@ export class OrderService {
     orderId: string,
     driverId: string,
   ): Observable<OrderResponse> {
-    return this.http.post<OrderResponse>(
-      `${this.base}/tenant/${tenantId}/branch/${branchId}/order/${orderId}/assign-driver`,
-      { driverId },
-    );
+    return this.http
+      .post<Order>(
+        `${this.base}/orders/${orderId}/assign-driver`,
+        { driverId },
+        this.withTenant(),
+      )
+      .pipe(map((order) => ({ ok: true, data: this.mapOrderFromApi(order) })));
   }
 
   updateOrderStatus(
@@ -540,10 +598,13 @@ export class OrderService {
     orderId: string,
     dto: UpdateDeliveryStatusDto,
   ): Observable<OrderResponse> {
-    return this.http.patch<OrderResponse>(
-      `${this.base}/tenant/${tenantId}/branch/${branchId}/order/${orderId}/delivery`,
-      dto,
-    );
+    return this.http
+      .patch<Order>(
+        `${this.base}/orders/${orderId}/delivery`,
+        dto,
+        this.withTenant(),
+      )
+      .pipe(map((order) => ({ ok: true, data: this.mapOrderFromApi(order) })));
   }
 
   getDriverOrders(
@@ -551,11 +612,11 @@ export class OrderService {
     branchId: string,
     driverId: string,
   ): Observable<Order[]> {
-    const params = new HttpParams().set('driverId', driverId);
-    return this.http.get<any>(
-      `${this.base}/tenant/${tenantId}/branch/${branchId}/order`,
-      { params },
-    ) as any;
+    return this.listOrders({ branchId }).pipe(
+      map((orders) =>
+        orders.filter((order) => order.delivery?.driverId === driverId),
+      ),
+    );
   }
 
   updateDriverLocation(
@@ -575,4 +636,10 @@ export class OrderService {
     );
   }
 }
+
+
+
+
+
+
 

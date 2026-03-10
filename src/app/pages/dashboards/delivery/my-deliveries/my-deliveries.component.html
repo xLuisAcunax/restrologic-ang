@@ -52,7 +52,7 @@
                   ) {
                     <button
                       class="btn btn-primary btn-sm"
-                      (click)="updateStatus(order, 'accepted')"
+                      (click)="updateStatus(order.id, 'accepted')"
                     >
                       Aceptar
                     </button>
@@ -110,7 +110,7 @@
                   @if (order.delivery?.status === "accepted") {
                     <button
                       class="btn btn-sm btn-info"
-                      (click)="updateStatus(order, 'picked_up')"
+                      (click)="updateStatus(order.id, 'picked_up')"
                     >
                       Recoger
                     </button>
@@ -118,7 +118,7 @@
                   @if (order.delivery?.status === "picked_up") {
                     <button
                       class="btn btn-sm btn-warning"
-                      (click)="updateStatus(order, 'in_transit')"
+                      (click)="updateStatus(order.id, 'in_transit')"
                     >
                       En camino
                     </button>
@@ -126,13 +126,13 @@
                   @if (order.delivery?.status === "in_transit") {
                     <button
                       class="btn btn-sm btn-success"
-                      (click)="updateStatus(order, 'delivered')"
+                      (click)="updateStatus(order.id, 'delivered')"
                     >
                       Entregado
                     </button>
                     <button
                       class="btn btn-sm btn-error"
-                      (click)="updateStatus(order, 'failed')"
+                      (click)="updateStatus(order.id, 'failed')"
                     >
                       Fallido
                     </button>
@@ -189,10 +189,11 @@
     }
 
     <!-- Sin entregas -->
-    @if (orders().length === 0) {
+    @if (myOrders().length === 0) {
       <div class="text-center py-12">
         <p class="text-gray-500 text-lg">No tienes entregas asignadas</p>
       </div>
     }
   }
 </div>
+

@@ -1,53 +1,240 @@
-<div class="max-w-2xl mx-auto card bg-base-100 shadow-sm">
-  <div class="px-5 pt-5">
-    <h2 class="text-xl font-semibold">Estadísticas (configuración)</h2>
-    <p class="mt-1 text-gray-500 text-theme-sm dark:text-gray-400">
-      Valores usados por la dashboard. Más adelante se persistirán en la base de
-      datos.
-    </p>
-  </div>
-  <div class="card-body">
-    <div class="form-control w-full">
-      <label class="label"
-        ><span class="label-text">Meta mensual (COP)</span></label
-      >
-      <input
-        class="input input-bordered w-full"
-        type="number"
-        min="0"
-        step="1000"
-        [value]="monthlyTargetCOP"
-        (input)="updateTarget($any($event.target).value)"
-      />
-      <span class="text-xs text-gray-500 mt-1"
-        >Por ahora fija: 6,000,000 COP (puedes ajustar el valor aquí).</span
-      >
+<div class="max-w-5xl mx-auto space-y-6">
+  <div class="card bg-base-100 shadow-sm">
+    <div class="px-5 pt-5">
+      <h2 class="text-xl font-semibold">Opciones</h2>
+      <p class="mt-1 text-gray-500 text-theme-sm dark:text-gray-400">
+        Ajustes operativos de la sucursal actual y preferencias del dashboard.
+      </p>
     </div>
+    <div class="card-body">
+      <div class="grid gap-4 md:grid-cols-2">
+        <div class="form-control w-full">
+          <label class="label">
+            <span class="label-text">Meta mensual (COP)</span>
+          </label>
+          <input
+            class="input input-bordered w-full"
+            type="number"
+            min="0"
+            step="1000"
+            [value]="monthlyTargetCOP"
+            (input)="updateTarget($any($event.target).value)"
+          />
+        </div>
 
-    <div class="grid grid-cols-2 gap-4 mt-4">
-      <div class="form-control">
-        <label class="label"
-          ><span class="label-text">Auto refrescar (segundos)</span></label
-        >
-        <input
-          class="input input-bordered"
-          type="number"
-          min="1"
-          [value]="refreshIntervalSeconds"
-          (input)="onRefreshSecondsChange($any($event.target).value)"
-        />
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Auto refrescar (segundos)</span>
+          </label>
+          <input
+            class="input input-bordered"
+            type="number"
+            min="1"
+            [value]="refreshIntervalSeconds"
+            (input)="onRefreshSecondsChange($any($event.target).value)"
+          />
+        </div>
       </div>
-      <div class="form-control">
-        <label class="label cursor-pointer flex items-center gap-3">
+
+      <div class="form-control mt-3">
+        <label class="label cursor-pointer justify-start gap-3">
           <input
             type="checkbox"
             class="toggle"
             [checked]="autoRefreshEnabled"
             (change)="toggleAutoRefresh($event)"
           />
-          <span class="label-text">Habilitar auto refresco</span>
+          <span class="label-text">Habilitar auto refresco del dashboard</span>
         </label>
       </div>
+    </div>
+  </div>
+
+  <div class="card bg-base-100 shadow-sm">
+    <div class="px-5 pt-5">
+      <h2 class="text-xl font-semibold">Domicilios</h2>
+      <p class="mt-1 text-gray-500 text-theme-sm dark:text-gray-400">
+        Configuracion de cobertura y tarifas para
+        <strong>{{ branchName() }}</strong>.
+      </p>
+    </div>
+    <div class="card-body">
+      @if (!branchId()) {
+        <div class="alert alert-warning">
+          Selecciona una sucursal para configurar sus opciones de domicilios.
+        </div>
+      } @else {
+        @if (deliverySettingsError()) {
+          <div class="alert alert-error mb-4">
+            {{ deliverySettingsError() }}
+          </div>
+        }
+
+        @if (deliverySettingsSuccess()) {
+          <div class="alert alert-success mb-4">
+            {{ deliverySettingsSuccess() }}
+          </div>
+        }
+
+        <div class="grid gap-4 md:grid-cols-2">
+          <label class="label cursor-pointer justify-start gap-3">
+            <input
+              type="checkbox"
+              class="toggle"
+              [checked]="deliveryEnabled()"
+              (change)="deliveryEnabled.set($any($event.target).checked)"
+            />
+            <span class="label-text">Habilitar domicilios</span>
+          </label>
+
+          <label class="label cursor-pointer justify-start gap-3">
+            <input
+              type="checkbox"
+              class="toggle"
+              [checked]="enablePublicMenu()"
+              (change)="enablePublicMenu.set($any($event.target).checked)"
+            />
+            <span class="label-text">Permitir pedidos desde menu publico</span>
+          </label>
+        </div>
+
+        <div class="grid gap-4 mt-4 md:grid-cols-3">
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Radio maximo permitido (km)</span>
+            </label>
+            <input
+              class="input input-bordered"
+              type="number"
+              min="0"
+              step="0.1"
+              [ngModel]="deliveryRadiusKm()"
+              (ngModelChange)="deliveryRadiusKm.set(+$event || 0)"
+            />
+          </div>
+
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Domicilio gratis hasta (km)</span>
+            </label>
+            <input
+              class="input input-bordered"
+              type="number"
+              min="0"
+              step="0.1"
+              [ngModel]="freeDeliveryThresholdKm()"
+              (ngModelChange)="freeDeliveryThresholdKm.set($event === '' ? null : +$event)"
+            />
+          </div>
+
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Asignacion automatica</span>
+            </label>
+            <select
+              class="select select-bordered"
+              [ngModel]="autoAssignmentStrategy()"
+              (ngModelChange)="autoAssignmentStrategy.set($event)"
+            >
+              <option value="MANUAL">Manual</option>
+              <option value="ROUND_ROBIN">Round robin</option>
+              <option value="NEAREST">Mas cercano</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-control mt-4 max-w-sm">
+          <label class="label">
+            <span class="label-text">Proveedor de rutas</span>
+          </label>
+          <select
+            class="select select-bordered"
+            [ngModel]="routeProvider()"
+            (ngModelChange)="routeProvider.set($event)"
+          >
+            <option value="NONE">Ninguno</option>
+            <option value="MAPBOX">Mapbox</option>
+            <option value="GOOGLE">Google</option>
+          </select>
+        </div>
+
+        <div class="mt-6">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold">Tramos de tarifa</h3>
+            <button class="btn btn-outline btn-sm" type="button" (click)="addBracket()">
+              Agregar tramo
+            </button>
+          </div>
+
+          <div class="space-y-3 mt-4">
+            @for (bracket of pricingBrackets(); track $index) {
+              <div class="grid gap-3 md:grid-cols-[1fr_1fr_1fr_auto] items-end">
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text">Hasta km</span>
+                  </label>
+                  <input
+                    class="input input-bordered"
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    [ngModel]="bracket.upToKm"
+                    (ngModelChange)="updateBracket($index, 'upToKm', $event)"
+                  />
+                </div>
+
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text">Tarifa base</span>
+                  </label>
+                  <input
+                    class="input input-bordered"
+                    type="number"
+                    min="0"
+                    step="100"
+                    [ngModel]="bracket.baseFee"
+                    (ngModelChange)="updateBracket($index, 'baseFee', $event)"
+                  />
+                </div>
+
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text">Adicional por km</span>
+                  </label>
+                  <input
+                    class="input input-bordered"
+                    type="number"
+                    min="0"
+                    step="100"
+                    [ngModel]="bracket.perKm"
+                    (ngModelChange)="updateBracket($index, 'perKm', $event)"
+                  />
+                </div>
+
+                <button
+                  class="btn btn-error btn-outline"
+                  type="button"
+                  (click)="removeBracket($index)"
+                  [disabled]="pricingBrackets().length === 1"
+                >
+                  Eliminar
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="flex justify-end mt-6">
+          <button
+            class="btn btn-primary"
+            type="button"
+            [disabled]="loadingDeliverySettings() || savingDeliverySettings()"
+            (click)="saveDeliverySettings()"
+          >
+            {{ savingDeliverySettings() ? 'Guardando...' : 'Guardar opciones' }}
+          </button>
+        </div>
+      }
     </div>
   </div>
 </div>

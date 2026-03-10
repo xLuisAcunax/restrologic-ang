@@ -23,7 +23,7 @@
       (click)="dialogRef.close('Canceled')"
       class="btn btn-sm btn-ghost btn-circle"
     >
-      âœ•
+      ×
     </button>
   </div>
 
@@ -45,7 +45,7 @@
 
       <div class="form-control w-full">
         <label class="label"
-          ><span class="label-text font-bold">DirecciÃ³n FÃ­sica</span></label
+          ><span class="label-text font-bold">Dirección Física</span></label
         >
         <div class="relative">
           <input
@@ -73,10 +73,32 @@
         </div>
       </div>
 
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="form-control w-full">
+          <label class="label"><span class="label-text font-bold">Ciudad</span></label>
+          <input
+            type="text"
+            class="input input-bordered w-full focus:input-primary"
+            placeholder="Barranquilla"
+            formControlName="city"
+          />
+        </div>
+
+        <div class="form-control w-full">
+          <label class="label"><span class="label-text font-bold">País</span></label>
+          <input
+            type="text"
+            class="input input-bordered w-full focus:input-primary"
+            placeholder="Colombia"
+            formControlName="country"
+          />
+        </div>
+      </div>
+
       <div class="form-control w-full">
         <label class="label"
           ><span class="label-text font-bold"
-            >DescripciÃ³n / Referencia</span
+            >Descripción / Referencia</span
           ></label
         >
         <textarea

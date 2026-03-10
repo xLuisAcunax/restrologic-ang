@@ -79,16 +79,17 @@ export const routes: Routes = [
         data: { roles: ['Admin'], title: 'Detalle de caja' },
       },
       {
-        path: 'stats',
+        path: 'options',
         loadComponent: () =>
           import('../../admin/dashboard-stats/dashboard-stats.component').then(
             (m) => m.DashboardStatsComponent,
           ),
-        data: { roles: ['Admin'], title: 'Estadísticas' },
+        data: { roles: ['Admin'], title: 'Opciones' },
       },
       // { path: 'businesses/:businessId', component: BusinessDetailComponent },
       // { path: 'audits', component: AuditListComponent },
       // { path: 'audits/:id', component: AuditDetailComponent },
+      { path: 'stats', redirectTo: 'options', pathMatch: 'full' },
       { path: '**', redirectTo: '' },
     ],
   },
@@ -99,3 +100,4 @@ export const routes: Routes = [
   exports: [RouterModule],
 })
 export class AdminRoutes {}
+

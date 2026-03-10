@@ -294,6 +294,10 @@ export type CreatePublicOrderDto = {
     distanceKm?: number;
     fee?: number;
     status?: DeliveryStatus;
+    location?: {
+      lat: number;
+      lng: number;
+    } | null;
   };
 };
 
@@ -400,3 +404,4 @@ export type OrderDetailsDialogData = {
   productNameFallbacks?: Record<string, string>;
   userNameFallbacks?: Record<string, string>;
 };
+
