@@ -53,7 +53,9 @@ export class SuperBusinessesComponent implements OnInit {
     });
 
     dialogRef.closed.subscribe((result) => {
-      console.log('Dialog closed with:', result); // 'Confirmed' or 'Canceled'
+      if (result === 'Confirmed') {
+        this.load();
+      }
     });
   }
 

@@ -1,14 +1,14 @@
 import { inject, Injectable } from '@angular/core';
+import { map, switchMap } from 'rxjs';
 import { BusinessDetail, BusinessService } from './business.service';
 import { UserService } from './user.service';
-import { map, switchMap } from 'rxjs';
 
 export interface OwnerRegistrationPayload {
   firstName: string;
   lastName: string;
-  email?: string;
+  email: string;
   password: string;
-  userName: string;
+  userName?: string;
   role?: string;
   isActive?: boolean;
 }
@@ -37,20 +37,16 @@ export interface BusinessOwnerOnboardingResult {
 export class OnboardingService {
   private businessService = inject(BusinessService);
   private userService = inject(UserService);
-  private AuthService = inject(UserService);
 
   registerOwnerWithBusiness(payload: BusinessOwnerOnboardingPayload) {
-    const { business, owner, createdBy } = payload;
+    const { business, owner } = payload;
+    const schemaName = this.buildSchemaName(business.name, business.nit);
 
     return this.businessService
       .createTenant({
-        nit: business.nit,
         name: business.name,
         description: business.description,
-        modules: business.modules ?? [],
-        createdBy,
-        isActive: business.isActive ?? true,
-        createdAt: business.createdAt,
+        schemaName,
       })
       .pipe(
         switchMap(({ data: tenant }) => {
@@ -66,16 +62,34 @@ export class OnboardingService {
               password: owner.password,
               isActive: owner.isActive ?? true,
               roleId: owner.role ?? 'Admin',
-              createdBy,
               userName: owner.userName,
             })
             .pipe(
-              map((user) => ({
-                tenant,
-                user,
-              }))
+              switchMap((user) =>
+                this.userService.assignUserToTenant({
+                  email: owner.email,
+                  tenantId: tenant.id,
+                }).pipe(
+                  map(() => ({
+                    tenant,
+                    user,
+                  }))
+                )
+              )
             );
         })
       );
+  }
+
+  private buildSchemaName(name: string, nit: string) {
+    const base = `${name}-${nit}`
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 40);
+
+    return base || `tenant_${Date.now()}`;
   }
 }

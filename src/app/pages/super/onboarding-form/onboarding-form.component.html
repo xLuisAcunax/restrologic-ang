@@ -36,7 +36,7 @@
             />
           </div>
           <div class="md:col-span-1">
-            <label class="label">Correo electr贸nico</label>
+            <label class="label">Correo electr髇ico</label>
             <input
               type="email"
               class="input w-full"
@@ -45,29 +45,29 @@
             />
           </div>
           <div class="md:col-span-2">
-            <label class="label">Contrase帽a</label>
+            <label class="label">Contrase馻</label>
             <input
               type="password"
               class="input w-full"
-              placeholder="Contrase帽a"
+              placeholder="Contrase馻"
               formControlName="password"
             />
           </div>
           <div class="md:col-span-1">
-            <label class="label">Tel茅fono</label>
+            <label class="label">Tel閒ono</label>
             <input
               type="text"
               class="input w-full"
-              placeholder="Tel茅fono"
+              placeholder="Tel閒ono"
               formControlName="phoneNumber"
             />
           </div>
           <div class="md:col-span-1">
-            <label class="label">Direcci贸n</label>
+            <label class="label">Direcci髇</label>
             <input
               type="text"
               class="input w-full"
-              placeholder="Direcci贸n"
+              placeholder="Direcci髇"
               formControlName="address"
             />
           </div>
@@ -99,24 +99,31 @@
             />
           </div>
           <div class="md:col-span-2">
-            <label class="label">Descripci贸n</label>
+            <label class="label">Descripci髇</label>
             <input
               type="text"
               class="input w-full"
-              placeholder="Descripci贸n"
+              placeholder="Descripci髇"
               formControlName="description"
             />
           </div>
         </div>
       </section>
+
+      @if (errorMessage()) {
+        <div class="alert alert-error">
+          <span>{{ errorMessage() }}</span>
+        </div>
+      }
     </form>
   </div>
   <div class="card-actions justify-end p-6 pt-0">
-    <button class="btn mt-4" (click)="dialogRef.close('Canceled')">
+    <button class="btn mt-4" type="button" (click)="dialogRef.close('Canceled')">
       Cancelar
     </button>
     <button
       class="btn btn-primary mt-4"
+      type="button"
       (click)="onSaving()"
       [disabled]="submitting()"
     >

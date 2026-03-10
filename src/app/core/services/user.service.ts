@@ -30,10 +30,19 @@ export class UserService {
   }
 
   createUser(dto: CreateUserDto): Observable<any> {
-    return this.http.post<{ message: string; UserId: string }>(
+    return this.http.post<{ message: string; userId: string }>(
       `${this.base}/Auth/register`,
-      dto
+      {
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        email: dto.email,
+        password: dto.password,
+      }
     );
+  }
+
+  assignUserToTenant(dto: { email: string; tenantId: string }): Observable<any> {
+    return this.http.post<any>(`${this.base}/Tenants/assign-user`, dto);
   }
 
   assignUserToBranch(
@@ -58,7 +67,6 @@ export class UserService {
     return this.http.delete<{ ok: boolean }>(`${this.base}/users/${userId}`);
   }
 
-  // map User to UserDto and flatten roles by branchId
   mapToUserDto(user: User): UserDto {
     return {
       id: user.id,

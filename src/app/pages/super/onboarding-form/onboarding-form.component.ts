@@ -17,15 +17,18 @@ export class OnboardingFormComponent {
   me = inject(AuthService).me;
   private fb = inject(FormBuilder);
   submitting = signal(false);
+  errorMessage = signal('');
 
   form = this.fb.group({
     owner: this.fb.group({
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
-      email: ['', Validators.email],
+      email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
-      userName: ['', Validators.required],
+      userName: [''],
       address: [''],
+      documentId: [''],
+      phoneNumber: [''],
     }),
     business: this.fb.group({
       name: ['', Validators.required],
@@ -35,7 +38,7 @@ export class OnboardingFormComponent {
   });
 
   constructor(
-    public dialogRef: DialogRef<string>, // Specify the return type when closing
+    public dialogRef: DialogRef<string>,
     @Inject(DIALOG_DATA) public data: { algo: string }
   ) {}
 
@@ -47,7 +50,7 @@ export class OnboardingFormComponent {
 
     const currentUser = this.me();
     if (!currentUser?.id) {
-      console.error('Onboarding failed: missing current session user');
+      this.errorMessage.set('No se encontró la sesión actual.');
       return;
     }
 
@@ -55,18 +58,14 @@ export class OnboardingFormComponent {
     const ownerGroup = owner!;
     const businessGroup = business!;
 
-    const ownerName = `${ownerGroup.firstName} ${ownerGroup.lastName}`
-      .replace(/\s+/g, ' ')
-      .trim();
-
     const payload: BusinessOwnerOnboardingPayload = {
       createdBy: currentUser.id,
       owner: {
         firstName: ownerGroup.firstName!,
         lastName: ownerGroup.lastName!,
-        email: ownerGroup.email || undefined,
+        email: ownerGroup.email!,
         password: ownerGroup.password!,
-        userName: ownerGroup.userName!,
+        userName: ownerGroup.userName || undefined,
         role: 'Admin',
         isActive: true,
       },
@@ -79,6 +78,7 @@ export class OnboardingFormComponent {
       },
     };
 
+    this.errorMessage.set('');
     this.submitting.set(true);
     this.onboardingService.registerOwnerWithBusiness(payload).subscribe({
       next: () => {
@@ -87,6 +87,8 @@ export class OnboardingFormComponent {
       },
       error: (error) => {
         this.submitting.set(false);
+        const message = error?.error?.message || error?.message || 'No fue posible crear el negocio.';
+        this.errorMessage.set(message);
         console.error('Onboarding flow failed', error);
       },
     });

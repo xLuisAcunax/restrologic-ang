@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
@@ -48,13 +48,9 @@ export type UpdateBusinessDto = {
 };
 
 export type CreateTenantDto = {
-  nit: string;
   name: string;
   description?: string;
-  modules?: string[];
-  createdBy: string;
-  isActive?: boolean;
-  createdAt?: string;
+  schemaName: string;
 };
 
 export type CreateBranchDto = {
@@ -112,8 +108,15 @@ export class BusinessService {
     ok: boolean;
     data: BusinessDetail;
   }> {
-    return this.http.get<{ ok: boolean; data: BusinessDetail }>(
-      `${this.base}/tenant/${tenantId}`
+    return this.http.get<BusinessDetail[]>(`${this.base}/Tenants`).pipe(
+      map((tenants) => {
+        const tenant = tenants.find((item) => item.id === tenantId);
+        if (!tenant) {
+          throw new Error('Tenant not found');
+        }
+
+        return { ok: true, data: tenant };
+      })
     );
   }
 
@@ -133,14 +136,12 @@ export class BusinessService {
     id: string,
     dto: UpdateBusinessDto
   ): Observable<{ ok: boolean; data: BusinessDetail }> {
-    return this.http.put<{ ok: boolean; data: BusinessDetail }>(
-      `${this.base}/tenant/${id}`,
-      dto
+    return this.http.put<BusinessDetail>(`${this.base}/Tenants/${id}`, dto).pipe(
+      map((data) => ({ ok: true, data }))
     );
   }
 
   updateBranch(branchId: string, dto: UpdateBranchDto) {
-    console.log('Updating branch with ID:', branchId, 'and DTO:', dto);
     return this.http.put<{ ok: boolean; data: BranchSummary }>(
       `${this.base}/Branches/${branchId}`,
       dto
@@ -160,11 +161,23 @@ export class BusinessService {
   createTenant(
     dto: CreateTenantDto
   ): Observable<{ ok: boolean; data: BusinessDetail }> {
-    return this.http.post<{ ok: boolean; data: BusinessDetail }>(
-      `${this.base}/tenant`,
-      dto
-    );
+    return this.http
+      .post<{
+        message: string;
+        tenant?: BusinessDetail;
+        Tenant?: BusinessDetail;
+        TenantId?: string;
+      }>(`${this.base}/Tenants`, dto)
+      .pipe(
+        map((response) => ({
+          ok: true,
+          data: (response.tenant ?? response.Tenant ?? {
+            id: response.TenantId ?? '',
+            name: dto.name,
+            description: dto.description,
+            nit: null,
+          }) as BusinessDetail,
+        }))
+      );
   }
 }
-
-
