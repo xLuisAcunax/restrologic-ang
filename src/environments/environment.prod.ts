@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  apiBaseUrl: 'https://api.restrologic.net/api/v1',
+  apiBaseUrl: 'https://api.restrologic.net/api',
   publicMenuBaseUrl: 'https://restrologic-ang.pages.dev/',
   features: {
     ordersSseEnabled: true,
