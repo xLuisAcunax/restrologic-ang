@@ -1,4 +1,11 @@
-import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CartService, CartItem } from '../../services/cart.service';
@@ -15,9 +22,7 @@ import {
 import { SizeService, Size } from '../../services/size.service';
 import { GeocodingService } from '../../services/geocoding.service';
 import { GeolocationService } from '../../../core/services/geolocation.service';
-import {
-  BranchDeliverySettings,
-} from '../../../core/services/branch-delivery-settings.service';
+import { BranchDeliverySettings } from '../../../core/services/branch-delivery-settings.service';
 import {
   PublicCheckoutConfig,
   PublicCheckoutService,
@@ -47,7 +52,10 @@ export class CartDrawerComponent implements OnInit {
 
   private readonly sizes = signal<Size[]>([]);
   private readonly checkoutConfig = signal<PublicCheckoutConfig | null>(null);
-  private readonly deliveryCoordinates = signal<{ lat: number; lng: number } | null>(null);
+  private readonly deliveryCoordinates = signal<{
+    lat: number;
+    lng: number;
+  } | null>(null);
 
   private readonly loadedCheckoutKey = signal('');
   private readonly validatedAddress = signal('');
@@ -91,10 +99,12 @@ export class CartDrawerComponent implements OnInit {
   });
 
   readonly deliverySettings = computed<BranchDeliverySettings | null>(
-    () => this.checkoutConfig()?.deliverySettings ?? null
+    () => this.checkoutConfig()?.deliverySettings ?? null,
   );
   readonly branchInfo = computed(() => this.checkoutConfig()?.branch ?? null);
-  readonly hasAddress = computed(() => this.customerAddress().trim().length > 0);
+  readonly hasAddress = computed(
+    () => this.customerAddress().trim().length > 0,
+  );
   readonly addressNeedsValidation = computed(() => {
     const address = this.customerAddress().trim();
     return address.length > 0 && address !== this.validatedAddress();
@@ -121,7 +131,7 @@ export class CartDrawerComponent implements OnInit {
       this.hasAddress() &&
       !this.addressNeedsValidation() &&
       this.estimatedDistanceKm() != null &&
-      !this.distanceLookupError()
+      !this.distanceLookupError(),
   );
   readonly deliveryBlockedMessage = computed(() => {
     if (!this.hasAddress()) {
@@ -134,7 +144,7 @@ export class CartDrawerComponent implements OnInit {
 
     const settings = this.deliverySettings();
     if (!settings) {
-      return 'No fue posible cargar la configuraci�n de domicilios.';
+      return 'No fue posible cargar la configuración de domicilios.';
     }
 
     if (!settings.deliveryEnabled) {
@@ -142,7 +152,7 @@ export class CartDrawerComponent implements OnInit {
     }
 
     if (!settings.enablePublicMenu) {
-      return 'Los pedidos a domicilio desde el men� p�blico no est�n disponibles ahora mismo.';
+      return 'Los pedidos a domicilio desde el menú público no están disponibles ahora mismo.';
     }
 
     if (this.distanceLookupError()) {
@@ -154,7 +164,7 @@ export class CartDrawerComponent implements OnInit {
     }
 
     if (this.radiusExceeded()) {
-      return `La direcci�n excede el radio m�ximo permitido de ${settings.deliveryRadiusKm} km.`;
+      return `La dirección excede el radio máximo permitido de ${settings.deliveryRadiusKm} km.`;
     }
 
     return '';
@@ -170,7 +180,9 @@ export class CartDrawerComponent implements OnInit {
 
   // Validations
   nameValid = computed(() => this.customerName().trim().length >= 2);
-  phoneValid = computed(() => /[0-9 ()+\-]{7,}/.test(this.customerPhone().trim()));
+  phoneValid = computed(() =>
+    /[0-9 ()+\-]{7,}/.test(this.customerPhone().trim()),
+  );
   addressOk = computed(() => {
     const address = this.customerAddress().trim();
     return address.length === 0 || address.length >= 5;
@@ -199,7 +211,7 @@ export class CartDrawerComponent implements OnInit {
       this.nameValid() &&
       this.phoneValid() &&
       this.addressOk() &&
-      this.deliveryValidationReady()
+      this.deliveryValidationReady(),
   );
 
   ngOnInit() {}
@@ -216,7 +228,7 @@ export class CartDrawerComponent implements OnInit {
       error: () => {
         this.loadingCheckoutConfig.set(false);
         this.checkoutConfigError.set(
-          'No fue posible cargar la configuración de domicilios de esta sucursal.'
+          'No fue posible cargar la configuración de domicilios de esta sucursal.',
         );
       },
     });
@@ -256,7 +268,9 @@ export class CartDrawerComponent implements OnInit {
     }
 
     if (!settings) {
-      this.distanceLookupError.set('No fue posible cargar la configuraci�n de domicilios.');
+      this.distanceLookupError.set(
+        'No fue posible cargar la configuración de domicilios.',
+      );
       this.estimatedDistanceKm.set(null);
       this.deliveryFee.set(0);
       this.deliveryCoordinates.set(null);
@@ -265,7 +279,9 @@ export class CartDrawerComponent implements OnInit {
 
     if (!settings.deliveryEnabled) {
       this.validatedAddress.set('');
-      this.distanceLookupError.set('La sucursal no tiene domicilios habilitados en este momento.');
+      this.distanceLookupError.set(
+        'La sucursal no tiene domicilios habilitados en este momento.',
+      );
       this.estimatedDistanceKm.set(null);
       this.deliveryFee.set(0);
       this.deliveryCoordinates.set(null);
@@ -273,7 +289,9 @@ export class CartDrawerComponent implements OnInit {
     }
 
     if (!settings.enablePublicMenu) {
-      this.distanceLookupError.set('Los pedidos a domicilio desde el men� p�blico no est�n disponibles ahora mismo.');
+      this.distanceLookupError.set(
+        'Los pedidos a domicilio desde el menú público no están disponibles ahora mismo.',
+      );
       this.estimatedDistanceKm.set(null);
       this.deliveryFee.set(0);
       this.deliveryCoordinates.set(null);
@@ -284,7 +302,9 @@ export class CartDrawerComponent implements OnInit {
       typeof branch?.latitude !== 'number' ||
       typeof branch?.longitude !== 'number'
     ) {
-      this.distanceLookupError.set('La sucursal no tiene una ubicaci�n configurada para calcular el domicilio.');
+      this.distanceLookupError.set(
+        'La sucursal no tiene una ubicación configurada para calcular el domicilio.',
+      );
       this.estimatedDistanceKm.set(null);
       this.deliveryFee.set(0);
       this.deliveryCoordinates.set(null);
@@ -303,7 +323,11 @@ export class CartDrawerComponent implements OnInit {
       if (tenantId && branchId) {
         try {
           const cached = await firstValueFrom(
-            this.checkoutService.lookupCachedAddress(tenantId, branchId, address)
+            this.checkoutService.lookupCachedAddress(
+              tenantId,
+              branchId,
+              address,
+            ),
           );
           if (
             cached?.found &&
@@ -324,12 +348,14 @@ export class CartDrawerComponent implements OnInit {
       if (!coordinates) {
         coordinates = await this.geocoder.geocodeAddress(
           address,
-          branch.city || undefined
+          branch.city || undefined,
         );
       }
 
       if (!coordinates) {
-        this.distanceLookupError.set('No pudimos ubicar esa direcci�n. Revisa la direcci�n e int�ntalo nuevamente.');
+        this.distanceLookupError.set(
+          'No pudimos ubicar esa dirección. Revisa la dirección e inténtalo nuevamente.',
+        );
         this.estimatedDistanceKm.set(null);
         this.deliveryFee.set(0);
         this.deliveryCoordinates.set(null);
@@ -348,7 +374,7 @@ export class CartDrawerComponent implements OnInit {
             },
             branch.city,
             branch.country,
-            'google'
+            'google',
           )
           .subscribe({ error: () => void 0 });
       }
@@ -357,9 +383,9 @@ export class CartDrawerComponent implements OnInit {
         this.geolocation
           .calculateDistance(
             { latitude: branch.latitude, longitude: branch.longitude },
-            coordinates
+            coordinates,
           )
-          .toFixed(2)
+          .toFixed(2),
       );
 
       this.deliveryCoordinates.set({
@@ -370,7 +396,9 @@ export class CartDrawerComponent implements OnInit {
       this.deliveryFee.set(this.computeBranchDeliveryFee(distanceKm, settings));
       this.validatedAddress.set(address);
     } catch {
-      this.distanceLookupError.set('No pudimos calcular el domicilio con esa direcci�n.');
+      this.distanceLookupError.set(
+        'No pudimos calcular el domicilio con esa dirección.',
+      );
       this.estimatedDistanceKm.set(null);
       this.deliveryFee.set(0);
       this.deliveryCoordinates.set(null);
@@ -381,7 +409,7 @@ export class CartDrawerComponent implements OnInit {
 
   private computeBranchDeliveryFee(
     distanceKm: number,
-    settings: BranchDeliverySettings
+    settings: BranchDeliverySettings,
   ): number {
     const config: DeliveriesModuleConfig = {
       enablePublicMenu: settings.enablePublicMenu,
@@ -499,7 +527,7 @@ export class CartDrawerComponent implements OnInit {
             group.selectedProducts.map((sel: any) => ({
               optionId: sel.product.product.id,
               quantity: sel.quantity,
-            }))
+            })),
           );
 
           bundleNotes = it.bundleSelections
@@ -507,7 +535,7 @@ export class CartDrawerComponent implements OnInit {
               group.selectedProducts.map((sel: any) => {
                 const qtyStr = sel.quantity > 1 ? `${sel.quantity}x ` : '';
                 return `${qtyStr}${sel.product.product.name}`;
-              })
+              }),
             )
             .join(' + ');
         }
@@ -557,7 +585,9 @@ export class CartDrawerComponent implements OnInit {
     const deliveryLocation = this.deliveryCoordinates();
 
     if (address.length > 0 && (!deliveryLocation || distanceKm == null)) {
-      this.distanceLookupError.set('Debes validar la dirección antes de confirmar el pedido.');
+      this.distanceLookupError.set(
+        'Debes validar la dirección antes de confirmar el pedido.',
+      );
       this.submitted.set(false);
       return;
     }
@@ -618,14 +648,15 @@ export class CartDrawerComponent implements OnInit {
         console.error('Error creando pedido', err);
         if (err.status === 403 && err.error?.code === 'MODULE_DISABLED') {
           alert(
-            'El sistema de pedidos p�blicos no est� disponible en este momento. Por favor contacta al restaurante directamente.'
+            'El sistema de pedidos públicos no está disponible en este momento. Por favor contacta al restaurante directamente.',
           );
         } else if (
           err.status === 422 &&
-          (err.error?.message?.includes('RADIUS') || err.error?.code === 'DELIVERY_RADIUS_EXCEEDED')
+          (err.error?.message?.includes('RADIUS') ||
+            err.error?.code === 'DELIVERY_RADIUS_EXCEEDED')
         ) {
           alert(
-            `La distancia de entrega (${this.estimatedDistanceKm()} km) excede el radio m�ximo permitido (${err.error?.maxKm || this.deliverySettings()?.deliveryRadiusKm || 10} km).`
+            `La distancia de entrega (${this.estimatedDistanceKm()} km) excede el radio máximo permitido (${err.error?.maxKm || this.deliverySettings()?.deliveryRadiusKm || 10} km).`,
           );
         } else {
           alert('No se pudo crear el pedido. Intenta nuevamente.');
@@ -635,10 +666,3 @@ export class CartDrawerComponent implements OnInit {
     });
   }
 }
-
-
-
-
-
-
-
