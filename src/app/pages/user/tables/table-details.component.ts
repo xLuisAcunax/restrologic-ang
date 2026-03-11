@@ -115,11 +115,17 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
 
   /** Mobile tab: 'menu' shows product browser, 'order' shows order summary */
   activeTab = signal<'menu' | 'order'>('menu');
-  cartCount = computed(() => this.cart().reduce((sum, i) => sum + i.quantity, 0));
+  cartCount = computed(() =>
+    this.cart().reduce((sum, i) => sum + i.quantity, 0),
+  );
   isLockedByAnotherUser = computed(() => {
     const presence = this.tablePresence();
     const me = this.auth.me()?.id;
-    return !!presence?.locked && !!presence.lockedBy?.userId && presence.lockedBy.userId !== me;
+    return (
+      !!presence?.locked &&
+      !!presence.lockedBy?.userId &&
+      presence.lockedBy.userId !== me
+    );
   });
 
   /** Categories that have at least one product in the current product list */
@@ -494,8 +500,9 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
   // ---------- Persistence ----------
   saveOrder() {
     if (this.isLockedByAnotherUser()) {
-      const lockedBy = this.tablePresence()?.lockedBy?.userName || 'otro usuario';
-      this.error.set('Esta mesa est· siendo atendida por ' + lockedBy + '.');
+      const lockedBy =
+        this.tablePresence()?.lockedBy?.userName || 'otro usuario';
+      this.error.set('Esta mesa est√° siendo atendida por ' + lockedBy + '.');
       return;
     }
 
@@ -615,7 +622,7 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
 
         // Ejecutar operaciones en serie para simplicidad
         concat(...ops).subscribe({
-          next: () => { },
+          next: () => {},
           complete: () => {
             this.reloadOrder(orderId);
             this.isSaving.set(false);
@@ -650,7 +657,7 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
           group.selectedProducts.map((sel) => {
             const qtyStr = sel.quantity > 1 ? `${sel.quantity}x ` : '';
             return `${qtyStr}${sel.product.product.name}`;
-          })
+          }),
         )
         .join(' + ');
     }
@@ -679,8 +686,9 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
   // ---------- Payments ----------
   openPaymentDialog() {
     if (this.isLockedByAnotherUser()) {
-      const lockedBy = this.tablePresence()?.lockedBy?.userName || 'otro usuario';
-      this.error.set('Esta mesa est· siendo atendida por ' + lockedBy + '.');
+      const lockedBy =
+        this.tablePresence()?.lockedBy?.userName || 'otro usuario';
+      this.error.set('Esta mesa est√° siendo atendida por ' + lockedBy + '.');
       return;
     }
 
@@ -855,8 +863,9 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
 
   onProductClick(product: Product) {
     if (this.isLockedByAnotherUser()) {
-      const lockedBy = this.tablePresence()?.lockedBy?.userName || 'otro usuario';
-      this.error.set('Esta mesa est· siendo atendida por ' + lockedBy + '.');
+      const lockedBy =
+        this.tablePresence()?.lockedBy?.userName || 'otro usuario';
+      this.error.set('Esta mesa est√° siendo atendida por ' + lockedBy + '.');
       return;
     }
 
@@ -1238,6 +1247,3 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
     window.open(pdfUrl, '_blank');
   }
 }
-
-
-

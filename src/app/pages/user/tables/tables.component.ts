@@ -262,7 +262,7 @@ export class UserTablesComponent implements OnInit, OnDestroy {
       const lockedBy = table.lockedBy?.userName || 'otro usuario';
       this.blockedTableId.set(table.id);
       this.lockMessage.set(
-        `La mesa ${table.name || ''} est� siendo atendida por ${lockedBy}.`,
+        `La mesa ${table.name || ''} está siendo atendida por ${lockedBy}.`,
       );
       return;
     }
