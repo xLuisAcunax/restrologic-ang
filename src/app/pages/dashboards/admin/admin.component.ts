@@ -15,7 +15,7 @@ export class AdminComponent {
 
   readonly displayName = computed(() => {
     const me = this.auth.me();
-    return me?.firstName || me?.fullName || 'Admin';
+    return me?.fullName || me?.email || 'Admin';
   });
 
   readonly todayLabel = computed(() =>
@@ -121,3 +121,4 @@ export class AdminComponent {
     return Math.round((current / maxQty) * 100);
   }
 }
+
