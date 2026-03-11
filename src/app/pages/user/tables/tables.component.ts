@@ -65,7 +65,6 @@ export class UserTablesComponent implements OnInit, OnDestroy {
         this.branch.set(selectedBranch);
         this.branchId.set(selectedBranchId);
         this.loadTables(selectedBranchId);
-        void this.syncTableLocks(selectedBranchId);
       }
     });
 
@@ -163,10 +162,12 @@ export class UserTablesComponent implements OnInit, OnDestroy {
 
         if ((tables || []).length === 0) {
           this.tableOrders.set(new Map());
+          void this.syncTableLocks(branchId);
           return;
         }
 
         this.loadOrdersForTables(tables || []);
+        void this.syncTableLocks(branchId);
       },
       error: (err) => {
         console.error('[loadTables] Error loading tables:', err);
@@ -286,7 +287,6 @@ export class UserTablesComponent implements OnInit, OnDestroy {
       const currentBranchId = this.branchId();
       if (currentBranchId) {
         this.loadTables(currentBranchId);
-        void this.syncTableLocks(currentBranchId);
       }
     });
   }
@@ -530,3 +530,4 @@ export class UserTablesComponent implements OnInit, OnDestroy {
     );
   }
 }
+
