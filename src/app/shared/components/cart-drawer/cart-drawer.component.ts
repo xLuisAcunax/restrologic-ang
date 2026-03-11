@@ -1,4 +1,4 @@
-import {
+﻿import {
   Component,
   OnInit,
   computed,
@@ -133,18 +133,18 @@ export class CartDrawerComponent implements OnInit {
       this.estimatedDistanceKm() != null &&
       !this.distanceLookupError(),
   );
+  readonly publicCheckoutEnabled = computed(() => {
+    const settings = this.deliverySettings();
+    return !!settings && settings.deliveryEnabled && settings.enablePublicMenu;
+  });
   readonly deliveryBlockedMessage = computed(() => {
-    if (!this.hasAddress()) {
-      return '';
-    }
-
     if (this.checkoutConfigError()) {
       return this.checkoutConfigError();
     }
 
     const settings = this.deliverySettings();
     if (!settings) {
-      return 'No fue posible cargar la configuración de domicilios.';
+      return 'No fue posible cargar la configuraciÃ³n de domicilios.';
     }
 
     if (!settings.deliveryEnabled) {
@@ -153,6 +153,10 @@ export class CartDrawerComponent implements OnInit {
 
     if (!settings.enablePublicMenu) {
       return 'Los pedidos a domicilio desde el menú público no están disponibles ahora mismo.';
+    }
+
+    if (!this.hasAddress()) {
+      return '';
     }
 
     if (this.distanceLookupError()) {
@@ -483,6 +487,12 @@ export class CartDrawerComponent implements OnInit {
   }
 
   openCheckout() {
+    if (!this.publicCheckoutEnabled()) {
+      this.checkoutOpen.set(true);
+      this.submitted.set(true);
+      return;
+    }
+
     this.checkoutOpen.set(true);
   }
 
@@ -584,7 +594,11 @@ export class CartDrawerComponent implements OnInit {
     const fee = this.deliveryFee();
     const deliveryLocation = this.deliveryCoordinates();
 
-    if (!this.customerName().trim() || !this.customerPhone().trim() || !address) {
+    if (
+      !this.customerName().trim() ||
+      !this.customerPhone().trim() ||
+      !address
+    ) {
       this.distanceLookupError.set(
         'Debes completar nombre, teléfono y dirección antes de confirmar el pedido.',
       );
@@ -671,4 +685,3 @@ export class CartDrawerComponent implements OnInit {
     });
   }
 }
-

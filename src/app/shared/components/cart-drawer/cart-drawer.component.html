@@ -175,18 +175,21 @@
             }
           </div>
 
-          @if (hasAddress()) {
           <div class="bg-base-200/50 p-4 rounded-xl border border-base-200 space-y-3">
             <label class="label text-xs font-bold uppercase text-base-content/50 pt-0">Validación de domicilio</label>
 
             <div class="flex items-center justify-between gap-3">
               <div class="text-sm text-base-content/60">
+                @if (!publicCheckoutEnabled() || checkoutConfigError()) {
+                La sucursal no admite pedidos en linea en este momento.
+                } @else {
                 Pulsa el botón para validar la dirección y calcular el domicilio.
+                }
               </div>
               <button
                 type="button"
                 class="btn btn-sm btn-primary"
-                [disabled]="!canValidateAddress()"
+                [disabled]="!canValidateAddress() || !publicCheckoutEnabled()"
                 (click)="validateDeliveryAddress()">
                 Validar dirección
               </button>
@@ -221,7 +224,6 @@
             </div>
             }
           </div>
-          }
 
           <div class="form-control">
             <label class="label text-xs font-bold uppercase text-base-content/50 pb-1">Notas Adicionales</label>
@@ -261,7 +263,7 @@
       </div>
 
       @if (!checkoutOpen()) {
-      <button class="btn btn-primary btn-block btn-lg shadow-xl shadow-primary/20" (click)="openCheckout()">
+      <button class="btn btn-primary btn-block btn-lg shadow-xl shadow-primary/20" [disabled]="loadingCheckoutConfig() || !publicCheckoutEnabled()" (click)="openCheckout()">
         Ir a Pagar
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd"
@@ -285,4 +287,6 @@
   </div>
 </div>
 }
+
+
 

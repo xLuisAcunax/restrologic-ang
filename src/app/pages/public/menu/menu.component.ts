@@ -1,4 +1,4 @@
-import {
+﻿import {
   Component,
   inject,
   OnInit,
@@ -46,6 +46,10 @@ import { DeliveriesModuleConfig } from '../../../core/models/module.model';
 import { DeliveryFeeService } from '../../../core/services/delivery-fee.service';
 import { ModuleAnalyticsService } from '../../../core/services/module-analytics.service';
 import {
+  PublicCheckoutConfig,
+  PublicCheckoutService,
+} from '../../../shared/services/public-checkout.service';
+import {
   PriceAdjustmentService,
   PriceAdjustment,
 } from '../../../core/services/price-adjustment.service';
@@ -83,6 +87,7 @@ export class PublicMenuComponent implements OnInit, AfterViewInit, OnDestroy {
   moduleService = inject(ModuleService);
   deliveryFee = inject(DeliveryFeeService);
   analytics = inject(ModuleAnalyticsService);
+  checkoutService = inject(PublicCheckoutService);
   priceAdjustmentService = inject(PriceAdjustmentService);
   productSizeService = inject(ProductSizeService);
   dialog = inject(Dialog);
@@ -98,6 +103,37 @@ export class PublicMenuComponent implements OnInit, AfterViewInit, OnDestroy {
   publicMenuAllowed = computed(() => {
     const cfg = this.deliveriesConfig();
     return this.deliveriesEnabled() && !!cfg?.enablePublicMenu;
+  });
+  checkoutConfig = signal<PublicCheckoutConfig | null>(null);
+  checkoutStatusLoading = signal(false);
+  checkoutStatusError = signal('');
+  publicOrderingEnabled = computed(() => {
+    const settings = this.checkoutConfig()?.deliverySettings;
+    return !!settings && settings.deliveryEnabled && settings.enablePublicMenu;
+  });
+  publicOrderingMessage = computed(() => {
+    if (this.checkoutStatusLoading()) {
+      return 'Estamos verificando la disponibilidad de pedidos en linea para esta sucursal.';
+    }
+
+    if (this.checkoutStatusError()) {
+      return 'Temporalmente no es posible tomar pedidos desde este menu. Intenta nuevamente mas tarde.';
+    }
+
+    const settings = this.checkoutConfig()?.deliverySettings;
+    if (!settings) {
+      return 'Temporalmente no es posible tomar pedidos desde este menu.';
+    }
+
+    if (!settings.deliveryEnabled) {
+      return 'Los domicilios estan temporalmente deshabilitados para esta sucursal.';
+    }
+
+    if (!settings.enablePublicMenu) {
+      return 'Temporalmente no estamos recibiendo pedidos desde el menu publico.';
+    }
+
+    return '';
   });
 
   productsByCategory = signal<Record<string, Record<string, PublicMenuItem[]>>>(
@@ -131,6 +167,7 @@ export class PublicMenuComponent implements OnInit, AfterViewInit, OnDestroy {
 
       if (this.tenantId && this.branchId) {
         this.ctx.setTenantBranch(this.tenantId, this.branchId);
+        this.loadCheckoutStatus();
         this.loadMenu();
         this.categoryService.loadCategoriesIfNeeded();
         this.subcategoryService.forceRefresh();
@@ -138,6 +175,38 @@ export class PublicMenuComponent implements OnInit, AfterViewInit, OnDestroy {
         this.setupAutoRefresh();
       }
     });
+  }
+
+  private loadCheckoutStatus() {
+    if (!this.tenantId || !this.branchId) {
+      this.checkoutConfig.set(null);
+      this.checkoutStatusError.set('');
+      this.checkoutStatusLoading.set(false);
+      return;
+    }
+
+    this.checkoutStatusLoading.set(true);
+    this.checkoutStatusError.set('');
+
+    this.checkoutService
+      .getCheckoutConfig(this.tenantId, this.branchId)
+      .subscribe({
+        next: (config) => {
+          this.checkoutConfig.set(config);
+          this.checkoutStatusLoading.set(false);
+        },
+        error: () => {
+          this.checkoutConfig.set(null);
+          this.checkoutStatusLoading.set(false);
+          this.checkoutStatusError.set(
+            'Temporalmente no es posible tomar pedidos desde este menu. Intenta nuevamente mas tarde.',
+          );
+        },
+      });
+  }
+
+  private canOrderFromPublicMenu(): boolean {
+    return this.publicOrderingEnabled();
   }
 
   ngAfterViewInit(): void {
@@ -332,7 +401,7 @@ export class PublicMenuComponent implements OnInit, AfterViewInit, OnDestroy {
             activeProducts.forEach((product: any) => {
               const categoryId = product.categoryId || '';
               const subcategoryId = product.subcategoryId || 'sin-subcategoria';
-              const categoryName = product.category?.name || 'Sin categoría';
+              const categoryName = product.category?.name || 'Sin categorí­a';
 
               if (!categoryId) return;
 
@@ -430,7 +499,8 @@ export class PublicMenuComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   getProductPrice(product: PublicMenuItem): number | null {
     const categoryId = product.category?.id ?? (product as any).categoryId;
-    const subcategoryId = product.subcategory?.id ?? (product as any).subcategoryId;
+    const subcategoryId =
+      product.subcategory?.id ?? (product as any).subcategoryId;
 
     if (!categoryId) {
       // No category, use base price
@@ -496,7 +566,8 @@ export class PublicMenuComponent implements OnInit, AfterViewInit, OnDestroy {
     product: PublicMenuItem,
   ): Array<{ portionId: string; portionName: string; price: number }> {
     const categoryId = product.category?.id ?? (product as any).categoryId;
-    const subcategoryId = product.subcategory?.id ?? (product as any).subcategoryId;
+    const subcategoryId =
+      product.subcategory?.id ?? (product as any).subcategoryId;
 
     if (!categoryId) return [];
 
@@ -551,10 +622,10 @@ export class PublicMenuComponent implements OnInit, AfterViewInit, OnDestroy {
         return { portionId: portion.id, portionName: portion.name, price };
       })
       .filter((p) => p !== null) as Array<{
-        portionId: string;
-        portionName: string;
-        price: number;
-      }>;
+      portionId: string;
+      portionName: string;
+      price: number;
+    }>;
   }
 
   /**
@@ -564,12 +635,14 @@ export class PublicMenuComponent implements OnInit, AfterViewInit, OnDestroy {
     product: PublicMenuItem,
     portion: { portionId: string; portionName: string; price: number },
   ) {
+    if (!this.canOrderFromPublicMenu()) return;
     const portionObj = { id: portion.portionId, name: portion.portionName };
     this.checkAndAddProduct(product, portion.price, portionObj);
   }
 
   // --- Bundles & Portions Logic (migrated from table-details) ---
   openPortionSelector(product: Product) {
+    if (!this.canOrderFromPublicMenu()) return;
     const dialogRef = this.dialog.open(PortionSelectorModalComponent, {
       data: { product },
       panelClass: 'modal-center',
@@ -581,7 +654,7 @@ export class PublicMenuComponent implements OnInit, AfterViewInit, OnDestroy {
         this.checkAndAddProduct(
           portionResult.product as any,
           portionResult.finalPrice,
-          portionResult.selectedSize
+          portionResult.selectedSize,
         );
       }
     });
@@ -592,6 +665,7 @@ export class PublicMenuComponent implements OnInit, AfterViewInit, OnDestroy {
     price: number,
     selectedSize: any = null,
   ): void {
+    if (!this.canOrderFromPublicMenu()) return;
     this.bundleService.getBundles({ productId: product.id }).subscribe({
       next: (bundles: any[]) => {
         const activeBundle = bundles.find((b: any) => b.isActive);
@@ -631,11 +705,8 @@ export class PublicMenuComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  openBundleSelector(
-    product: any,
-    selectedSize: any,
-    basePrice: number,
-  ): void {
+  openBundleSelector(product: any, selectedSize: any, basePrice: number): void {
+    if (!this.canOrderFromPublicMenu()) return;
     const dialogRef = this.dialog.open(BundleSelectionModalComponent, {
       data: { product, selectedSize, basePrice },
       panelClass: 'modal-center',
@@ -656,7 +727,7 @@ export class PublicMenuComponent implements OnInit, AfterViewInit, OnDestroy {
               (bundleResult.product as any).subcategory?.name || undefined,
             bundleName: bundleResult.bundleName,
             bundleSelections: bundleResult.groupSelections,
-          }
+          },
         );
       }
     });
@@ -719,6 +790,7 @@ export class PublicMenuComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ===== Simple Product Cart =====
   addSimpleProductToCart(product: PublicMenuItem) {
+    if (!this.canOrderFromPublicMenu()) return;
     // If the product has a single-choice variant group, use inline list
     const options = this.getVariantOptions(product);
     if (options.length > 0) {
@@ -779,6 +851,7 @@ export class PublicMenuComponent implements OnInit, AfterViewInit, OnDestroy {
   modifierSelections = signal<Map<string, Set<string>>>(new Map());
 
   openModifierSelector(product: PublicMenuItem) {
+    if (!this.canOrderFromPublicMenu()) return;
     console.log('Opening modifier selector for product:', product);
     this.modifierProduct.set(product);
     this.modifierSelections.set(new Map());
@@ -938,4 +1011,3 @@ export class PublicMenuComponent implements OnInit, AfterViewInit, OnDestroy {
     this.closeModifierSelector();
   }
 }
-
