@@ -185,11 +185,11 @@ export class CartDrawerComponent implements OnInit {
   );
   addressOk = computed(() => {
     const address = this.customerAddress().trim();
-    return address.length === 0 || address.length >= 5;
+    return address.length >= 5;
   });
   deliveryValidationReady = computed(() => {
     if (!this.hasAddress()) {
-      return true;
+      return false;
     }
 
     if (this.calculatingDistance()) {
@@ -584,7 +584,15 @@ export class CartDrawerComponent implements OnInit {
     const fee = this.deliveryFee();
     const deliveryLocation = this.deliveryCoordinates();
 
-    if (address.length > 0 && (!deliveryLocation || distanceKm == null)) {
+    if (!this.customerName().trim() || !this.customerPhone().trim() || !address) {
+      this.distanceLookupError.set(
+        'Debes completar nombre, teléfono y dirección antes de confirmar el pedido.',
+      );
+      this.submitted.set(false);
+      return;
+    }
+
+    if (!deliveryLocation || distanceKm == null) {
       this.distanceLookupError.set(
         'Debes validar la dirección antes de confirmar el pedido.',
       );
@@ -596,25 +604,22 @@ export class CartDrawerComponent implements OnInit {
       tenantId,
       branchId,
       source: 'public-menu',
-      isTakeaway: address.length === 0,
+      isTakeaway: false,
       customer: {
         name: this.customerName().trim(),
         phone: this.customerPhone().trim(),
-        address: address.length > 0 ? address : undefined,
+        address,
         notes: this.customerNotes().trim() || undefined,
       },
       items,
-      delivery:
-        address.length > 0 && distanceKm != null && deliveryLocation
-          ? {
-              requiresDelivery: true,
-              address,
-              distanceKm,
-              fee,
-              status: 'pending' as DeliveryStatus,
-              location: deliveryLocation,
-            }
-          : undefined,
+      delivery: {
+        requiresDelivery: true,
+        address,
+        distanceKm,
+        fee,
+        status: 'pending' as DeliveryStatus,
+        location: deliveryLocation,
+      },
     };
 
     this.orders.createPublicOrder(dto).subscribe({
@@ -666,3 +671,4 @@ export class CartDrawerComponent implements OnInit {
     });
   }
 }
+
