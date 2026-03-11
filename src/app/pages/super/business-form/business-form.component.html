@@ -16,11 +16,11 @@
         placeholder="Nombre"
         formControlName="name"
       />
-      <label class="label">Descripción</label>
+      <label class="label">Descripcion</label>
       <input
         type="text"
         class="input"
-        placeholder="Descripción"
+        placeholder="Descripcion"
         formControlName="description"
       />
       <label class="label">Estado</label>
@@ -29,11 +29,19 @@
         <option [ngValue]="false">Inactivo</option>
       </select>
     </form>
+
+    @if (errorMessage()) {
+      <div class="alert alert-error mt-4">
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
   </div>
   <div class="card-actions justify-end p-6 pt-0">
-    <button class="btn mt-4" (click)="dialogRef.close('Canceled')">
+    <button class="btn mt-4" (click)="dialogRef.close('Canceled')" [disabled]="saving()">
       Cancelar
     </button>
-    <button class="btn btn-primary mt-4" (click)="onSaving()">Guardar</button>
+    <button class="btn btn-primary mt-4" (click)="onSaving()" [disabled]="saving()">
+      {{ saving() ? 'Guardando...' : 'Guardar' }}
+    </button>
   </div>
 </div>

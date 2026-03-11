@@ -6,7 +6,7 @@ import { environment } from '../../../environments/environment';
 
 export type BusinessItem = {
   id: string;
-  nit: string;
+  nit: string | null;
   name: string;
   description?: string;
   isActive?: boolean;
@@ -51,6 +51,8 @@ export type CreateTenantDto = {
   name: string;
   description?: string;
   schemaName: string;
+  nit?: string;
+  isActive?: boolean;
 };
 
 export type CreateBranchDto = {
@@ -93,6 +95,16 @@ export class BusinessService {
     });
   }
 
+  private normalizeBusiness<T extends Partial<BusinessDetail | BusinessItem>>(
+    business: T
+  ): T {
+    return {
+      ...business,
+      nit: business.nit ?? null,
+      isActive: business.isActive ?? true,
+    } as T;
+  }
+
   list(): Observable<{
     ok: boolean;
     data: BusinessItem[];
@@ -104,12 +116,17 @@ export class BusinessService {
       .pipe(
         map((response) => {
           if (Array.isArray(response)) {
-            return { ok: true, data: response };
+            return {
+              ok: true,
+              data: response.map((item) => this.normalizeBusiness(item)),
+            };
           }
 
           return {
             ok: response.ok ?? true,
-            data: response.data ?? [],
+            data: (response.data ?? []).map((item) =>
+              this.normalizeBusiness(item)
+            ),
           };
         })
       );
@@ -126,7 +143,7 @@ export class BusinessService {
           throw new Error('Tenant not found');
         }
 
-        return { ok: true, data: tenant };
+        return { ok: true, data: this.normalizeBusiness(tenant) };
       })
     );
   }
@@ -150,9 +167,9 @@ export class BusinessService {
     id: string,
     dto: UpdateBusinessDto
   ): Observable<{ ok: boolean; data: BusinessDetail }> {
-    return this.http.put<BusinessDetail>(`${this.base}/Tenants/${id}`, dto).pipe(
-      map((data) => ({ ok: true, data }))
-    );
+    return this.http
+      .put<BusinessDetail>(`${this.base}/Tenants/${id}`, dto)
+      .pipe(map((data) => ({ ok: true, data: this.normalizeBusiness(data) })));
   }
 
   updateBranch(branchId: string, dto: UpdateBranchDto, tenantId?: string) {
@@ -189,12 +206,15 @@ export class BusinessService {
       .pipe(
         map((response) => ({
           ok: true,
-          data: (response.tenant ?? response.Tenant ?? {
-            id: response.TenantId ?? '',
-            name: dto.name,
-            description: dto.description,
-            nit: null,
-          }) as BusinessDetail,
+          data: this.normalizeBusiness(
+            (response.tenant ?? response.Tenant ?? {
+              id: response.TenantId ?? '',
+              name: dto.name,
+              description: dto.description,
+              nit: dto.nit ?? null,
+              isActive: dto.isActive ?? true,
+            }) as BusinessDetail
+          ),
         }))
       );
   }

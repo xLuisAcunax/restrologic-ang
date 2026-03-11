@@ -47,6 +47,8 @@ export class OnboardingService {
         name: business.name,
         description: business.description,
         schemaName,
+        nit: business.nit,
+        isActive: business.isActive ?? true,
       })
       .pipe(
         switchMap(({ data: tenant }) => {

@@ -10,6 +10,7 @@ import { PageBreadcrumbComponent } from '../../../shared/components/common/page-
 import { Dialog } from '@angular/cdk/dialog';
 import { BusinessFormComponent } from '../business-form/business-form.component';
 import { BranchFormComponent } from '../branch-form/branch-form.component';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'business-detail',
@@ -27,16 +28,25 @@ export class BusinessDetailComponent implements OnInit {
   route = inject(ActivatedRoute);
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('businessId')!; //TODO: update to tenantId
+    const id = this.route.snapshot.paramMap.get('businessId')!;
     if (id) this.load(id);
   }
 
   load(id: string) {
     this.loading.set(true);
     this.error.set(null);
-    this.tenantService.getBusiness(id).subscribe({
-      next: (b) => {
-        this.tenant.set(b.data);
+
+    forkJoin({
+      business: this.tenantService.getBusiness(id),
+      branches: this.tenantService.getBranches(id),
+    }).subscribe({
+      next: ({ business, branches }) => {
+        const normalizedBranches = Array.isArray(branches) ? branches : [];
+        this.branches.set(normalizedBranches);
+        this.tenant.set({
+          ...business.data,
+          branches: normalizedBranches,
+        });
         this.loading.set(false);
       },
       error: (err) => {
@@ -44,21 +54,6 @@ export class BusinessDetailComponent implements OnInit {
         if (err?.status === 404) this.error.set('Tenant not found');
         else this.error.set('Failed to load tenant');
         console.error(err);
-      },
-    });
-
-    this.tenantService.getBranches(id).subscribe({
-      next: (res: any) => {
-        const branches = Array.isArray(res) ? res : res?.data || [];
-        this.branches.set(branches);
-        if (this.tenant()) {
-          this.tenant.set({ ...this.tenant()!, branches });
-        }
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.loading.set(false);
-        console.error('Failed to load branches', err);
       },
     });
   }
@@ -69,8 +64,7 @@ export class BusinessDetailComponent implements OnInit {
       data: { tenantId: this.tenant()?.id, tenant: this.tenant() },
     });
 
-    dialogRef.closed.subscribe((result) => {
-      console.log('Dialog closed with:', result); // 'Confirmed' or 'Canceled'
+    dialogRef.closed.subscribe(() => {
       this.load(this.tenant()?.id!);
     });
   }
@@ -85,8 +79,7 @@ export class BusinessDetailComponent implements OnInit {
       },
     });
 
-    dialogRef.closed.subscribe((result) => {
-      console.log('Dialog closed with:', result); // 'Confirmed' or 'Canceled'
+    dialogRef.closed.subscribe(() => {
       this.load(this.tenant()?.id!);
     });
   }
@@ -98,5 +91,3 @@ export class BusinessDetailComponent implements OnInit {
     return 'badge badge-error';
   }
 }
-
-
