@@ -152,7 +152,9 @@ export class UserTablesComponent implements OnInit, OnDestroy {
 
     this.tableService.getTables(branchId).subscribe({
       next: (tables) => {
-        this.tables.set(this.reconcileTablesWithLiveOrders(tables || []));
+        this.tables.set(
+          this.preserveTablePresence(this.reconcileTablesWithLiveOrders(tables || [])),
+        );
 
         if ((tables || []).length === 0) {
           this.tableOrders.set(new Map());
@@ -420,6 +422,33 @@ export class UserTablesComponent implements OnInit, OnDestroy {
     });
   }
 
+  private preserveTablePresence(tables: Table[]): Table[] {
+    const currentPresence = new Map(
+      this.tables().map((table) => [
+        table.id,
+        {
+          locked: !!table.locked,
+          lockedBy: table.lockedBy ?? null,
+          lockedAt: table.lockedAt ?? null,
+        },
+      ]),
+    );
+
+    return tables.map((table) => {
+      const presence = currentPresence.get(table.id);
+      if (!presence) {
+        return table;
+      }
+
+      return {
+        ...table,
+        locked: presence.locked,
+        lockedBy: presence.locked ? presence.lockedBy : null,
+        lockedAt: presence.locked ? presence.lockedAt : null,
+      };
+    });
+  }
+
   private normalizeTableStatus(status: Table['status']): TableStatusEnum {
     if (typeof status === 'number') {
       return status as TableStatusEnum;
@@ -494,6 +523,7 @@ export class UserTablesComponent implements OnInit, OnDestroy {
     );
   }
 }
+
 
 
 

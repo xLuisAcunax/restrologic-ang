@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Inject, inject } from '@angular/core';
+import { Component, Inject, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import {
@@ -9,6 +9,7 @@ import {
   UpdateBranchDto,
 } from '../../../core/services/business.service';
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
+import { ActivatedRoute } from '@angular/router';
 import { GeocodingService } from '../../../shared/services/geocoding.service';
 
 @Component({
@@ -20,6 +21,9 @@ export class BranchFormComponent {
   me = inject(AuthService).me;
   businessService = inject(BusinessService);
   geocoder = inject(GeocodingService);
+  route = inject(ActivatedRoute);
+  saving = signal(false);
+  error = signal<string | null>(null);
 
   form = new FormBuilder().group({
     name: ['', Validators.required],
@@ -51,6 +55,18 @@ export class BranchFormComponent {
     }
   }
 
+  private getTenantId(): string {
+    return (
+      this.data.tenantId?.trim() ||
+      this.route.snapshot.paramMap.get('businessId')?.trim() ||
+      ''
+    );
+  }
+
+  get dialogTitle(): string {
+    return this.data.branchId ? 'Editar sucursal' : 'Nueva sucursal';
+  }
+
   private async buildCoordinates() {
     const address = this.form.value.address?.trim();
     const city = this.form.value.city?.trim();
@@ -71,6 +87,15 @@ export class BranchFormComponent {
       return;
     }
 
+    const tenantId = this.getTenantId();
+    if (!tenantId) {
+      this.error.set('No fue posible determinar el tenant para la sucursal.');
+      return;
+    }
+
+    this.saving.set(true);
+    this.error.set(null);
+
     const coordinates = await this.buildCoordinates();
 
     if (this.data.branchId) {
@@ -86,34 +111,55 @@ export class BranchFormComponent {
       };
 
       this.businessService
-        .updateBranch(this.data.branchId, updateBranchDto, this.data.tenantId)
-        .subscribe((resp) => {
-          console.log('branch updated successful:', JSON.stringify(resp));
-          this.dialogRef.close('Confirmed');
+        .updateBranch(this.data.branchId, updateBranchDto, tenantId)
+        .subscribe({
+          next: (resp) => {
+            console.log('branch updated successful:', JSON.stringify(resp));
+            this.dialogRef.close('Confirmed');
+          },
+          error: (err) => {
+            console.error('branch update failed:', err);
+            this.error.set(
+              err?.error?.message ||
+                err?.error ||
+                'No fue posible actualizar la sucursal.'
+            );
+            this.saving.set(false);
+          },
+          complete: () => this.saving.set(false),
         });
 
       return;
     }
 
-    if (this.data.tenantId) {
-      const createBranchDto: CreateBranchDto = {
-        name: this.form.value.name!,
-        address: this.form.value.address,
-        city: this.form.value.city,
-        country: this.form.value.country,
-        latitude: coordinates.latitude,
-        longitude: coordinates.longitude,
-        description: this.form.value.description,
-        isActive: this.form.value.isActive ?? true,
-      };
+    const createBranchDto: CreateBranchDto = {
+      name: this.form.value.name!,
+      address: this.form.value.address,
+      city: this.form.value.city,
+      country: this.form.value.country,
+      latitude: coordinates.latitude,
+      longitude: coordinates.longitude,
+      description: this.form.value.description,
+      isActive: this.form.value.isActive ?? true,
+    };
 
-      this.businessService
-        .createBranch(this.data.tenantId, createBranchDto)
-        .subscribe((resp) => {
-          console.log('branch created successful:', JSON.stringify(resp));
-          this.dialogRef.close('Confirmed');
-        });
-    }
+    this.businessService.createBranch(tenantId, createBranchDto).subscribe({
+      next: (resp) => {
+        console.log('branch created successful:', JSON.stringify(resp));
+        this.dialogRef.close('Confirmed');
+      },
+      error: (err) => {
+        console.error('branch creation failed:', err);
+        this.error.set(
+          err?.error?.message ||
+            err?.error ||
+            'No fue posible crear la sucursal.'
+        );
+        this.saving.set(false);
+      },
+      complete: () => this.saving.set(false),
+    });
   }
 }
+
 

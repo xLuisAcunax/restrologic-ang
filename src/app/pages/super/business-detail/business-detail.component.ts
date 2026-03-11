@@ -49,9 +49,8 @@ export class BusinessDetailComponent implements OnInit {
 
     this.tenantService.getBranches(id).subscribe({
       next: (res: any) => {
-        const branches = res?.data || [];
+        const branches = Array.isArray(res) ? res : res?.data || [];
         this.branches.set(branches);
-        // Safely assign branches to tenant object if possible
         if (this.tenant()) {
           this.tenant.set({ ...this.tenant()!, branches });
         }
@@ -99,4 +98,5 @@ export class BusinessDetailComponent implements OnInit {
     return 'badge badge-error';
   }
 }
+
 
