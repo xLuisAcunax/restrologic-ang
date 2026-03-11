@@ -96,7 +96,8 @@ export class UserTablesComponent implements OnInit, OnDestroy {
             ...table,
             status: hasActiveOrder
               ? TableStatusEnum.Occupied
-              : this.normalizeTableStatus(table.status) === TableStatusEnum.Occupied
+              : this.normalizeTableStatus(table.status) ===
+                  TableStatusEnum.Occupied
                 ? TableStatusEnum.Free
                 : table.status,
           };
@@ -125,16 +126,18 @@ export class UserTablesComponent implements OnInit, OnDestroy {
       this.timerTick.update((v) => v + 1);
     }, 60000);
 
-    this.realtimeSubscription = this.realtime.orderEvents$.subscribe((event) => {
-      const currentBranchId = this.branchId();
-      if (!currentBranchId || event.branchId !== currentBranchId) {
-        return;
-      }
+    this.realtimeSubscription = this.realtime.orderEvents$.subscribe(
+      (event) => {
+        const currentBranchId = this.branchId();
+        if (!currentBranchId || event.branchId !== currentBranchId) {
+          return;
+        }
 
-      if (event.name === 'TableLocked' || event.name === 'TableReleased') {
-        this.applyTablePresenceEvent(event.payload as TablePresenceInfo);
-      }
-    });
+        if (event.name === 'TableLocked' || event.name === 'TableReleased') {
+          this.applyTablePresenceEvent(event.payload as TablePresenceInfo);
+        }
+      },
+    );
   }
 
   ngOnDestroy(): void {
@@ -153,7 +156,9 @@ export class UserTablesComponent implements OnInit, OnDestroy {
     this.tableService.getTables(branchId).subscribe({
       next: (tables) => {
         this.tables.set(
-          this.preserveTablePresence(this.reconcileTablesWithLiveOrders(tables || [])),
+          this.preserveTablePresence(
+            this.reconcileTablesWithLiveOrders(tables || []),
+          ),
         );
 
         if ((tables || []).length === 0) {
@@ -233,7 +238,7 @@ export class UserTablesComponent implements OnInit, OnDestroy {
       return null;
     }
 
-    return `En uso por ${table.lockedBy.userName}`;
+    return `Bloqueada`;
   }
 
   statusBadge(table: Table) {
@@ -257,7 +262,7 @@ export class UserTablesComponent implements OnInit, OnDestroy {
       const lockedBy = table.lockedBy?.userName || 'otro usuario';
       this.blockedTableId.set(table.id);
       this.lockMessage.set(
-        `La mesa ${table.name || ''} está siendo atendida por ${lockedBy}.`,
+        `La mesa ${table.name || ''} estï¿½ siendo atendida por ${lockedBy}.`,
       );
       return;
     }
@@ -454,7 +459,9 @@ export class UserTablesComponent implements OnInit, OnDestroy {
       return status as TableStatusEnum;
     }
 
-    const raw = String(status || '').toLowerCase().trim();
+    const raw = String(status || '')
+      .toLowerCase()
+      .trim();
     switch (raw) {
       case 'occupied':
       case 'ocupada':
@@ -507,8 +514,8 @@ export class UserTablesComponent implements OnInit, OnDestroy {
         return {
           ...table,
           locked: presence.locked,
-          lockedBy: presence.locked ? presence.lockedBy ?? null : null,
-          lockedAt: presence.locked ? presence.lockedAt ?? null : null,
+          lockedBy: presence.locked ? (presence.lockedBy ?? null) : null,
+          lockedAt: presence.locked ? (presence.lockedAt ?? null) : null,
         };
       }),
     );
@@ -523,8 +530,3 @@ export class UserTablesComponent implements OnInit, OnDestroy {
     );
   }
 }
-
-
-
-
-
