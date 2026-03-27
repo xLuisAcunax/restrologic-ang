@@ -436,6 +436,13 @@
               <span>{{ formatCurrency(subtotalDisplay(order()!)) }}</span>
             </div>
 
+            @if (showDeliveryFee(order()!)) {
+              <div class="flex justify-between text-sm text-base-content/60">
+                <span>Domicilio</span>
+                <span>{{ formatCurrency(deliveryFeeDisplay(order()!)) }}</span>
+              </div>
+            }
+
             @for (tax of appliedTaxes(order()!); track tax.label) {
               <div class="flex justify-between text-sm text-base-content/60">
                 <span>{{ tax.label }}</span>
