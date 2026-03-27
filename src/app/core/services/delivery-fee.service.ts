@@ -78,7 +78,7 @@ export class DeliveryFeeService {
     return {
       upToKm: this.normalizeNumber(bracket.upToKm),
       baseFee: this.normalizeNumber(bracket.baseFee),
-      perKm: this.normalizeNullableNumber(bracket.perKm),
+      perKm: this.normalizeNullableNumber(bracket.perKm) ?? undefined,
     };
   }
 
