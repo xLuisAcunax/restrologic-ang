@@ -390,10 +390,15 @@ export class UserKitchenComponent implements OnInit, OnDestroy {
       }
     }
 
-    const total = this.roundCurrency(subtotal + additiveTotal);
+    const deliveryFee = this.deliveryFeeAmount(order);
+    const total = this.roundCurrency(subtotal + additiveTotal + deliveryFee);
 
     doc.setFont('helvetica', 'normal');
     writeLineWithAmount('Subtotal', formatCurrency(subtotal));
+
+    if (this.shouldShowDeliveryFee(order)) {
+      writeLineWithAmount('Domicilio', formatCurrency(deliveryFee));
+    }
 
     if (taxLines.length > 0) {
       taxLines.forEach((t) => {
@@ -1050,6 +1055,17 @@ export class UserKitchenComponent implements OnInit, OnDestroy {
     return this.roundCurrency(unitPrice * qty);
   }
 
+  private deliveryFeeAmount(order: Order): number {
+    const fee = order.delivery?.fee;
+    return typeof fee === 'number' && Number.isFinite(fee)
+      ? this.roundCurrency(Math.max(0, fee))
+      : 0;
+  }
+
+  private shouldShowDeliveryFee(order: Order): boolean {
+    return !!(order.requiresDelivery || order.delivery?.requiresDelivery || !order.isTakeaway || this.deliveryFeeAmount(order) > 0);
+  }
+
   private roundCurrency(value: number): number {
     return Math.round((value + Number.EPSILON) * 100) / 100;
   }
@@ -1189,5 +1205,6 @@ export class UserKitchenComponent implements OnInit, OnDestroy {
     }
   }
 }
+
 
 

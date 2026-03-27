@@ -1113,6 +1113,15 @@ export class OrderDetailsDialogComponent implements OnInit {
     return order.items.reduce((acc, item) => acc + (item.subtotal || 0), 0);
   }
 
+  deliveryFeeDisplay(order: Order): number {
+    const fee = order.delivery?.fee;
+    return typeof fee === 'number' && Number.isFinite(fee) ? Math.max(0, fee) : 0;
+  }
+
+  showDeliveryFee(order: Order): boolean {
+    return !!(order.requiresDelivery || order.delivery?.requiresDelivery || !order.isTakeaway || this.deliveryFeeDisplay(order) > 0);
+  }
+
   // 2. Calcular Descuentos Totales
   discountsTotal(order: Order): number {
     if (!order.discounts) return 0;
@@ -1138,8 +1147,9 @@ export class OrderDetailsDialogComponent implements OnInit {
     // Otherwise calculate from items
     const sub = this.subtotalDisplay(order);
     const disc = this.discountsTotal(order);
+    const deliveryFee = this.deliveryFeeDisplay(order);
     // const taxes = ... (sumar impuestos si no están incluidos)
-    return sub - disc;
+    return sub - disc + deliveryFee;
   }
 
   // 5. Calcular LO PAGADO (Suma de pagos registrados)
@@ -1167,3 +1177,4 @@ export class OrderDetailsDialogComponent implements OnInit {
     }).format(value);
   }
 }
+

@@ -1306,6 +1306,10 @@ export class UserOrdersComponent implements OnInit {
   }
 
   orderTotal(order: Order): number {
+    if (typeof order.total === 'number' && Number.isFinite(order.total) && order.total > 0) {
+      return this.roundCurrency(order.total);
+    }
+
     const productsSubtotal = this.calculateItemsSubtotal(order);
     const discountsTotal = this.roundCurrency(
       Math.min(productsSubtotal, this.calculateDiscountsTotal(order)),
@@ -1332,10 +1336,22 @@ export class UserOrdersComponent implements OnInit {
         ? Math.max(0, baseAfterDiscount - includedTotal)
         : baseAfterDiscount,
     );
+    const deliveryFee = this.deliveryFeeAmount(order);
     const total = this.roundCurrency(
-      netSubtotal + includedTotal + additiveTotal,
+      netSubtotal + includedTotal + additiveTotal + deliveryFee,
     );
     return total > 0 ? total : 0;
+  }
+
+  deliveryFeeAmount(order: Order): number {
+    const fee = order.delivery?.fee;
+    return typeof fee === 'number' && Number.isFinite(fee)
+      ? this.roundCurrency(Math.max(0, fee))
+      : 0;
+  }
+
+  private shouldShowDeliveryFee(order: Order): boolean {
+    return !!(order.requiresDelivery || order.delivery?.requiresDelivery || !order.isTakeaway || this.deliveryFeeAmount(order) > 0);
   }
 
   private calculateItemsSubtotal(order: Order): number {
@@ -1860,6 +1876,10 @@ export class UserOrdersComponent implements OnInit {
     }
     writeLineWithAmount('Subtotal', this.formatCurrency(subtotal));
 
+    if (this.shouldShowDeliveryFee(order)) {
+      writeLineWithAmount('Domicilio', this.formatCurrency(this.deliveryFeeAmount(order)));
+    }
+
     // Discounts
     const discountsTotal = this.calculateDiscountsTotal(order);
     if (discountsTotal > 0) {
@@ -2057,6 +2077,7 @@ export class UserOrdersComponent implements OnInit {
     return item.modifiers.map((m: any) => this.modifierLabel(m)).join(', ');
   }
 }
+
 
 
 
