@@ -21,36 +21,86 @@ export class DeliveryFeeService {
   ): number {
     const cfg = config || this.getConfig();
     if (!cfg) return 0;
-    if (distanceKm <= 0) return 0;
 
-    // Free threshold
-    if (
-      cfg.freeDeliveryThresholdKm != null &&
-      distanceKm <= cfg.freeDeliveryThresholdKm
-    ) {
+    const normalizedDistance = this.normalizeNumber(distanceKm);
+    if (normalizedDistance <= 0) return 0;
+
+    const maxRadiusKm = this.normalizeNumber(cfg.deliveryRadiusKm);
+    if (maxRadiusKm > 0 && normalizedDistance > maxRadiusKm) {
       return 0;
     }
 
-    const brackets = [...(cfg.pricingBrackets || [])].sort(
-      (a, b) => a.upToKm - b.upToKm
+    const freeThresholdKm = this.normalizeNullableNumber(
+      cfg.freeDeliveryThresholdKm
     );
+    if (freeThresholdKm != null && normalizedDistance <= freeThresholdKm) {
+      return 0;
+    }
+
+    const brackets = (cfg.pricingBrackets || [])
+      .map((bracket) => this.normalizeBracket(bracket))
+      .filter((bracket) => bracket.upToKm > 0)
+      .sort((a, b) => a.upToKm - b.upToKm);
+
     if (!brackets.length) return 0;
 
-    // Find first bracket matching distance
     const bracket =
-      brackets.find((b) => distanceKm <= b.upToKm) ||
+      brackets.find((candidate) => normalizedDistance <= candidate.upToKm) ||
       brackets[brackets.length - 1];
-    return this.calculateBracketFee(distanceKm, bracket);
+
+    const bracketIndex = brackets.indexOf(bracket);
+    const previousUpperBound =
+      bracketIndex > 0 ? brackets[bracketIndex - 1].upToKm : 0;
+    const lowerBound = Math.max(previousUpperBound, freeThresholdKm ?? 0);
+
+    return this.calculateBracketFee(normalizedDistance, bracket, lowerBound);
   }
 
   private calculateBracketFee(
     distanceKm: number,
-    bracket: DeliveriesPricingBracket
+    bracket: DeliveriesPricingBracket,
+    lowerBoundKm: number
   ): number {
-    if (bracket.perKm && bracket.perKm > 0) {
-      // Charge base + variable portion inside bracket
-      return Math.round(bracket.baseFee + distanceKm * bracket.perKm);
+    const baseFee = this.normalizeNumber(bracket.baseFee);
+    const perKm = this.normalizeNullableNumber(bracket.perKm) ?? 0;
+
+    if (perKm > 0) {
+      const extraDistance = Math.max(0, distanceKm - lowerBoundKm);
+      return Math.round(baseFee + extraDistance * perKm);
     }
-    return bracket.baseFee;
+
+    return Math.round(baseFee);
+  }
+
+  private normalizeBracket(
+    bracket: DeliveriesPricingBracket
+  ): DeliveriesPricingBracket {
+    return {
+      upToKm: this.normalizeNumber(bracket.upToKm),
+      baseFee: this.normalizeNumber(bracket.baseFee),
+      perKm: this.normalizeNullableNumber(bracket.perKm),
+    };
+  }
+
+  private normalizeNumber(value: unknown): number {
+    if (typeof value === 'number') {
+      return Number.isFinite(value) ? value : 0;
+    }
+
+    if (typeof value === 'string') {
+      const parsed = Number.parseFloat(value.trim().replace(',', '.'));
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    return 0;
+  }
+
+  private normalizeNullableNumber(value: unknown): number | null {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+
+    const normalized = this.normalizeNumber(value);
+    return Number.isFinite(normalized) ? normalized : null;
   }
 }
