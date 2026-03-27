@@ -343,7 +343,8 @@ export class UserKitchenComponent implements OnInit, OnDestroy {
       const quantity = this.resolveQuantity(item);
       const name = this.productLabel(item);
       const lineLabel = `${quantity} x ${name}`;
-      const itemTotal = formatCurrency(item.subtotal!);
+      const itemSubtotal = this.resolveSubtotal(item, quantity);
+      const itemTotal = formatCurrency(itemSubtotal);
       writeLineWithAmount(lineLabel, itemTotal);
 
       if (item.modifiers && item.modifiers.length > 0) {
@@ -373,7 +374,10 @@ export class UserKitchenComponent implements OnInit, OnDestroy {
 
     // Calculate and show totals using the same logic as orders.component
     const subtotal = this.roundCurrency(
-      items.reduce((sum, item) => sum + (item.subtotal || 0), 0),
+      items.reduce((sum, item) => {
+        const quantity = this.resolveQuantity(item);
+        return sum + this.resolveSubtotal(item, quantity);
+      }, 0),
     );
 
     const taxLines = this.computeTaxLinesFromOrder(order);
@@ -1032,6 +1036,18 @@ export class UserKitchenComponent implements OnInit, OnDestroy {
       1;
     const qty = Number(rawQty);
     return Number.isFinite(qty) && qty > 0 ? Math.round(qty) : 1;
+  }
+
+  private resolveSubtotal(item: OrderItemWithKey, qty: number): number {
+    if (typeof item.subtotal === 'number' && !Number.isNaN(item.subtotal)) {
+      return this.roundCurrency(item.subtotal);
+    }
+    const unitPriceSource = (item as { unitPrice?: number }).unitPrice;
+    const unitPrice =
+      typeof unitPriceSource === 'number' && !Number.isNaN(unitPriceSource)
+        ? unitPriceSource
+        : 0;
+    return this.roundCurrency(unitPrice * qty);
   }
 
   private roundCurrency(value: number): number {
