@@ -301,9 +301,10 @@ export class UserTablesComponent implements OnInit, OnDestroy {
 
     const start = new Date(order.createdAt).getTime();
     const isServed = this.normalizeOrderStatus(order.status) === 'served';
+    const servedAt = this.getStatusChangedAt(order, 'served');
     const end =
-      isServed && order.updatedAt
-        ? new Date(order.updatedAt).getTime()
+      isServed && servedAt
+        ? servedAt.getTime()
         : Date.now();
 
     const diffMs = end - start;
@@ -323,9 +324,10 @@ export class UserTablesComponent implements OnInit, OnDestroy {
 
     const start = new Date(order.createdAt).getTime();
     const isServed = this.normalizeOrderStatus(order.status) === 'served';
+    const servedAt = this.getStatusChangedAt(order, 'served');
     const end =
-      isServed && order.updatedAt
-        ? new Date(order.updatedAt).getTime()
+      isServed && servedAt
+        ? servedAt.getTime()
         : Date.now();
 
     const diffMs = end - start;
@@ -417,6 +419,30 @@ export class UserTablesComponent implements OnInit, OnDestroy {
   private isTerminalOrderStatus(status: OrderStatus | string): boolean {
     const normalized = this.normalizeOrderStatus(status);
     return ['paid', 'closed', 'cancelled'].includes(normalized);
+  }
+
+  private getStatusChangedAt(
+    order: Order,
+    targetStatus: OrderStatus | string,
+  ): Date | null {
+    const target = this.normalizeOrderStatus(targetStatus);
+    const history = (order.statusHistory || [])
+      .map((entry) => {
+        const rawStatus =
+          typeof entry.status === 'string'
+            ? entry.status
+            : entry.status?.type || '';
+        return {
+          code: this.normalizeOrderStatus(rawStatus),
+          changedAt: entry.changedAt ? new Date(entry.changedAt) : null,
+        };
+      })
+      .filter((entry) => entry.code === target && entry.changedAt)
+      .sort(
+        (a, b) => a.changedAt!.getTime() - b.changedAt!.getTime(),
+      );
+
+    return history.at(-1)?.changedAt ?? null;
   }
 
   private reconcileTablesWithLiveOrders(tables: Table[]): Table[] {
