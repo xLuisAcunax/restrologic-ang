@@ -20,7 +20,10 @@ import {
 } from '../../../core/services/product.service';
 import { UserService } from '../../../core/services/user.service';
 import { LocalDateTimePipe } from '../../../shared/pipes/local-datetime.pipe';
-import { todayAsInputLocalDate } from '../../../shared/utils/date-range.utils';
+import {
+  createDayRangeIso,
+  todayAsInputLocalDate,
+} from '../../../shared/utils/date-range.utils';
 import * as XLSX from 'xlsx';
 import {
   Order,
@@ -140,15 +143,21 @@ export class OrderHistoryComponent implements OnInit {
       return;
     }
 
+    const fromRange = createDayRangeIso(this.startDate());
+    const toRange = createDayRangeIso(this.endDate());
+    if (!fromRange || !toRange) {
+      this.error.set('El rango de fechas no es válido.');
+      return;
+    }
+
     this.loading.set(true);
     this.error.set(null);
 
-    // Usar los nuevos parÃ¡metros from/to con fecha simple (YYYY-MM-DD)
     this.orderService
       .listOrders({
         branchId,
-        from: this.startDate(),
-        to: this.endDate(),
+        from: fromRange.start,
+        to: toRange.end,
       })
       .subscribe({
         next: (res) => {
@@ -811,3 +820,4 @@ export class OrderHistoryComponent implements OnInit {
     XLSX.writeFile(workbook, 'ordenes.xlsx');
   }
 }
+

@@ -319,12 +319,11 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
     this.orderService.getOpenOrderForTable(this.data.table.id).subscribe({
       next: (order) => {
         if (order) {
-          // Check if order is fully paid - if so, treat as no order
-          const status = (order.status || '').toString().toLowerCase();
-          const isFullyPaid = status === 'paid' || status === 'closed';
+          // Ignore terminal orders so a cancelled/closed ticket does not
+          // keep occupying the table details panel after the table is freed.
+          const isTerminal = this.isTerminalOrderStatus(order.status);
 
-          if (isFullyPaid) {
-            // Order is paid, don't show it
+          if (isTerminal) {
             this.currentOrder.set(null);
             this.cart.set([]);
           } else {
@@ -753,14 +752,14 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
     this.orderService.getOrder(orderId).subscribe((order) => {
       if (!order) {
         this.currentOrder.set(null);
+        this.cart.set([]);
         return;
       }
 
-      const status = (order.status || '').toString().toLowerCase();
-      const isFullyPaid = status === 'paid' || status === 'closed';
+      const isTerminal = this.isTerminalOrderStatus(order.status);
 
-      if (isFullyPaid) {
-        // Order is fully paid - free the table and close dialog
+      if (isTerminal) {
+        // Order reached a terminal status - free the table and close dialog
         const tenantId = this.getTenantId();
         const branchId = this.getBranchId();
         const tableId = this.data.table.id;
@@ -792,6 +791,11 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
         if (order.id) this.loadOrderItems(order.id);
       }
     });
+  }
+
+  private isTerminalOrderStatus(status?: Order['status'] | string | null) {
+    const normalized = (status || '').toString().toLowerCase();
+    return ['paid', 'closed', 'cancelled'].includes(normalized);
   }
 
   // ---------- UI helpers ----------
