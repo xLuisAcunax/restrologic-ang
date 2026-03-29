@@ -793,7 +793,12 @@ export class OrderDetailsDialogComponent implements OnInit {
   }
 
   private statusCodeFrom(
-    status: Order['status'] | { type?: Order['status'] } | null | undefined,
+    status:
+      | Order['status']
+      | string
+      | { type?: Order['status'] | string }
+      | null
+      | undefined,
   ): string {
     if (status === null || status === undefined) {
       return this.data.statusCode || '';
@@ -808,7 +813,12 @@ export class OrderDetailsDialogComponent implements OnInit {
   }
 
   statusLabel(
-    status: Order['status'] | { type?: Order['status'] } | null | undefined,
+    status:
+      | Order['status']
+      | string
+      | { type?: Order['status'] | string }
+      | null
+      | undefined,
   ): string {
     const code = this.statusCodeFrom(status).toString().toLowerCase();
     switch (code) {
