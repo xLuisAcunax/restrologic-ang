@@ -81,6 +81,7 @@ export class UserTablesComponent implements OnInit, OnDestroy {
       liveOrders
         .filter((order) => order.branchId === branchId)
         .filter((order) => !!order.tableId)
+        .filter((order) => !this.isTerminalOrderStatus(order.status))
         .forEach((order) => {
           if (order.tableId) {
             nextOrders.set(order.tableId, order);
@@ -190,8 +191,9 @@ export class UserTablesComponent implements OnInit, OnDestroy {
             if (order) {
               const status = (order.status || '').toString().toLowerCase();
               const isFullyPaid = status === 'paid' || status === 'closed';
+              const isCancelled = status === 'cancelled';
 
-              if (isFullyPaid) {
+              if (isFullyPaid || isCancelled) {
                 tablesToFree.push(table);
               } else {
                 orderMap.set(table.id, order);
@@ -410,6 +412,11 @@ export class UserTablesComponent implements OnInit, OnDestroy {
 
   private normalizeOrderStatus(status: OrderStatus | string): string {
     return String(status || '').toLowerCase();
+  }
+
+  private isTerminalOrderStatus(status: OrderStatus | string): boolean {
+    const normalized = this.normalizeOrderStatus(status);
+    return ['paid', 'closed', 'cancelled'].includes(normalized);
   }
 
   private reconcileTablesWithLiveOrders(tables: Table[]): Table[] {
