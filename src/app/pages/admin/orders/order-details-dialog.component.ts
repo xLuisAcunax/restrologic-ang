@@ -3,16 +3,18 @@ import {
   Component,
   Inject,
   OnInit,
+  computed,
   inject,
   signal,
-  computed,
 } from '@angular/core';
-import { DialogRef, DIALOG_DATA } from '@angular/cdk/dialog';
+import { Dialog, DialogRef, DIALOG_DATA } from '@angular/cdk/dialog';
 import { OrderService } from '../../../core/services/order.service';
 import { AppliedTax } from '../../../shared/utils/tax.utils';
 import { TaxService, Tax } from '../../../core/services/tax.service';
 import { UserService } from '../../../core/services/user.service';
 import { BusinessService } from '../../../core/services/business.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { TableService } from '../../../core/services/table.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { LocalDateTimePipe } from '../../../shared/pipes/local-datetime.pipe';
@@ -22,12 +24,13 @@ import {
   OrderItem,
   OrderStatusHistoryDto,
   PaymentDto,
+  UpdateOrderDto,
 } from '../../../core/models/order.model';
 import {
   ProductSize,
   ProductSizeService,
 } from '../../../core/services/product-size.service';
-import { Size } from 'ol/size';
+import { CancelOrderDialogComponent } from '../../../shared/components/cancel-order-dialog/cancel-order-dialog.component';
 
 @Component({
   selector: 'app-order-details-dialog',
@@ -41,6 +44,9 @@ export class OrderDetailsDialogComponent implements OnInit {
   private taxService = inject(TaxService);
   private sizeService = inject(ProductSizeService);
   private businessService = inject(BusinessService);
+  private dialog = inject(Dialog);
+  private auth = inject(AuthService);
+  private tableService = inject(TableService);
   private roundCurrency(value: number): number {
     return Math.round((value + Number.EPSILON) * 100) / 100;
   }
@@ -107,6 +113,7 @@ export class OrderDetailsDialogComponent implements OnInit {
   order = signal<Order | null>(null);
   loading = signal<boolean>(true);
   error = signal<string | null>(null);
+  saving = signal<boolean>(false);
   private userNames = signal<Map<string, string>>(new Map());
 
   constructor(
@@ -350,6 +357,99 @@ export class OrderDetailsDialogComponent implements OnInit {
 
   close() {
     this.dialogRef.close();
+  }
+
+  canCancelOrder(order: Order | null): boolean {
+    if (!order) {
+      return false;
+    }
+    const status = this.statusCodeFrom(order.status).toLowerCase();
+    if (['cancelled', 'closed', 'paid', 'served'].includes(status)) {
+      return false;
+    }
+    const payments = (order.payments || []).filter(
+      (payment) => payment.status !== 'voided',
+    );
+    if (payments.length > 0) {
+      return false;
+    }
+    const roles = (this.auth.getRole() || []).map((role) => role.toUpperCase());
+    return roles.some((role) => ['ADMIN', 'SUPER', 'CAJERO'].includes(role));
+  }
+
+  cancelOrder(): void {
+    const current = this.order();
+    if (!current?.id || !this.canCancelOrder(current)) {
+      return;
+    }
+
+    const ref = this.dialog.open<string>(CancelOrderDialogComponent, {
+      width: '480px',
+      disableClose: true,
+    });
+
+    ref.closed.subscribe((reason) => {
+      const text = (reason || '').trim();
+      if (text.length < 3) {
+        return;
+      }
+
+      const tenantId = this.data.tenantId || this.auth.me()?.tenantId || '';
+      const branchId = this.data.branchId || current.branchId || '';
+      if (!tenantId || !branchId) {
+        this.error.set('No se pudo determinar la sucursal de la orden.');
+        return;
+      }
+
+      const history = current.statusHistory || [];
+      const cancellationEntry: OrderStatusHistoryDto = {
+        status: { type: 'cancelled' },
+        changedAt: new Date().toISOString(),
+        changedBy: this.auth.me()?.id || 'System User',
+      };
+
+      const dto: UpdateOrderDto = {
+        status: { type: 'cancelled' },
+        statusHistory: [...history, cancellationEntry],
+        notes: this.buildCancellationNotes(current, text),
+      };
+
+      this.saving.set(true);
+      this.orderService.updateOrder(tenantId, branchId, current.id, dto).subscribe({
+        next: (res) => {
+          this.saving.set(false);
+          const updatedOrder = (res?.data as Order | undefined) ?? current;
+          this.order.set({
+            ...updatedOrder,
+            items: updatedOrder.items?.length ? updatedOrder.items : current.items,
+            payments:
+              updatedOrder.payments?.length !== undefined
+                ? updatedOrder.payments
+                : current.payments,
+          } as Order);
+
+          const tableId = (updatedOrder.tableId ?? current.tableId ?? '').toString();
+          if (tableId) {
+            this.tableService.updateTableStatus(tenantId, branchId, tableId, 0).subscribe({
+              error: (err) =>
+                console.warn(
+                  'No se pudo actualizar la mesa a Libre tras cancelar la orden.',
+                  err,
+                ),
+            });
+          }
+
+          this.dialogRef.close({ cancelled: true });
+        },
+        error: (err) => {
+          console.error('Error cancelling order from details dialog:', err);
+          this.saving.set(false);
+          this.error.set(
+            err?.error?.message || 'No se pudo cancelar la orden.',
+          );
+        },
+      });
+    });
   }
 
   // Show cancellation reason from order.notes field
@@ -1120,6 +1220,16 @@ export class OrderDetailsDialogComponent implements OnInit {
 
   showDeliveryFee(order: Order): boolean {
     return !!(order.requiresDelivery || order.delivery?.requiresDelivery || !order.isTakeaway || this.deliveryFeeDisplay(order) > 0);
+  }
+
+  private buildCancellationNotes(order: Order, reason: string): string {
+    const prefix = 'Motivo de cancelacion:';
+    const note = `${prefix} ${reason.trim()}`;
+    const existing = (order.notes || '').trim();
+    if (!existing) {
+      return note;
+    }
+    return `${existing}\n${note}`;
   }
 
   // 2. Calcular Descuentos Totales

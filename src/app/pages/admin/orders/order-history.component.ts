@@ -11,6 +11,7 @@ import {
 import { OrderService } from '../../../core/services/order.service';
 import { OrderDetailsDialogComponent } from './order-details-dialog.component';
 import { TableService } from '../../../core/services/table.service';
+import { CancelOrderDialogComponent } from '../../../shared/components/cancel-order-dialog/cancel-order-dialog.component';
 import { Tax, TaxService } from '../../../core/services/tax.service';
 import { AppliedTaxSummary } from '../../../shared/utils/tax.utils';
 import {
@@ -21,7 +22,11 @@ import { UserService } from '../../../core/services/user.service';
 import { LocalDateTimePipe } from '../../../shared/pipes/local-datetime.pipe';
 import { todayAsInputLocalDate } from '../../../shared/utils/date-range.utils';
 import * as XLSX from 'xlsx';
-import { Order } from '../../../core/models/order.model';
+import {
+  Order,
+  OrderStatusHistoryDto,
+  UpdateOrderDto,
+} from '../../../core/models/order.model';
 
 @Component({
   selector: 'app-order-history',
@@ -269,7 +274,7 @@ export class OrderHistoryComponent implements OnInit {
       computedNetSubtotal + taxSummary.includedTotal + taxSummary.additiveTotal,
     );
 
-    this.dialog.open(OrderDetailsDialogComponent, {
+    const ref = this.dialog.open(OrderDetailsDialogComponent, {
       width: '760px',
       maxHeight: '90vh',
       data: {
@@ -287,6 +292,94 @@ export class OrderHistoryComponent implements OnInit {
         productNameFallbacks: Object.fromEntries(this.productsById()),
         userNameFallbacks: Object.fromEntries(this.usersById()),
       },
+    });
+    ref.closed.subscribe((result) => {
+      if (result && typeof result === 'object' && 'cancelled' in result) {
+        this.loadOrders();
+      }
+    });
+  }
+
+  canCancelOrder(order: Order): boolean {
+    const status = this.getOrderStatusCode(order);
+    if (['cancelled', 'closed', 'paid', 'served'].includes(status)) {
+      return false;
+    }
+    const payments = (order.payments || []).filter(
+      (payment) => payment.status !== 'voided',
+    );
+    if (payments.length > 0) {
+      return false;
+    }
+    const roles = this.userRoles().map((role) => role.toUpperCase());
+    return roles.some((role) => ['ADMIN', 'SUPER', 'CAJERO'].includes(role));
+  }
+
+  cancelOrder(order: Order): void {
+    if (!order?.id || !this.canCancelOrder(order)) {
+      return;
+    }
+
+    const ref = this.dialog.open<string>(CancelOrderDialogComponent, {
+      width: '480px',
+      disableClose: true,
+    });
+
+    ref.closed.subscribe((reason) => {
+      const text = (reason || '').trim();
+      if (text.length < 3) {
+        return;
+      }
+
+      const branchId = this.branchSelectionService.getEffectiveBranchId();
+      if (!branchId || !this.tenantId()) {
+        this.error.set('No se pudo determinar la sucursal activa.');
+        return;
+      }
+
+      const changedBy = this.auth.me()?.id || 'System User';
+      const history = order.statusHistory || [];
+      const cancellationEntry: OrderStatusHistoryDto = {
+        status: { type: 'cancelled' },
+        changedAt: new Date().toISOString(),
+        changedBy,
+      };
+
+      const dto: UpdateOrderDto = {
+        status: { type: 'cancelled' },
+        statusHistory: [...history, cancellationEntry],
+        notes: this.buildCancellationNotes(order, text),
+      };
+
+      this.loading.set(true);
+      this.orderService.updateOrder(this.tenantId(), branchId, order.id, dto).subscribe({
+        next: (res) => {
+          this.loading.set(false);
+          const updatedOrder = res?.data ?? null;
+          const tableId = (updatedOrder?.tableId ?? order.tableId ?? '').toString();
+
+          if (tableId) {
+            this.tableService
+              .updateTableStatus(this.tenantId(), branchId, tableId, 0)
+              .subscribe({
+                error: (err) =>
+                  console.warn(
+                    'No se pudo actualizar la mesa a Libre tras cancelar la orden.',
+                    err,
+                  ),
+              });
+          }
+
+          this.loadOrders();
+        },
+        error: (err) => {
+          console.error('Error cancelling order from admin history:', err);
+          this.loading.set(false);
+          this.error.set(
+            err?.error?.message || 'No se pudo cancelar la orden.',
+          );
+        },
+      });
     });
   }
 
@@ -333,6 +426,16 @@ export class OrderHistoryComponent implements OnInit {
 
   private roundCurrency(value: number): number {
     return Math.round((value + Number.EPSILON) * 100) / 100;
+  }
+
+  private buildCancellationNotes(order: Order, reason: string): string {
+    const prefix = 'Motivo de cancelacion:';
+    const note = `${prefix} ${reason.trim()}`;
+    const existing = (order.notes || '').trim();
+    if (!existing) {
+      return note;
+    }
+    return `${existing}\n${note}`;
   }
 
   private estimateItemSubtotal(item: Order['items'][number]): number {
