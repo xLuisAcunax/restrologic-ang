@@ -810,11 +810,54 @@ export class OrderDetailsDialogComponent implements OnInit {
   statusLabel(
     status: Order['status'] | { type?: Order['status'] } | null | undefined,
   ): string {
-    const code = this.statusCodeFrom(status);
+    const code = this.statusCodeFrom(status).toString().toLowerCase();
+    switch (code) {
+      case 'created':
+      case 'draft':
+        return 'Creada';
+      case 'pending':
+        return 'Pendiente';
+      case 'submitted':
+        return 'Enviada';
+      case 'confirmed':
+        return 'Confirmada';
+      case 'preparing':
+      case 'inpreparation':
+        return 'En preparacion';
+      case 'ready':
+        return 'Lista';
+      case 'served':
+        return 'Servida';
+      case 'partiallypaid':
+        return 'Abono registrado';
+      case 'paid':
+        return 'Pagada';
+      case 'closed':
+        return 'Cerrada';
+      case 'cancelled':
+        return 'Cancelada';
+      case 'delivery_assigned':
+        return 'Domicilio asignado';
+      case 'delivery_accepted':
+        return 'Domicilio aceptado';
+      case 'delivery_preparing':
+        return 'Domicilio en preparacion';
+      case 'delivery_ready':
+        return 'Domicilio listo';
+      case 'delivery_picked_up':
+        return 'Domicilio recogido';
+      case 'delivery_in_transit':
+        return 'Domicilio en camino';
+      case 'delivery_delivered':
+        return 'Domicilio entregado';
+      case 'delivery_cancelled':
+        return 'Domicilio cancelado';
+      case 'delivery_failed':
+        return 'Entrega fallida';
+    }
+
     const label = code
-      .toString()
-      .toLowerCase()
-      .split('-')
+      .split(/[-_]/)
       .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
       .join(' ');
     if (label.trim().length === 0) {
@@ -869,14 +912,27 @@ export class OrderDetailsDialogComponent implements OnInit {
     // Filtrar únicamente cambios de estado a nivel de ORDEN (no de items / transiciones internas redundantes)
     const orderLevelStatuses = [
       'created',
+      'draft',
       'pending',
+      'submitted',
       'confirmed',
       'preparing',
+      'inpreparation',
       'ready',
       'served',
+      'partiallypaid',
       'paid',
       'closed',
       'cancelled',
+      'delivery_assigned',
+      'delivery_accepted',
+      'delivery_preparing',
+      'delivery_ready',
+      'delivery_picked_up',
+      'delivery_in_transit',
+      'delivery_delivered',
+      'delivery_cancelled',
+      'delivery_failed',
     ];
 
     const normalized = order.statusHistory
@@ -915,6 +971,28 @@ export class OrderDetailsDialogComponent implements OnInit {
 
   statusHistoryLabel(entry: OrderStatusHistoryDto): string {
     return this.statusLabel(entry.status);
+  }
+
+  statusHistoryDotClass(entry: OrderStatusHistoryDto): string {
+    const code = this.statusCodeFrom(entry.status).toLowerCase();
+    if (['cancelled', 'delivery_cancelled', 'delivery_failed'].includes(code)) {
+      return 'bg-error';
+    }
+    if (['served', 'paid', 'closed', 'delivery_delivered'].includes(code)) {
+      return 'bg-success';
+    }
+    if (
+      [
+        'ready',
+        'delivery_ready',
+        'delivery_picked_up',
+        'delivery_in_transit',
+        'partiallypaid',
+      ].includes(code)
+    ) {
+      return 'bg-info';
+    }
+    return 'bg-warning';
   }
 
   changedByLabel(changedBy: OrderStatusHistoryDto['changedBy']): string {

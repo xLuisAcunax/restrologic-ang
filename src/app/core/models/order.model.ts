@@ -100,9 +100,9 @@ export type RegisterPaymentDto = {
 };
 
 export type OrderStatusHistoryDto = {
-  status: { type: OrderStatus } | OrderStatus;
+  status: { type: OrderStatus | string } | OrderStatus | string;
   changedAt?: string;
-  changedBy: string;
+  changedBy: string | Record<string, unknown>;
 };
 
 export type OrderItem = {

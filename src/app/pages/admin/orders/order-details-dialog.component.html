@@ -488,6 +488,54 @@
             </div>
           </div>
         </div>
+
+        <div class="px-8 py-8 border-t border-base-200/60">
+          <h4
+            class="text-xs font-bold text-base-content/40 uppercase tracking-widest mb-4"
+          >
+            Historial de estado
+          </h4>
+
+          @if (statusHistory(order()!).length) {
+            <div class="space-y-4">
+              @for (entry of statusHistory(order()!); track $index) {
+                <div class="flex gap-4 items-start">
+                  <div class="flex flex-col items-center pt-1">
+                    <div
+                      class="w-3 h-3 rounded-full {{ statusHistoryDotClass(entry) }}"
+                    ></div>
+                    @if (!$last) {
+                      <div class="w-px h-10 bg-base-200 mt-2"></div>
+                    }
+                  </div>
+
+                  <div class="flex-1 min-w-0">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                      <div class="font-semibold text-base-content">
+                        {{ statusHistoryLabel(entry) }}
+                      </div>
+                      <div class="text-xs text-base-content/45 font-mono">
+                        {{ entry.changedAt | localDateTime }}
+                      </div>
+                    </div>
+                    <div class="text-sm text-base-content/55 mt-1">
+                      Responsable:
+                      <span class="font-medium text-base-content/70">{{
+                        changedByLabel(entry.changedBy)
+                      }}</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div
+              class="p-4 border border-dashed border-base-300 rounded-lg text-center text-sm text-base-content/40"
+            >
+              No hay historial de estados disponible.
+            </div>
+          }
+        </div>
       </div>
     </div>
   } @else {
