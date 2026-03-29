@@ -352,10 +352,10 @@ export class OrderHistoryComponent implements OnInit {
       };
 
       this.loading.set(true);
-      this.orderService.updateOrder(this.tenantId(), branchId, order.id, dto).subscribe({
+      this.orderService.updateOrder(order.id, dto as any).subscribe({
         next: (res) => {
           this.loading.set(false);
-          const updatedOrder = res?.data ?? null;
+          const updatedOrder = (res as Order) ?? null;
           const tableId = (updatedOrder?.tableId ?? order.tableId ?? '').toString();
 
           if (tableId) {

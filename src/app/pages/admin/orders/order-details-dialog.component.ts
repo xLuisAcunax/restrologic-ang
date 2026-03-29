@@ -415,10 +415,10 @@ export class OrderDetailsDialogComponent implements OnInit {
       };
 
       this.saving.set(true);
-      this.orderService.updateOrder(tenantId, branchId, current.id, dto).subscribe({
+      this.orderService.updateOrder(current.id, dto as any).subscribe({
         next: (res) => {
           this.saving.set(false);
-          const updatedOrder = (res?.data as Order | undefined) ?? current;
+          const updatedOrder = (res as Order | undefined) ?? current;
           this.order.set({
             ...updatedOrder,
             items: updatedOrder.items?.length ? updatedOrder.items : current.items,
