@@ -117,7 +117,7 @@ export class OrderDetailsDialogComponent implements OnInit {
   private userNames = signal<Map<string, string>>(new Map());
 
   constructor(
-    private dialogRef: DialogRef<void>,
+    private dialogRef: DialogRef<{ cancelled: boolean } | void>,
     @Inject(DIALOG_DATA) private data: OrderDetailsDialogData,
   ) {
     this.mergeUserNames(this.data.userNameFallbacks);
