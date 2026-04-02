@@ -36,6 +36,12 @@
   </div>
 
   <div class="w-[95%] 2xl:w-[90%] max-w-[1920px] mx-auto">
+    @if (errorMessage()) {
+      <div class="mb-4 rounded-xl border border-error/20 bg-error/10 px-4 py-3 text-sm font-medium text-error">
+        {{ errorMessage() }}
+      </div>
+    }
+
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
       @for (t of filtered(); track t.id) {
       <div

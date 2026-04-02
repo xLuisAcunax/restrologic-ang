@@ -18,6 +18,7 @@ export class TablesComponent implements OnInit {
   tables = signal<Table[]>([]);
   filtered = signal<Table[]>([]);
   search = signal<string>('');
+  errorMessage = signal<string | null>(null);
 
   private authService = inject(AuthService);
   private tableService = inject(TableService);
@@ -37,9 +38,16 @@ export class TablesComponent implements OnInit {
   ngOnInit(): void {}
 
   loadTables(branchId: string) {
-    this.tableService.getTables(branchId).subscribe((res: any) => {
-      this.tables.set(res || []);
-      this.applyFilter();
+    this.tableService.getTables(branchId).subscribe({
+      next: (res: any) => {
+        this.errorMessage.set(null);
+        this.tables.set(res || []);
+        this.applyFilter();
+      },
+      error: (err) => {
+        console.error('[admin tables] Error loading tables:', err);
+        this.errorMessage.set('No se pudieron cargar las mesas.');
+      },
     });
   }
 
@@ -103,7 +111,19 @@ export class TablesComponent implements OnInit {
 
     this.tableService
       .deleteTable(tenantId, branchId, table.id)
-      .subscribe(() => this.loadTables(branchId));
+      .subscribe({
+        next: () => {
+          this.errorMessage.set(null);
+          this.loadTables(branchId);
+        },
+        error: (err) => {
+          console.error('[admin tables] Error deleting table:', err);
+          this.errorMessage.set(
+            err?.error ||
+              'No se pudo eliminar la mesa. Si tiene una orden activa, primero debes cerrarla o cancelarla.',
+          );
+        },
+      });
   }
 
   badgeClass(status: string) {
