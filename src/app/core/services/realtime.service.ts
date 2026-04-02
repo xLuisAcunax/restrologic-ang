@@ -92,6 +92,8 @@ export class RealtimeService implements OnDestroy {
       return null;
     }
 
+    await this.releaseOtherTablePresence(branchId, tableId, userId);
+
     const payload = await this.connection.invoke<TablePresenceInfo>(
       'EnterTable',
       branchId,
@@ -146,6 +148,7 @@ export class RealtimeService implements OnDestroy {
         'GetActiveTableLocks',
         branchId,
       );
+      this.pruneActiveTablePresence(branchId, Array.isArray(locks) ? locks : []);
       return Array.isArray(locks) ? locks : [];
     } catch {
       return [];
@@ -301,6 +304,64 @@ export class RealtimeService implements OnDestroy {
     try {
       await this.connection.invoke('LeaveBranch', branchId);
     } catch {}
+  }
+
+  private async releaseOtherTablePresence(
+    branchId: string,
+    tableId: string,
+    userId: string,
+  ): Promise<void> {
+    const entries = Array.from(this.activeTablePresence.entries()).filter(
+      ([, entry]) =>
+        entry.branchId === branchId &&
+        entry.userId === userId &&
+        entry.tableId !== tableId,
+    );
+
+    for (const [key, entry] of entries) {
+      try {
+        await this.connection?.invoke(
+          'LeaveTable',
+          entry.branchId,
+          entry.tableId,
+          entry.userId,
+        );
+      } catch {
+      } finally {
+        this.activeTablePresence.delete(key);
+      }
+    }
+  }
+
+  private pruneActiveTablePresence(
+    branchId: string,
+    locks: TablePresenceInfo[],
+  ): void {
+    const currentUserId = this.auth.me()?.id;
+    if (!currentUserId) {
+      return;
+    }
+
+    const activeLockKeys = new Set(
+      locks
+        .filter(
+          (lock) =>
+            lock.branchId === branchId &&
+            lock.locked &&
+            lock.lockedBy?.userId === currentUserId,
+        )
+        .map((lock) => `${lock.branchId}:${lock.tableId}`),
+    );
+
+    for (const [key, entry] of this.activeTablePresence.entries()) {
+      if (entry.branchId !== branchId || entry.userId !== currentUserId) {
+        continue;
+      }
+
+      if (!activeLockKeys.has(key)) {
+        this.activeTablePresence.delete(key);
+      }
+    }
   }
 
   private buildOrdersHubUrl(): string {

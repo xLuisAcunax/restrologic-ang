@@ -164,12 +164,7 @@
               {{ t.name }}
             </h3>
 
-            <p
-              class="text-[11px] font-bold uppercase tracking-widest mt-1"
-              [class.text-base-content/40]="t.status !== 1"
-              [class.text-primary]="t.status !== 1 && t.description"
-              [class.text-error/60]="t.status === 1"
-            >
+            <p class="text-[11px] font-bold uppercase tracking-widest mt-1 text-base-content/40">
               {{ t.description || "GENERAL" }}
             </p>
 

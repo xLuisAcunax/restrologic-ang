@@ -112,6 +112,7 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
   currentOrder = signal<Order | null>(null);
   error = signal<string | null>(null);
   tablePresence = signal<TablePresenceInfo | null>(null);
+  private leavingPresence = false;
 
   /** Mobile tab: 'menu' shows product browser, 'order' shows order summary */
   activeTab = signal<'menu' | 'order'>('menu');
@@ -820,7 +821,7 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
   }
 
   closeDialog() {
-    this.dialogRef.close();
+    void this.closeDialogWithPresenceRelease();
   }
 
   private getTenantId(): string | undefined {
@@ -854,6 +855,10 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
   }
 
   private async leaveTablePresence(): Promise<void> {
+    if (this.leavingPresence) {
+      return;
+    }
+
     const branchId = this.getBranchId();
     const tableId = this.data.table.id;
     const userId = this.auth.me()?.id;
@@ -862,7 +867,17 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    await this.realtime.leaveTablePresence(branchId, tableId, userId);
+    this.leavingPresence = true;
+    try {
+      await this.realtime.leaveTablePresence(branchId, tableId, userId);
+    } finally {
+      this.leavingPresence = false;
+    }
+  }
+
+  private async closeDialogWithPresenceRelease(): Promise<void> {
+    await this.leaveTablePresence();
+    this.dialogRef.close();
   }
 
   onProductClick(product: Product) {
