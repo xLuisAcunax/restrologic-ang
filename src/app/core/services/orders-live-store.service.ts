@@ -71,6 +71,15 @@ export class OrdersLiveStore {
     }
   }
 
+  refreshCurrentBranch(): void {
+    const branchId = this.branchSelection.getEffectiveBranchId();
+    if (!branchId) {
+      return;
+    }
+
+    this.loadInitialSnapshot(branchId, this.activationVersion);
+  }
+
   getById(id: string): Order | undefined {
     return this.ordersMap().get(id);
   }

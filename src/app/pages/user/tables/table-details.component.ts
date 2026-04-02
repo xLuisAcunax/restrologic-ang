@@ -543,9 +543,10 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
 
           this.currentOrder.set(order);
           if (order?.id) {
-            this.loadOrderItems(order.id);
+            this.finalizeSavedOrder(order.id, order.status);
+          } else {
+            this.isSaving.set(false);
           }
-          this.isSaving.set(false);
         },
         error: () => {
           this.error.set('No se pudo crear la orden.');
@@ -578,9 +579,10 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
         const order = res?.data ?? res;
         this.currentOrder.set(order);
         if (order?.id) {
-          this.loadOrderItems(order.id);
+          this.finalizeSavedOrder(order.id, order.status);
+        } else {
+          this.isSaving.set(false);
         }
-        this.isSaving.set(false);
       },
       error: (err: any) => {
         console.error('Error creating new order:', err);
@@ -632,8 +634,7 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
         concat(...ops).subscribe({
           next: () => {},
           complete: () => {
-            this.reloadOrder(orderId);
-            this.isSaving.set(false);
+            this.finalizeSavedOrder(orderId, this.currentOrder()?.status);
           },
           error: () => {
             this.error.set('No se pudieron sincronizar los ítems.');
@@ -643,6 +644,32 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.error.set('No se pudieron obtener los ítems actuales.');
+        this.isSaving.set(false);
+      },
+    });
+  }
+
+  private finalizeSavedOrder(
+    orderId: string,
+    currentStatus?: Order['status'] | string | null,
+  ) {
+    const normalized = (currentStatus || '').toString().trim().toLowerCase();
+    const requiresSubmission = ['draft', 'created'].includes(normalized);
+
+    if (!requiresSubmission) {
+      this.reloadOrder(orderId);
+      this.isSaving.set(false);
+      return;
+    }
+
+    this.orderService.updateOrder(orderId, { status: 'Submitted' }).subscribe({
+      next: () => {
+        this.reloadOrder(orderId);
+        this.isSaving.set(false);
+      },
+      error: () => {
+        this.error.set('La orden se guardó, pero no se pudo pasar a pendiente.');
+        this.reloadOrder(orderId);
         this.isSaving.set(false);
       },
     });

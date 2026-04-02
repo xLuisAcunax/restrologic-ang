@@ -213,6 +213,7 @@ export class UserTablesComponent implements OnInit, OnDestroy {
     dialogRef.closed.subscribe(() => {
       const currentBranchId = this.branchId();
       if (currentBranchId) {
+        this.ordersStore.refreshCurrentBranch();
         this.loadTables(currentBranchId);
       }
     });
