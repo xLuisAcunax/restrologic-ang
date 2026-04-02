@@ -17,8 +17,7 @@ import { Dialog } from '@angular/cdk/dialog';
 import { TableDetailsComponent } from './table-details.component';
 import { LoggedUser } from '../../../core/models/user.model';
 import { Order, OrderStatus } from '../../../core/models/order.model';
-import { of, Subscription } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 import { TableStatusEnum } from '../../../core/enums/table-status.enum';
 import {
   RealtimeService,
@@ -89,20 +88,7 @@ export class UserTablesComponent implements OnInit, OnDestroy {
         });
 
       this.tableOrders.set(nextOrders);
-      this.tables.update((tables) =>
-        tables.map((table) => {
-          const hasActiveOrder = nextOrders.has(table.id);
-          return {
-            ...table,
-            status: hasActiveOrder
-              ? TableStatusEnum.Occupied
-              : this.normalizeTableStatus(table.status) ===
-                  TableStatusEnum.Occupied
-                ? TableStatusEnum.Free
-                : table.status,
-          };
-        }),
-      );
+      this.refreshTablesFromOrderMap(nextOrders);
     });
 
     effect(() => {
@@ -155,85 +141,18 @@ export class UserTablesComponent implements OnInit, OnDestroy {
 
     this.tableService.getTables(branchId).subscribe({
       next: (tables) => {
+        const currentOrders = this.tableOrders();
         this.tables.set(
           this.preserveTablePresence(
-            this.reconcileTablesWithLiveOrders(tables || []),
+            this.applyOrderMapToTables(tables || [], currentOrders),
           ),
         );
-
-        if ((tables || []).length === 0) {
-          this.tableOrders.set(new Map());
-          void this.syncTableLocks(branchId);
-          return;
-        }
-
-        this.loadOrdersForTables(tables || []);
         void this.syncTableLocks(branchId);
       },
       error: (err) => {
         console.error('[loadTables] Error loading tables:', err);
       },
     });
-  }
-
-  private loadOrdersForTables(tables: Table[]) {
-    const orderMap = new Map<string, Order>();
-    const tablesToFree: Table[] = [];
-    let completed = 0;
-
-    for (const table of tables) {
-      this.orderService
-        .getOpenOrderForTable(table.id)
-        .pipe(catchError(() => of(null)))
-        .subscribe({
-          next: (order) => {
-            completed++;
-            if (order) {
-              const status = (order.status || '').toString().toLowerCase();
-              const isFullyPaid = status === 'paid' || status === 'closed';
-              const isCancelled = status === 'cancelled';
-
-              if (isFullyPaid || isCancelled) {
-                tablesToFree.push(table);
-              } else {
-                orderMap.set(table.id, order);
-              }
-            } else {
-              tablesToFree.push(table);
-            }
-
-            if (completed === tables.length) {
-              this.tableOrders.set(orderMap);
-              for (const t of tablesToFree) {
-                this.freeTableAutomatically(t);
-              }
-            }
-          },
-        });
-    }
-  }
-
-  private freeTableAutomatically(table: Table) {
-    const tenantId = this.loggedUser()?.tenantId;
-    const branchId = this.branchId();
-
-    if (tenantId && branchId && table.id) {
-      this.tableService
-        .updateTableStatus(tenantId, branchId, table.id, TableStatusEnum.Free)
-        .subscribe({
-          next: () => {
-            console.log('[Tables] Auto-freed table:', table.id);
-            this.tables.update((tables) =>
-              tables.map((t) =>
-                t.id === table.id ? { ...t, status: TableStatusEnum.Free } : t,
-              ),
-            );
-          },
-          error: (err) => {
-            console.warn('[Tables] Could not auto-free table:', table.id, err);
-          },
-        });
-    }
   }
 
   getLockIndicator(table: Table): string | null {
@@ -445,8 +364,10 @@ export class UserTablesComponent implements OnInit, OnDestroy {
     return history.at(-1)?.changedAt ?? null;
   }
 
-  private reconcileTablesWithLiveOrders(tables: Table[]): Table[] {
-    const currentOrders = this.tableOrders();
+  private applyOrderMapToTables(
+    tables: Table[],
+    currentOrders: Map<string, Order>,
+  ): Table[] {
     return tables.map((table) => {
       const hasActiveOrder = currentOrders.has(table.id);
       return {
@@ -455,9 +376,15 @@ export class UserTablesComponent implements OnInit, OnDestroy {
           ? TableStatusEnum.Occupied
           : this.normalizeTableStatus(table.status) === TableStatusEnum.Occupied
             ? TableStatusEnum.Free
-            : table.status,
+          : table.status,
       };
     });
+  }
+
+  private refreshTablesFromOrderMap(currentOrders: Map<string, Order>): void {
+    this.tables.update((tables) =>
+      this.applyOrderMapToTables(tables, currentOrders),
+    );
   }
 
   private preserveTablePresence(tables: Table[]): Table[] {
