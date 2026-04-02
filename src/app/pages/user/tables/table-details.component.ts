@@ -521,9 +521,11 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
   }
 
   private createOrderForTable() {
+    const items = this.cart().map((item) => this.mapToItemRequest(item));
     this.orderService
       .createOrGetOrderForTable(this.data.table.id, {
         assignedToUserId: this.auth.me()?.id,
+        items,
       })
       .subscribe({
         next: (order) => {
@@ -540,7 +542,10 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
           }
 
           this.currentOrder.set(order);
-          if (order?.id) this.syncOrderItems(order.id);
+          if (order?.id) {
+            this.loadOrderItems(order.id);
+          }
+          this.isSaving.set(false);
         },
         error: () => {
           this.error.set('No se pudo crear la orden.');
@@ -566,13 +571,16 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
         branchId,
         tableId: this.data.table.id,
         assignedToUserId: this.auth.me()?.id,
+        items: this.cart().map((item) => this.mapToItemRequest(item)),
       }) as any
     ).subscribe({
       next: (res: any) => {
         const order = res?.data ?? res;
         this.currentOrder.set(order);
-        // Now sync the items to the new order
-        if (order?.id) this.syncOrderItems(order.id);
+        if (order?.id) {
+          this.loadOrderItems(order.id);
+        }
+        this.isSaving.set(false);
       },
       error: (err: any) => {
         console.error('Error creating new order:', err);

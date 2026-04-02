@@ -27,6 +27,7 @@ export type CreateOrderRequest = {
   guests?: number;
   notes?: string;
   assignedToUserId?: string;
+  items?: OrderItemRequest[];
 };
 
 export type UpdateOrderRequest = {
