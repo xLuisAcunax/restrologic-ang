@@ -123,8 +123,8 @@ export class TableService {
   }
 
   deleteTable(tenantId: string, branchId: string, tableId: string) {
-    return this.http.delete(
-      `${this.base}/tenant/${tenantId}/branch/${branchId}/table/${tableId}`,
+    return this.http.delete<{ ok: boolean; data?: Table }>(
+      `${this.base}/Tables/${tableId}`,
     );
   }
 
