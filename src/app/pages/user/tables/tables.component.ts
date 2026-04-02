@@ -54,6 +54,10 @@ export class UserTablesComponent implements OnInit, OnDestroy {
   // Signal to trigger UI updates for elapsed time
   private timerTick = signal(0);
   private realtimeSubscription: Subscription | null = null;
+  private readonly tableNameCollator = new Intl.Collator('es', {
+    numeric: true,
+    sensitivity: 'base',
+  });
 
   constructor() {
     effect(() => {
@@ -143,8 +147,10 @@ export class UserTablesComponent implements OnInit, OnDestroy {
       next: (tables) => {
         const currentOrders = this.tableOrders();
         this.tables.set(
-          this.preserveTablePresence(
-            this.applyOrderMapToTables(tables || [], currentOrders),
+          this.sortTablesByName(
+            this.preserveTablePresence(
+              this.applyOrderMapToTables(tables || [], currentOrders),
+            ),
           ),
         );
         void this.syncTableLocks(branchId);
@@ -383,7 +389,7 @@ export class UserTablesComponent implements OnInit, OnDestroy {
 
   private refreshTablesFromOrderMap(currentOrders: Map<string, Order>): void {
     this.tables.update((tables) =>
-      this.applyOrderMapToTables(tables, currentOrders),
+      this.sortTablesByName(this.applyOrderMapToTables(tables, currentOrders)),
     );
   }
 
@@ -444,19 +450,21 @@ export class UserTablesComponent implements OnInit, OnDestroy {
     const locks = await this.realtime.getActiveTableLocks(branchId);
     const lockMap = new Map(locks.map((lock) => [lock.tableId, lock]));
     this.tables.update((tables) =>
-      tables.map((table) => {
-        const presence = lockMap.get(table.id);
-        if (!presence) {
-          return { ...table, locked: false, lockedBy: null, lockedAt: null };
-        }
+      this.sortTablesByName(
+        tables.map((table) => {
+          const presence = lockMap.get(table.id);
+          if (!presence) {
+            return { ...table, locked: false, lockedBy: null, lockedAt: null };
+          }
 
-        return {
-          ...table,
-          locked: presence.locked,
-          lockedBy: presence.lockedBy ?? null,
-          lockedAt: presence.lockedAt ?? null,
-        };
-      }),
+          return {
+            ...table,
+            locked: presence.locked,
+            lockedBy: presence.lockedBy ?? null,
+            lockedAt: presence.lockedAt ?? null,
+          };
+        }),
+      ),
     );
   }
 
@@ -466,19 +474,29 @@ export class UserTablesComponent implements OnInit, OnDestroy {
     }
 
     this.tables.update((tables) =>
-      tables.map((table) => {
-        if (table.id !== presence.tableId) {
-          return table;
-        }
+      this.sortTablesByName(
+        tables.map((table) => {
+          if (table.id !== presence.tableId) {
+            return table;
+          }
 
-        return {
-          ...table,
-          locked: presence.locked,
-          lockedBy: presence.locked ? (presence.lockedBy ?? null) : null,
-          lockedAt: presence.locked ? (presence.lockedAt ?? null) : null,
-        };
-      }),
+          return {
+            ...table,
+            locked: presence.locked,
+            lockedBy: presence.locked ? (presence.lockedBy ?? null) : null,
+            lockedAt: presence.locked ? (presence.lockedAt ?? null) : null,
+          };
+        }),
+      ),
     );
+  }
+
+  private sortTablesByName(tables: Table[]): Table[] {
+    return [...tables].sort((a, b) => {
+      const left = (a.name || '').trim() || a.id;
+      const right = (b.name || '').trim() || b.id;
+      return this.tableNameCollator.compare(left, right);
+    });
   }
 
   private isLockedByAnotherUser(table: Table): boolean {
