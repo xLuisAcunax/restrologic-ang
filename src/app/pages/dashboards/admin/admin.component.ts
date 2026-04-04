@@ -26,8 +26,12 @@ export class AdminComponent {
     }).format(new Date()),
   );
 
-  readonly latestTopProducts = computed(() => this.dashboard.topProductsToday().slice(0, 5));
-  readonly latestOrders = computed(() => this.dashboard.recentOrders().slice(0, 6));
+  readonly latestTopProducts = computed(() =>
+    this.dashboard.topProductsToday().slice(0, 5),
+  );
+  readonly latestOrders = computed(() =>
+    this.dashboard.recentOrders().slice(0, 6),
+  );
   readonly hourlyBars = computed(() => {
     const hours = this.dashboard.hourlySalesToday();
     const max = Math.max(...hours, 0);
@@ -109,8 +113,8 @@ export class AdminComponent {
 
   orderSecondaryLabel(order: Order): string {
     if (order.customer?.phone) return order.customer.phone;
-    if (order.source === 'public-menu') return 'Menú público';
-    return order.source || 'Operación interna';
+    if (order.source === 'public-menu') return 'MenÃº pÃºblico';
+    return order.source || 'OperaciÃ³n interna';
   }
 
   productProgress(index: number): number {
@@ -121,4 +125,3 @@ export class AdminComponent {
     return Math.round((current / maxQty) * 100);
   }
 }
-

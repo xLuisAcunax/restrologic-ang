@@ -23,15 +23,15 @@
   },
   "private": true,
   "dependencies": {
-    "@angular/animations": "^20.3.18",
+    "@angular/animations": "^21.2.7",
     "@angular/cdk": "20.2.3",
-    "@angular/common": "20.3.1",
-    "@angular/compiler": "20.3.1",
-    "@angular/core": "20.3.1",
-    "@angular/forms": "^20.3.18",
-    "@angular/platform-browser": "^20.3.18",
-    "@angular/platform-browser-dynamic": "^20.3.18",
-    "@angular/router": "^20.3.18",
+    "@angular/common": "21.2.7",
+    "@angular/compiler": "21.2.7",
+    "@angular/core": "21.2.7",
+    "@angular/forms": "^21.2.7",
+    "@angular/platform-browser": "^21.2.7",
+    "@angular/platform-browser-dynamic": "^21.2.7",
+    "@angular/router": "^21.2.7",
     "@microsoft/signalr": "^10.0.0",
     "@tailwindcss/postcss": "^4.1.13",
     "@types/leaflet": "^1.9.21",
@@ -49,9 +49,9 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@angular/build": "^20.3.22",
-    "@angular/cli": "^20.3.22",
-    "@angular/compiler-cli": "^20.3.18",
+    "@angular/build": "^21.2.6",
+    "@angular/cli": "^21.2.6",
+    "@angular/compiler-cli": "^21.2.7",
     "@types/jasmine": "~5.1.0",
     "@types/uuid": "^10.0.0",
     "baseline-browser-mapping": "^2.10.14",
@@ -63,6 +63,7 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
-    "typescript": "5.8.3"
+    "postcss": "^8.5.3",
+    "typescript": "5.9.3"
   }
 }
