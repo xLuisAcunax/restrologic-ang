@@ -1,4 +1,3 @@
-
 import {
   ChangeDetectionStrategy,
   Component,
@@ -51,13 +50,11 @@ export class SigninFormComponent {
 
     this.authService.login(email!, password!).subscribe({
       next: () => {
-        console.log('Login successful - roles:', this.authService.me()?.roles);
         const user = this.authService.me();
 
         if (user?.isSuper) {
           this.router.navigate(['/super']);
         } else if (user?.roles?.includes('Admin')) {
-          console.log('Navigating to /admin for Admin role');
           this.router.navigate(['/admin']);
         } else {
           this.router.navigate(['/']);
@@ -65,9 +62,7 @@ export class SigninFormComponent {
       },
       error: (err) => {
         this.isSubmitting.set(false);
-        this.error.set(
-          err.error?.error || 'Login failed. Please check your credentials.',
-        );
+        this.error.set(err.error?.error || 'Credenciales inválida.');
       },
     });
   }

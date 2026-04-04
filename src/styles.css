@@ -62,8 +62,6 @@
   }
 }
 
-/* (App sidebar overrides moved to component stylesheet) */
-
 .table-details-dialog-pane {
   align-self: center !important;
   max-height: 90vh;
@@ -78,7 +76,7 @@
   padding: 0;
 }
 
-.table-details-dialog-pane .cdk-dialog-container>* {
+.table-details-dialog-pane .cdk-dialog-container > * {
   flex: 1 1 auto;
   max-height: inherit;
 }
