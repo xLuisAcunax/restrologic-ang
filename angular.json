@@ -21,11 +21,7 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "src/styles.css",
-              "node_modules/leaflet/dist/leaflet.css",
-              "node_modules/ol/ol.css"
-            ],
+            "styles": ["src/styles.css", "node_modules/ol/ol.css"],
             "scripts": ["node_modules/apexcharts/dist/apexcharts.min.js"]
           },
           "configurations": {
@@ -75,17 +71,7 @@
           "builder": "@angular/build:extract-i18n"
         },
         "test": {
-          "builder": "@angular/build:karma",
-          "options": {
-            "tsConfig": "tsconfig.spec.json",
-            "assets": [
-              {
-                "glob": "**/*",
-                "input": "public"
-              }
-            ],
-            "styles": ["src/styles.css"]
-          }
+          "builder": "@analogjs/vitest-angular:test"
         }
       }
     }
