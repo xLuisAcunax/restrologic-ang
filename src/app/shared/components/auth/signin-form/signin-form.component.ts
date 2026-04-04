@@ -1,6 +1,16 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import {
+  FormBuilder,
+  ReactiveFormsModule,
+  Validators,
+  FormsModule,
+} from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 
@@ -55,7 +65,9 @@ export class SigninFormComponent {
       },
       error: (err) => {
         this.isSubmitting.set(false);
-        this.error.set(err.error?.error || 'Login failed. Please check your credentials.');
+        this.error.set(
+          err.error?.error || 'Login failed. Please check your credentials.',
+        );
       },
     });
   }
