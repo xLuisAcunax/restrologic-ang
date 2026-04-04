@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, inject } from '@angular/core';
 import { DashboardService } from '../../../services/dashboard.service';
 
@@ -12,7 +12,7 @@ type Row = {
 
 @Component({
   selector: 'app-recent-orders',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './recent-orders.component.html',
 })
 export class RecentOrdersComponent {

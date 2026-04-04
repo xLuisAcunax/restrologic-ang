@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { OrderItem } from '../../../../core/models/order.model';
@@ -6,7 +6,7 @@ import { OrderItem } from '../../../../core/models/order.model';
 @Component({
   selector: 'app-summary-section',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './summary-section.component.html',
 })
 export class SummarySectionComponent {

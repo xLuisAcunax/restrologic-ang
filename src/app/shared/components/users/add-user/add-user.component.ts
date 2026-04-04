@@ -17,7 +17,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { UserService } from '../../../../core/services/user.service';
 import { BranchSummary } from '../../../../core/services/business.service';
-import { CommonModule } from '@angular/common';
+
 import { CreateUserDto, User } from '../../../../core/models/user.model';
 import { RoleService } from '../../../../core/services/role.service';
 import { switchMap, of, finalize } from 'rxjs';
@@ -25,7 +25,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'add-user',
-  imports: [FormsModule, ReactiveFormsModule, CommonModule],
+  imports: [FormsModule, ReactiveFormsModule],
   templateUrl: './add-user.component.html',
 })
 export class AddUserComponent implements OnInit {

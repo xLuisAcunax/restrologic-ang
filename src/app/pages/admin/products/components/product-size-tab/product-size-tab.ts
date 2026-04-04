@@ -2,7 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { BranchSelectionService } from '../../../../../core/services/branch-selection.service';
 import { Dialog } from '@angular/cdk/dialog';
 import { CategoryService } from '../../../../../core/services/category.service';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import {
   ProductSize,
@@ -12,7 +12,7 @@ import { ProductSizeFormComponent } from '../../modals/product-size-form/product
 
 @Component({
   selector: 'product-size-tab',
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './product-size-tab.html',
 })
 export class ProductSizeTab {

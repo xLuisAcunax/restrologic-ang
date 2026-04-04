@@ -1,5 +1,5 @@
 import { Component, Input, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ModuleAnalyticsService } from '../../../core/services/module-analytics.service';
 
 /**
@@ -9,7 +9,7 @@ import { ModuleAnalyticsService } from '../../../core/services/module-analytics.
 @Component({
   selector: 'app-upgrade-prompt',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <div
       class="rounded-2xl border-2 border-dashed border-warning/50 bg-warning/10 p-8 text-center"

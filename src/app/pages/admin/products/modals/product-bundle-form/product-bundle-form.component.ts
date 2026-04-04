@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, Inject, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
@@ -16,7 +16,7 @@ import { BranchSelectionService } from '../../../../../core/services/branch-sele
 @Component({
   selector: 'product-bundle-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './product-bundle-form.component.html',
 })
 export class ProductBundleFormComponent implements OnInit {

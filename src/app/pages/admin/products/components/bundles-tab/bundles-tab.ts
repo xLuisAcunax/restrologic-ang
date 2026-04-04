@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Dialog } from '@angular/cdk/dialog';
@@ -16,7 +16,7 @@ import { ProductBundleFormComponent } from '../../modals/product-bundle-form/pro
 @Component({
   selector: 'bundles-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './bundles-tab.html',
 })
 export class BundlesTab implements OnInit {

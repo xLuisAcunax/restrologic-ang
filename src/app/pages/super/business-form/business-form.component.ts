@@ -7,11 +7,11 @@ import {
   BusinessService,
   UpdateBusinessDto,
 } from '../../../core/services/business.service';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
   selector: 'app-business-form',
-  imports: [ReactiveFormsModule, CommonModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './business-form.component.html',
 })
 export class BusinessFormComponent {

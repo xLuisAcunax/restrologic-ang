@@ -9,9 +9,11 @@
           class="select select-bordered"
           [(ngModel)]="selectedComponent"
           (change)="onFilterChange()"
-        >
+          >
           <option value="">Todos</option>
-          <option *ngFor="let c of components" [value]="c">{{ c }}</option>
+          @for (c of components; track c) {
+            <option [value]="c">{{ c }}</option>
+          }
         </select>
       </label>
       <label class="form-control">
@@ -23,174 +25,178 @@
           max="500"
           [(ngModel)]="limit"
           (ngModelChange)="load()"
-        />
-      </label>
+          />
+        </label>
 
-      <label class="form-control">
-        <div class="label"><span class="label-text">Desde</span></div>
-        <input
-          class="input input-bordered"
-          type="datetime-local"
-          [(ngModel)]="sinceDate"
-          (keydown.enter)="load()"
-        />
-      </label>
+        <label class="form-control">
+          <div class="label"><span class="label-text">Desde</span></div>
+          <input
+            class="input input-bordered"
+            type="datetime-local"
+            [(ngModel)]="sinceDate"
+            (keydown.enter)="load()"
+            />
+          </label>
 
-      <label class="form-control">
-        <div class="label"><span class="label-text">Estado HTTP</span></div>
-        <select class="select select-bordered" [(ngModel)]="selectedStatus">
-          <option value="">Todos</option>
-          <option value="500">500</option>
-          <option value="502">502</option>
-          <option value="503">503</option>
-          <option value="504">504</option>
-          <option value="400">400</option>
-          <option value="401">401</option>
-          <option value="403">403</option>
-          <option value="404">404</option>
-        </select>
-      </label>
+          <label class="form-control">
+            <div class="label"><span class="label-text">Estado HTTP</span></div>
+            <select class="select select-bordered" [(ngModel)]="selectedStatus">
+              <option value="">Todos</option>
+              <option value="500">500</option>
+              <option value="502">502</option>
+              <option value="503">503</option>
+              <option value="504">504</option>
+              <option value="400">400</option>
+              <option value="401">401</option>
+              <option value="403">403</option>
+              <option value="404">404</option>
+            </select>
+          </label>
 
-      <label class="form-control md:col-span-1">
-        <div class="label"><span class="label-text">Buscar</span></div>
-        <input
-          class="input input-bordered"
-          placeholder="Error, ruta, requestId"
-          [(ngModel)]="searchTerm"
-        />
-      </label>
-    </div>
+          <label class="form-control md:col-span-1">
+            <div class="label"><span class="label-text">Buscar</span></div>
+            <input
+              class="input input-bordered"
+              placeholder="Error, ruta, requestId"
+              [(ngModel)]="searchTerm"
+              />
+            </label>
+          </div>
 
-    <div class="mt-4 flex flex-wrap items-center gap-3">
-      <button class="btn btn-primary" type="button" (click)="load()">
-        <span class="loading loading-spinner" *ngIf="loading"></span>
-        <span *ngIf="!loading">Actualizar</span>
-      </button>
-      <span class="text-sm text-base-content/60">
-        {{ filteredItems().length }} registros
-      </span>
-    </div>
+          <div class="mt-4 flex flex-wrap items-center gap-3">
+            <button class="btn btn-primary" type="button" (click)="load()">
+              @if (loading) {
+                <span class="loading loading-spinner"></span>
+              }
+              @if (!loading) {
+                <span>Actualizar</span>
+              }
+            </button>
+            <span class="text-sm text-base-content/60">
+              {{ filteredItems().length }} registros
+            </span>
+          </div>
 
-    <div class="mt-6 hidden overflow-x-auto md:block">
-      @if (!loading && filteredItems().length === 0) {
-      <div
-        class="rounded-xl border border-dashed border-base-300 p-8 text-center text-base-content/60"
-      >
-        No se encontraron registros.
-      </div>
-      } @else {
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Error</th>
-            <th>Ruta</th>
-            <th>Usuario</th>
-            <th>Componente</th>
-            <th>Request ID</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (item of filteredItems(); track item.id) {
-          <tr class="hover">
-            <td class="whitespace-nowrap">
-              {{ item.createdAt | date : "medium" }}
-            </td>
-            <td class="max-w-xs truncate">
-              <span
-                class="font-mono text-xs"
+          <div class="mt-6 hidden overflow-x-auto md:block">
+            @if (!loading && filteredItems().length === 0) {
+              <div
+                class="rounded-xl border border-dashed border-base-300 p-8 text-center text-base-content/60"
+                >
+                No se encontraron registros.
+              </div>
+            } @else {
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Error</th>
+                    <th>Ruta</th>
+                    <th>Usuario</th>
+                    <th>Componente</th>
+                    <th>Request ID</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of filteredItems(); track item.id) {
+                    <tr class="hover">
+                      <td class="whitespace-nowrap">
+                        {{ item.createdAt | date : "medium" }}
+                      </td>
+                      <td class="max-w-xs truncate">
+                        <span
+                          class="font-mono text-xs"
                 [ngClass]="{
                   'sev-error': item.status >= 500,
                   'sev-warn': item.status >= 400 && item.status < 500
                 }"
-                >{{ item.status }}</span
-              >
-              <div class="font-medium">{{ item.message }}</div>
-            </td>
-            <td>
-              <div class="text-sm font-medium">
-                {{ item.method }} {{ item.path }}
-              </div>
-              <div class="text-xs text-base-content/70">
-                {{ item.errorId }}
-              </div>
-            </td>
-            <td class="text-sm">
-              <div>{{ item.userEmail || "—" }}</div>
-              <div class="text-xs text-base-content/60">
-                {{ item.userRoles?.join(", ") || "" }}
-              </div>
-            </td>
-            <td>
-              <span class="badge" [ngClass]="item.component">{{
-                item.component || "—"
-              }}</span>
-            </td>
-            <td class="text-xs font-mono">
-              {{ item.requestId || "—" }}
-            </td>
-            <td class="text-right">
-              <button
-                class="btn btn-sm btn-outline"
-                (click)="view(item.errorId)"
-              >
-                Ver
-              </button>
-            </td>
-          </tr>
-          }
-        </tbody>
-      </table>
-      }
-    </div>
+                          >{{ item.status }}</span
+                          >
+                          <div class="font-medium">{{ item.message }}</div>
+                        </td>
+                        <td>
+                          <div class="text-sm font-medium">
+                            {{ item.method }} {{ item.path }}
+                          </div>
+                          <div class="text-xs text-base-content/70">
+                            {{ item.errorId }}
+                          </div>
+                        </td>
+                        <td class="text-sm">
+                          <div>{{ item.userEmail || "—" }}</div>
+                          <div class="text-xs text-base-content/60">
+                            {{ item.userRoles?.join(", ") || "" }}
+                          </div>
+                        </td>
+                        <td>
+                          <span class="badge" [ngClass]="item.component">{{
+                            item.component || "—"
+                          }}</span>
+                        </td>
+                        <td class="text-xs font-mono">
+                          {{ item.requestId || "—" }}
+                        </td>
+                        <td class="text-right">
+                          <button
+                            class="btn btn-sm btn-outline"
+                            (click)="view(item.errorId)"
+                            >
+                            Ver
+                          </button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+            </div>
 
-    <div class="mt-6 grid gap-4 md:hidden">
-      @if (!loading && filteredItems().length === 0) {
-      <div
-        class="rounded-xl border border-dashed border-base-300 p-6 text-center text-base-content/60"
-      >
-        No se encontraron registros.
-      </div>
-      } @else { @for (item of filteredItems(); track item.id) {
-      <div class="rounded-xl border border-base-200 bg-base-100 p-4 shadow-sm">
-        <div class="flex items-start justify-between gap-3">
-          <div>
-            <p class="text-xs text-base-content/60">Fecha</p>
-            <p class="text-sm font-medium">
-              {{ item.createdAt | date : "short" }}
-            </p>
-          </div>
-          <span class="badge" [ngClass]="item.component">{{
-            item.component || "—"
-          }}</span>
-        </div>
+            <div class="mt-6 grid gap-4 md:hidden">
+              @if (!loading && filteredItems().length === 0) {
+                <div
+                  class="rounded-xl border border-dashed border-base-300 p-6 text-center text-base-content/60"
+                  >
+                  No se encontraron registros.
+                </div>
+              } @else { @for (item of filteredItems(); track item.id) {
+                <div class="rounded-xl border border-base-200 bg-base-100 p-4 shadow-sm">
+                  <div class="flex items-start justify-between gap-3">
+                    <div>
+                      <p class="text-xs text-base-content/60">Fecha</p>
+                      <p class="text-sm font-medium">
+                        {{ item.createdAt | date : "short" }}
+                      </p>
+                    </div>
+                    <span class="badge" [ngClass]="item.component">{{
+                      item.component || "—"
+                    }}</span>
+                  </div>
 
-        <div class="mt-3 space-y-2 text-sm">
-          <div>
-            <p class="text-xs text-base-content/60">Mensaje</p>
-            <p class="font-semibold break-words">{{ item.message }}</p>
-          </div>
-          <div>
-            <p class="text-xs text-base-content/60">Ruta</p>
-            <p class="break-words">{{ item.method }} {{ item.path }}</p>
-          </div>
-          <div>
-            <p class="text-xs text-base-content/60">Request ID</p>
-            <p class="font-mono text-xs break-all">
-              {{ item.requestId || "—" }}
-            </p>
-          </div>
-        </div>
+                  <div class="mt-3 space-y-2 text-sm">
+                    <div>
+                      <p class="text-xs text-base-content/60">Mensaje</p>
+                      <p class="font-semibold break-words">{{ item.message }}</p>
+                    </div>
+                    <div>
+                      <p class="text-xs text-base-content/60">Ruta</p>
+                      <p class="break-words">{{ item.method }} {{ item.path }}</p>
+                    </div>
+                    <div>
+                      <p class="text-xs text-base-content/60">Request ID</p>
+                      <p class="font-mono text-xs break-all">
+                        {{ item.requestId || "—" }}
+                      </p>
+                    </div>
+                  </div>
 
-        <button
-          class="btn btn-sm btn-primary mt-4 w-full"
-          (click)="view(item.errorId)"
-        >
-          Ver detalle
-        </button>
-      </div>
-      } }
-    </div>
-  </div>
-</div>
+                  <button
+                    class="btn btn-sm btn-primary mt-4 w-full"
+                    (click)="view(item.errorId)"
+                    >
+                    Ver detalle
+                  </button>
+                </div>
+                } }
+              </div>
+            </div>
+          </div>

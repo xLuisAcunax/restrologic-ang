@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import {
   ModuleAnalyticsService,
   AnalyticsSummary,
@@ -9,7 +9,7 @@ import { switchMap, startWith } from 'rxjs/operators';
 
 @Component({
   selector: 'super-dashboard',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './super.component.html',
 })
 export class SuperComponent implements OnInit, OnDestroy {

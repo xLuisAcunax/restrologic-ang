@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, inject, effect } from '@angular/core';
 import { DashboardService } from '../../../services/dashboard.service';
 import {
@@ -19,7 +19,7 @@ import {
 @Component({
   selector: 'app-monthly-sales-chart',
   standalone: true,
-  imports: [CommonModule, NgApexchartsModule],
+  imports: [NgApexchartsModule],
   templateUrl: './monthly-sales-chart.component.html',
 })
 export class MonthlySalesChartComponent {

@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common';
+
 import { UpgradePromptComponent } from '../../shared/components/upgrade-prompt/upgrade-prompt.component';
 
 @Component({
   selector: 'app-not-authorized',
   standalone: true,
-  imports: [CommonModule, RouterLink, UpgradePromptComponent],
+  imports: [RouterLink, UpgradePromptComponent],
   template: `
     <div class="flex min-h-screen items-center justify-center p-4">
       <div class="w-full max-w-md">

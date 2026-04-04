@@ -1,5 +1,5 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { DashboardSettingsService } from '../../../shared/services/dashboard-settings.service';
 import {
@@ -11,7 +11,7 @@ import { BranchSelectionService } from '../../../core/services/branch-selection.
 @Component({
   selector: 'app-dashboard-stats-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './dashboard-stats.component.html',
 })
 export class DashboardStatsComponent {

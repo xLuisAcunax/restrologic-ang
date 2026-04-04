@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PageBreadcrumbComponent } from '../../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
@@ -19,7 +19,7 @@ import {
 @Component({
   selector: 'app-module-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, PageBreadcrumbComponent],
+  imports: [FormsModule, PageBreadcrumbComponent],
   templateUrl: './module-management.component.html',
 })
 export class ModuleManagementComponent implements OnInit {

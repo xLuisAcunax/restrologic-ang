@@ -7,7 +7,7 @@ import {
   computed,
   inject,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import * as L from 'leaflet';
 import { AuthService } from '../../../../core/services/auth.service';
 import { OrderService } from '../../../../core/services/order.service';
@@ -29,7 +29,7 @@ type SortOrder = 'nearest' | 'farthest';
 @Component({
   selector: 'app-route-map',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './route-map.component.html',
   styleUrls: ['./route-map.component.css'],
 })

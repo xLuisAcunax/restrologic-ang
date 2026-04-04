@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CreateDiscountDto } from '../../../../core/models/order.model';
@@ -6,7 +6,7 @@ import { CreateDiscountDto } from '../../../../core/models/order.model';
 @Component({
   selector: 'app-discounts-section',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './discounts-section.component.html',
 })
 export class DiscountsSectionComponent {

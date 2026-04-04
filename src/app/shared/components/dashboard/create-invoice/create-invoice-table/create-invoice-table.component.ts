@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
@@ -19,7 +19,7 @@ interface FormData {
 
 @Component({
   selector: 'app-create-invoice-table',
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './create-invoice-table.component.html',
   styles: ``,
 })

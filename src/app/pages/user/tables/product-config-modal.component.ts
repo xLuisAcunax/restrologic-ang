@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, Inject, signal } from '@angular/core';
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { FormsModule } from '@angular/forms';
@@ -14,7 +14,7 @@ export type ProductConfigData = { product: Product };
 @Component({
   selector: 'app-product-config-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   template: `
     <div class="card bg-base-100 w-full shadow-2xl p-4">
       <div class="card-body">

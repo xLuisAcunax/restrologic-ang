@@ -6,7 +6,7 @@ import {
   AfterViewInit,
   OnDestroy,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { CartService } from '../../services/cart.service';
 import { CartUiService } from '../../services/cart-ui.service';
@@ -15,7 +15,7 @@ import { CartDrawerComponent } from '../../components/cart-drawer/cart-drawer.co
 @Component({
   selector: 'app-public-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, CartDrawerComponent],
+  imports: [RouterModule, CartDrawerComponent],
   templateUrl: './public-layout.component.html',
   styles: `
     @keyframes cartBounce {

@@ -5,7 +5,7 @@ import {
   Category,
   CategoryService,
 } from '../../../../../core/services/category.service';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { SubcategoryFormComponent } from '../../modals/subcategory-form/subcategory-form.component';
 import {
@@ -15,7 +15,7 @@ import {
 
 @Component({
   selector: 'subcategories-tab',
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './subcategories-tab.html',
 })
 export class SubcategoriesTab implements OnInit {

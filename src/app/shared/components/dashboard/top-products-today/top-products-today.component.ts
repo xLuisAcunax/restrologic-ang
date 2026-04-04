@@ -1,11 +1,11 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { DashboardService } from '../../../services/dashboard.service';
 
 @Component({
   selector: 'app-top-products-today',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './top-products-today.component.html',
 })
 export class TopProductsTodayComponent {

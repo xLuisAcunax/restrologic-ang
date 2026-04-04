@@ -11,7 +11,7 @@ import {
   BranchSummary,
   BusinessService,
 } from '../../../core/services/business.service';
-import { CommonModule } from '@angular/common';
+
 import { AuthService } from '../../../core/services/auth.service';
 import { BranchSelectionService } from '../../../core/services/branch-selection.service';
 import { FormsModule } from '@angular/forms';
@@ -27,7 +27,6 @@ import { BundleGroupsTab } from './components/bundle-groups-tab/bundle-groups-ta
 @Component({
   selector: 'app-products',
   imports: [
-    CommonModule,
     FormsModule,
     ProductsTab,
     CategoriesTab,
@@ -35,8 +34,8 @@ import { BundleGroupsTab } from './components/bundle-groups-tab/bundle-groups-ta
     ProductSizeTab,
     SubcategoriesTab,
     BundlesTab,
-    BundleGroupsTab,
-  ],
+    BundleGroupsTab
+],
   templateUrl: './products.component.html',
 })
 export class ProductsComponent implements OnInit, OnDestroy {

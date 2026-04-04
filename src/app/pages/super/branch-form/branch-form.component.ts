@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, Inject, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
@@ -14,7 +14,7 @@ import { GeocodingService } from '../../../shared/services/geocoding.service';
 
 @Component({
   selector: 'app-branch-form',
-  imports: [ReactiveFormsModule, CommonModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './branch-form.component.html',
 })
 export class BranchFormComponent {

@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { UserService } from '../../../core/services/user.service';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import {
@@ -24,7 +24,7 @@ export interface User {
 
 @Component({
   selector: 'app-users',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [FormsModule, ReactiveFormsModule],
   templateUrl: './users.component.html',
 })
 export class UsersComponent implements OnInit {

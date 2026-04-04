@@ -1,5 +1,5 @@
 import { Component, Inject, inject, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { OrderService } from '../../../core/services/order.service';
@@ -10,7 +10,7 @@ import { AuthService } from '../../../core/services/auth.service';
 @Component({
   selector: 'delivery-assignment-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   template: `
     <div class="p-6 bg-white rounded-lg">
       <h2 class="text-2xl font-bold mb-4">Asignar Conductor</h2>

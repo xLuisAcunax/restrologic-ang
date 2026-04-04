@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal, effect } from '@angular/core';
 import { BranchSummary } from '../../../core/services/business.service';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { BranchSelectionService } from '../../../core/services/branch-selection.service';
@@ -10,7 +10,7 @@ import { TableFormComponent } from './table-form/table-form.component';
 
 @Component({
   selector: 'app-tables',
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './tables.component.html',
 })
 export class TablesComponent implements OnInit {

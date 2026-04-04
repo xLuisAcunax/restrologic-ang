@@ -7,7 +7,7 @@ import {
   computed,
   inject,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
@@ -50,7 +50,7 @@ interface DeliveryStop {
 @Component({
   selector: 'app-route-map-ol',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './route-map-ol.component.html',
   styleUrls: ['./route-map-ol.component.css'],
 })

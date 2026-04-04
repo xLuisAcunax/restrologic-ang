@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import {
   ChangeDetectionStrategy,
   Component,
@@ -16,7 +16,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-signin-form',
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule],
+  imports: [RouterModule, ReactiveFormsModule, FormsModule],
   templateUrl: './signin-form.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

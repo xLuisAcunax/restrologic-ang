@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Dialog } from '@angular/cdk/dialog';
@@ -17,7 +17,7 @@ import { BranchSelectionService } from '../../../../../core/services/branch-sele
 @Component({
   selector: 'bundle-groups-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './bundle-groups-tab.html',
 })
 export class BundleGroupsTab implements OnInit {

@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import {
   Component,
   Inject,
@@ -34,7 +34,7 @@ import { BranchSelectionService } from '../../../../../core/services/branch-sele
 @Component({
   selector: 'product-bundle-group-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './product-bundle-group-form.component.html',
 })
 export class ProductBundleGroupFormComponent implements OnInit {

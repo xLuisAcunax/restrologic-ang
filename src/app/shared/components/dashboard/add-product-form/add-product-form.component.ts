@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
   selector: 'app-add-product-form',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './add-product-form.component.html',
   styles: ``,
 })

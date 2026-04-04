@@ -6,12 +6,12 @@ import {
   ViewChild,
   ViewContainerRef,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
   selector: 'app-cdk-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <!-- panel principal (panelClass ya lo aplica el overlay pane) -->
     <div class="modal modal-open">

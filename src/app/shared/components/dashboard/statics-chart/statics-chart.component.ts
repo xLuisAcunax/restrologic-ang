@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component } from '@angular/core';
 import { NgApexchartsModule } from 'ng-apexcharts';
 
@@ -20,7 +20,7 @@ import {
 
 @Component({
   selector: 'app-statics-chart',
-  imports: [CommonModule, NgApexchartsModule],
+  imports: [NgApexchartsModule],
   templateUrl: './statics-chart.component.html',
 })
 export class StatisticsChartComponent {

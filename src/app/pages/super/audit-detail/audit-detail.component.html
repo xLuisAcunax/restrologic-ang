@@ -21,132 +21,142 @@
         </div>
 
         @if (loading) {
-        <div class="mt-6 flex justify-center">
-          <span class="loading loading-ring loading-lg"></span>
-        </div>
+          <div class="mt-6 flex justify-center">
+            <span class="loading loading-ring loading-lg"></span>
+          </div>
         } @else if (!item()) {
-        <div
-          class="mt-6 rounded-xl border border-dashed border-base-300 p-6 text-center text-base-content/60"
-        >
-          No se encontró información para este error.
-        </div>
+          <div
+            class="mt-6 rounded-xl border border-dashed border-base-300 p-6 text-center text-base-content/60"
+            >
+            No se encontró información para este error.
+          </div>
         } @else {
 
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 mt-6">
-          <div class="rounded-lg bg-base-200 p-4">
-            <div class="text-xs text-base-content/60">Fecha</div>
-            <div class="text-lg font-medium">
-              {{ item()?.createdAt | date : "full" }}
-            </div>
-          </div>
-
-          <div class="rounded-lg bg-base-200 p-4">
-            <div class="text-xs text-base-content/60">Estado HTTP</div>
-            <div class="text-lg font-semibold">
-              {{ item()?.status }} {{ item()?.name || "" }}
-            </div>
-          </div>
-
-          <div class="rounded-lg bg-base-200 p-4">
-            <div class="text-xs text-base-content/60">Ruta</div>
-            <div class="font-mono text-sm">
-              {{ item()?.method }} {{ item()?.path }}
-            </div>
-          </div>
-
-          <div class="rounded-lg bg-base-200 p-4">
-            <div class="text-xs text-base-content/60">Request ID</div>
-            <div class="flex items-center justify-between gap-2">
-              <span class="font-mono text-xs break-all">
-                {{ item()?.requestId || "—" }}
-              </span>
-              <button class="btn btn-xs" (click)="copy(item()?.requestId)">
-                Copiar
-              </button>
-            </div>
-          </div>
-
-          <div class="rounded-lg bg-base-200 p-4">
-            <div class="text-xs text-base-content/60">Usuario</div>
-            <div class="space-y-1 text-sm">
-              <div>{{ item()?.userEmail || "—" }}</div>
-              <div class="text-xs text-base-content/60">
-                {{ item()?.userId || "" }}
-              </div>
-              <div class="text-xs text-base-content/60">
-                {{ item()?.userRoles?.join(", ") || "" }}
-              </div>
-            </div>
-          </div>
-
-          <div class="rounded-lg bg-base-200 p-4">
-            <div class="text-xs text-base-content/60">Contexto</div>
-            <div class="space-y-1 text-sm">
-              <div>Tenant: {{ item()?.tenantId || "—" }}</div>
-              <div>Sucursal: {{ item()?.branchId || "—" }}</div>
-              <div>IP: {{ item()?.ip || "—" }}</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-6 space-y-4">
-          <div>
-            <div class="text-sm text-base-content/60 mb-2">Mensaje</div>
-            <div class="rounded-lg bg-base-200 p-4 text-sm break-words">
-              {{ item()?.message }}
-            </div>
-          </div>
-
-          <div *ngIf="item()?.stack">
-            <div class="flex items-center justify-between">
-              <div class="text-sm text-base-content/60 mb-2">Stack</div>
-              <button class="btn btn-xs" (click)="copy(item()?.stack)">
-                Copiar todo
-              </button>
-            </div>
-            <div class="rounded-lg bg-base-200 p-4 overflow-auto">
-              <pre class="text-xs whitespace-pre-wrap">{{ item()?.stack }}</pre>
-            </div>
-          </div>
-
-          <div class="grid gap-4 md:grid-cols-2">
-            <div *ngIf="item()?.query">
-              <div class="text-sm text-base-content/60 mb-2">Query</div>
-              <div class="rounded-lg bg-base-200 p-4 overflow-auto">
-                <pre class="text-xs whitespace-pre-wrap">{{
-                  item()?.query
-                }}</pre>
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2 mt-6">
+            <div class="rounded-lg bg-base-200 p-4">
+              <div class="text-xs text-base-content/60">Fecha</div>
+              <div class="text-lg font-medium">
+                {{ item()?.createdAt | date : "full" }}
               </div>
             </div>
 
-            <div *ngIf="item()?.body">
-              <div class="text-sm text-base-content/60 mb-2">Body</div>
-              <div class="rounded-lg bg-base-200 p-4 overflow-auto">
-                <pre class="text-xs whitespace-pre-wrap">{{
-                  item()?.body
-                }}</pre>
+            <div class="rounded-lg bg-base-200 p-4">
+              <div class="text-xs text-base-content/60">Estado HTTP</div>
+              <div class="text-lg font-semibold">
+                {{ item()?.status }} {{ item()?.name || "" }}
               </div>
             </div>
 
-            <div *ngIf="item()?.headers">
-              <div class="text-sm text-base-content/60 mb-2">Headers</div>
-              <div class="rounded-lg bg-base-200 p-4 overflow-auto">
-                <pre class="text-xs whitespace-pre-wrap">{{
-                  item()?.headers
-                }}</pre>
+            <div class="rounded-lg bg-base-200 p-4">
+              <div class="text-xs text-base-content/60">Ruta</div>
+              <div class="font-mono text-sm">
+                {{ item()?.method }} {{ item()?.path }}
               </div>
             </div>
 
-            <div *ngIf="item()?.details">
-              <div class="text-sm text-base-content/60 mb-2">Detalles</div>
-              <div class="rounded-lg bg-base-200 p-4 overflow-auto">
-                <pre class="text-xs whitespace-pre-wrap">{{
-                  item()?.details
-                }}</pre>
+            <div class="rounded-lg bg-base-200 p-4">
+              <div class="text-xs text-base-content/60">Request ID</div>
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-mono text-xs break-all">
+                  {{ item()?.requestId || "—" }}
+                </span>
+                <button class="btn btn-xs" (click)="copy(item()?.requestId)">
+                  Copiar
+                </button>
+              </div>
+            </div>
+
+            <div class="rounded-lg bg-base-200 p-4">
+              <div class="text-xs text-base-content/60">Usuario</div>
+              <div class="space-y-1 text-sm">
+                <div>{{ item()?.userEmail || "—" }}</div>
+                <div class="text-xs text-base-content/60">
+                  {{ item()?.userId || "" }}
+                </div>
+                <div class="text-xs text-base-content/60">
+                  {{ item()?.userRoles?.join(", ") || "" }}
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded-lg bg-base-200 p-4">
+              <div class="text-xs text-base-content/60">Contexto</div>
+              <div class="space-y-1 text-sm">
+                <div>Tenant: {{ item()?.tenantId || "—" }}</div>
+                <div>Sucursal: {{ item()?.branchId || "—" }}</div>
+                <div>IP: {{ item()?.ip || "—" }}</div>
               </div>
             </div>
           </div>
-        </div>
+
+          <div class="mt-6 space-y-4">
+            <div>
+              <div class="text-sm text-base-content/60 mb-2">Mensaje</div>
+              <div class="rounded-lg bg-base-200 p-4 text-sm break-words">
+                {{ item()?.message }}
+              </div>
+            </div>
+
+            @if (item()?.stack) {
+              <div>
+                <div class="flex items-center justify-between">
+                  <div class="text-sm text-base-content/60 mb-2">Stack</div>
+                  <button class="btn btn-xs" (click)="copy(item()?.stack)">
+                    Copiar todo
+                  </button>
+                </div>
+                <div class="rounded-lg bg-base-200 p-4 overflow-auto">
+                  <pre class="text-xs whitespace-pre-wrap">{{ item()?.stack }}</pre>
+                </div>
+              </div>
+            }
+
+            <div class="grid gap-4 md:grid-cols-2">
+              @if (item()?.query) {
+                <div>
+                  <div class="text-sm text-base-content/60 mb-2">Query</div>
+                  <div class="rounded-lg bg-base-200 p-4 overflow-auto">
+                    <pre class="text-xs whitespace-pre-wrap">{{
+                      item()?.query
+                    }}</pre>
+                  </div>
+                </div>
+              }
+
+              @if (item()?.body) {
+                <div>
+                  <div class="text-sm text-base-content/60 mb-2">Body</div>
+                  <div class="rounded-lg bg-base-200 p-4 overflow-auto">
+                    <pre class="text-xs whitespace-pre-wrap">{{
+                      item()?.body
+                    }}</pre>
+                  </div>
+                </div>
+              }
+
+              @if (item()?.headers) {
+                <div>
+                  <div class="text-sm text-base-content/60 mb-2">Headers</div>
+                  <div class="rounded-lg bg-base-200 p-4 overflow-auto">
+                    <pre class="text-xs whitespace-pre-wrap">{{
+                      item()?.headers
+                    }}</pre>
+                  </div>
+                </div>
+              }
+
+              @if (item()?.details) {
+                <div>
+                  <div class="text-sm text-base-content/60 mb-2">Detalles</div>
+                  <div class="rounded-lg bg-base-200 p-4 overflow-auto">
+                    <pre class="text-xs whitespace-pre-wrap">{{
+                      item()?.details
+                    }}</pre>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
 
         }
       </div>

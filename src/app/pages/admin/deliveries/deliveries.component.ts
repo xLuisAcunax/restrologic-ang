@@ -1,5 +1,5 @@
 import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { DriverService, Driver } from '../../../core/services/driver.service';
@@ -28,7 +28,7 @@ function isOptimisticAssignmentResult(r: any): r is OptimisticAssignmentResult {
 @Component({
   selector: 'app-deliveries',
   standalone: true,
-  imports: [CommonModule, FormsModule, DeliveryStatusBadge],
+  imports: [FormsModule, DeliveryStatusBadge],
   templateUrl: './deliveries.component.html',
   styleUrl: './deliveries.component.css',
 })

@@ -1,11 +1,11 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, inject, computed } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-user-dropdown',
-  imports: [CommonModule, RouterModule],
+  imports: [RouterModule],
   templateUrl: './user-dropdown.component.html',
 })
 export class UserDropdownComponent {

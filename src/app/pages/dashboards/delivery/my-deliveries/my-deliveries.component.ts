@@ -1,5 +1,5 @@
 import { Component, OnInit, computed, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { AuthService } from '../../../../core/services/auth.service';
 import { OrderService } from '../../../../core/services/order.service';
 import { DeliveryStatusBadge } from '../../../../shared/components/delivery-status-badge/delivery-status-badge.component';
@@ -9,7 +9,7 @@ import { OrdersLiveStore } from '../../../../core/services/orders-live-store.ser
 @Component({
   selector: 'app-my-deliveries',
   standalone: true,
-  imports: [CommonModule, DeliveryStatusBadge],
+  imports: [DeliveryStatusBadge],
   templateUrl: './my-deliveries.component.html',
   styleUrls: ['./my-deliveries.component.css'],
 })

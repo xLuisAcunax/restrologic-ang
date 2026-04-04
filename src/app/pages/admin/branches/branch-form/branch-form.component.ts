@@ -7,12 +7,12 @@ import {
   UpdateBranchDto,
 } from '../../../../core/services/business.service';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+
 import { GeocodingService } from '../../../../shared/services/geocoding.service';
 
 @Component({
   selector: 'branch-form',
-  imports: [ReactiveFormsModule, CommonModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './branch-form.component.html',
 })
 export class BranchFormComponent implements OnInit {

@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+
 import {
   CreateProductDto,
   Product,
@@ -33,7 +33,7 @@ import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-product-form',
-  imports: [ReactiveFormsModule, FormsModule, CommonModule],
+  imports: [ReactiveFormsModule, FormsModule],
   templateUrl: './product-form.component.html',
 })
 export class ProductFormComponent implements OnInit, OnDestroy {

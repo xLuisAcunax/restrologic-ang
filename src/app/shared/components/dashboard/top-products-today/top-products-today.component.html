@@ -14,21 +14,24 @@
           </tr>
         </thead>
         <tbody>
-          <tr
-            *ngFor="let p of products; let i = index"
-            class="hover:bg-base-200/60"
-          >
-            <td class="whitespace-nowrap">{{ i + 1 }}. {{ p.name }}</td>
-            <td class="text-right">{{ p.qty }}</td>
-            <td class="text-right font-semibold">
-              {{ formatCurrency(p.total) }}
-            </td>
-          </tr>
-          <tr *ngIf="products.length === 0">
-            <td colspan="3" class="text-center py-6 text-gray-500">
-              Sin datos
-            </td>
-          </tr>
+          @for (p of products; track p; let i = $index) {
+            <tr
+              class="hover:bg-base-200/60"
+              >
+              <td class="whitespace-nowrap">{{ i + 1 }}. {{ p.name }}</td>
+              <td class="text-right">{{ p.qty }}</td>
+              <td class="text-right font-semibold">
+                {{ formatCurrency(p.total) }}
+              </td>
+            </tr>
+          }
+          @if (products.length === 0) {
+            <tr>
+              <td colspan="3" class="text-center py-6 text-gray-500">
+                Sin datos
+              </td>
+            </tr>
+          }
         </tbody>
       </table>
     </div>

@@ -4,7 +4,7 @@
     <div class="flex flex-col gap-4">
       <div
         class="flex flex-col md:flex-row md:items-center md:justify-between gap-3"
-      >
+        >
         <div class="flex items-center gap-2">
           <button class="btn btn-primary" (click)="showModal()">
             Onboarding
@@ -15,7 +15,7 @@
               placeholder="Search businesses..."
               class="input input-bordered input-sm ml-2"
               (input)="search.set($any($event.target).value)"
-            />
+              />
           </div>
         </div>
 
@@ -25,14 +25,14 @@
               class="btn btn-sm mx-1"
               [ngClass]="{ 'btn-active': viewMode() === 'cards' }"
               (click)="viewMode.set('cards')"
-            >
+              >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="w-4 h-4"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-              >
+                >
                 <rect x="3" y="3" width="8" height="8" rx="1" />
                 <rect x="13" y="3" width="8" height="8" rx="1" />
                 <rect x="13" y="13" width="8" height="8" rx="1" />
@@ -43,14 +43,14 @@
               class="btn btn-sm"
               [ngClass]="{ 'btn-active': viewMode() === 'table' }"
               (click)="viewMode.set('table')"
-            >
+              >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="w-4 h-4"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-              >
+                >
                 <path d="M3 3h18v4H3zM3 9h18v12H3z" />
               </svg>
             </button>
@@ -62,82 +62,88 @@
       </div>
 
       <!-- Cards view -->
-      <div *ngIf="viewMode() === 'cards'">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <ng-container *ngFor="let b of filteredBusinesses">
-            <div
-              class="card bg-neutral-100 shadow hover:shadow-lg transition-shadow border border-base-300"
-            >
-              <div class="card-body">
-                <div class="flex items-start justify-between">
-                  <div>
-                    <h3 class="font-semibold text-lg">{{ b.name }}</h3>
-                    <div class="text-sm text-gray-500">
-                      {{ b.description }}
+      @if (viewMode() === 'cards') {
+        <div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            @for (b of filteredBusinesses; track b) {
+              <div
+                class="card bg-neutral-100 shadow hover:shadow-lg transition-shadow border border-base-300"
+                >
+                <div class="card-body">
+                  <div class="flex items-start justify-between">
+                    <div>
+                      <h3 class="font-semibold text-lg">{{ b.name }}</h3>
+                      <div class="text-sm text-gray-500">
+                        {{ b.description }}
+                      </div>
+                    </div>
+                    <div class="text-right">
+                      <div [class]="getBadgeColor(b.isActive)">
+                        {{ b.isActive ? "ACTIVE" : "INACTIVE" }}
+                      </div>
+                      <div class="text-xs text-gray-400 mt-1">
+                        {{ b.createdAt | date : "short" }}
+                      </div>
                     </div>
                   </div>
-                  <div class="text-right">
-                    <div [class]="getBadgeColor(b.isActive)">
-                      {{ b.isActive ? "ACTIVE" : "INACTIVE" }}
-                    </div>
-                    <div class="text-xs text-gray-400 mt-1">
-                      {{ b.createdAt | date : "short" }}
+                  <div class="card-actions mt-4">
+                    <a
+                      class="btn btn-sm btn-outline"
+                      [routerLink]="['/super', 'businesses', b.id]"
+                      >View</a
+                      >
+                      <button class="btn btn-sm">Manage</button>
                     </div>
                   </div>
                 </div>
-                <div class="card-actions mt-4">
-                  <a
-                    class="btn btn-sm btn-outline"
-                    [routerLink]="['/super', 'businesses', b.id]"
-                    >View</a
-                  >
-                  <button class="btn btn-sm">Manage</button>
-                </div>
-              </div>
+              }
             </div>
-          </ng-container>
-        </div>
-      </div>
+          </div>
+        }
 
-      <!-- Table view -->
-      <div *ngIf="viewMode() === 'table'" class="overflow-x-auto">
-        <table class="table w-full">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Description</th>
-              <th>Status</th>
-              <th>Created</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let b of filteredBusinesses" class="hover:bg-base-200">
-              <td class="font-medium">{{ b.name }}</td>
-              <td>{{ b.description }}</td>
-              <td>
-                <span
+        <!-- Table view -->
+        @if (viewMode() === 'table') {
+          <div class="overflow-x-auto">
+            <table class="table w-full">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Description</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (b of filteredBusinesses; track b) {
+                  <tr class="hover:bg-base-200">
+                    <td class="font-medium">{{ b.name }}</td>
+                    <td>{{ b.description }}</td>
+                    <td>
+                      <span
                   [ngClass]="{
                     'text-green-600': b.isActive,
                     'text-red-600': !b.isActive
                   }"
-                  >{{ b.isActive ? "ACTIVE" : "INACTIVE" }}</span
-                >
-              </td>
-              <td>{{ b.createdAt | date : "short" }}</td>
-              <td class="text-right">
-                <a
-                  class="btn btn-xs btn-ghost"
-                  [routerLink]="['/super', 'businesses', b.id]"
-                >
-                  View
-                </a>
-                <button class="btn btn-xs">Manage</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                        >{{ b.isActive ? "ACTIVE" : "INACTIVE" }}</span
+                        >
+                      </td>
+                      <td>{{ b.createdAt | date : "short" }}</td>
+                      <td class="text-right">
+                        <a
+                          class="btn btn-xs btn-ghost"
+                          [routerLink]="['/super', 'businesses', b.id]"
+                          >
+                          View
+                        </a>
+                        <button class="btn btn-xs">Manage</button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
       </div>
     </div>
-  </div>
-</div>

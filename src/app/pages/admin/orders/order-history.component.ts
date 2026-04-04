@@ -146,7 +146,7 @@ export class OrderHistoryComponent implements OnInit {
     const fromRange = createDayRangeIso(this.startDate());
     const toRange = createDayRangeIso(this.endDate());
     if (!fromRange || !toRange) {
-      this.error.set('El rango de fechas no es v�lido.');
+      this.error.set('El rango de fechas no es válido.');
       return;
     }
 
@@ -365,7 +365,11 @@ export class OrderHistoryComponent implements OnInit {
         next: (res) => {
           this.loading.set(false);
           const updatedOrder = (res as Order) ?? null;
-          const tableId = (updatedOrder?.tableId ?? order.tableId ?? '').toString();
+          const tableId = (
+            updatedOrder?.tableId ??
+            order.tableId ??
+            ''
+          ).toString();
 
           if (tableId) {
             this.tableService
@@ -674,7 +678,7 @@ export class OrderHistoryComponent implements OnInit {
     if (map.has(order.tableId)) {
       return map.get(order.tableId) as string;
     }
-    return order.tableName || 'Domicilio' || '—';
+    return order.tableName || 'Domicilio' || '-';
   }
 
   // ===== Export helpers =====
@@ -820,4 +824,3 @@ export class OrderHistoryComponent implements OnInit {
     XLSX.writeFile(workbook, 'ordenes.xlsx');
   }
 }
-
