@@ -3,7 +3,7 @@ export const environment = {
   apiBaseUrl: '/api',
   publicMenuBaseUrl: 'http://localhost:4200',
   features: {
-    ordersSseEnabled: false, // Desactivado: usar polling corto
+    ordersSseEnabled: false,
     ordersPollingIntervalMs: 3000,
   },
   useGoogleGeocoding: true,
