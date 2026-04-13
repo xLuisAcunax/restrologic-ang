@@ -199,8 +199,10 @@ export class UserTablesComponent implements OnInit, OnDestroy {
     this.blockedTableId.set(null);
 
     const dialogRef = this.dialog.open(TableDetailsComponent, {
-      width: '75vw',
-      height: '90vh',
+      width: 'min(1200px, 100vw)',
+      maxWidth: '100vw',
+      height: '100dvh',
+      maxHeight: '100dvh',
       panelClass: 'table-details-modal',
       autoFocus: false,
       data: {
