@@ -277,6 +277,11 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
     );
 
     if (applicableAdjustments.length === 0) {
+      const basePrice = Number(product.price);
+      if (Number.isFinite(basePrice) && basePrice > 0) {
+        return { requiresPortion: false, price: basePrice };
+      }
+
       // No adjustments found, check if there are portions for this category
       const hasPortions = sizes.some(
         (s) => s.categoryId === categoryId && s.isActive !== false,
