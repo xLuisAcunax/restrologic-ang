@@ -1521,7 +1521,10 @@ export class UserOrdersComponent implements OnInit {
           }).subscribe({
             next: ({ updated, payments }) => {
               if (updated) {
-                updated.payments = payments;
+                updated.payments = this.resolvePayments(
+                  payments,
+                  optimisticPayments,
+                );
                 const status = (updated.status || '').toString().toLowerCase();
                 const closedByBackend =
                   status === 'paid' || status === 'closed';
@@ -1588,6 +1591,17 @@ export class UserOrdersComponent implements OnInit {
           );
         },
       });
+  }
+
+  private resolvePayments(
+    payments: PaymentDto[] | null | undefined,
+    optimisticPayments: PaymentDto[],
+  ): PaymentDto[] {
+    const normalized = Array.isArray(payments) ? payments : [];
+    if (normalized.length > 0) {
+      return normalized;
+    }
+    return optimisticPayments;
   }
 
   private buildOptimisticPayment(

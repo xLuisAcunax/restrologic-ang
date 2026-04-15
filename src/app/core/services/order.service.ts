@@ -14,6 +14,7 @@ import {
   OrderResponse,
   OrdersResponse,
   OrdersSinceResponse,
+  PaymentDto,
   OrderStatus,
   PublicOrderTrackingResponse,
   RegisterPaymentDto,
@@ -249,6 +250,53 @@ export class OrderService {
     return normalized as T;
   }
 
+  private normalizePaymentsPayload(payload: any): PaymentDto[] {
+    const rows = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload?.data)
+        ? payload.data
+        : Array.isArray(payload?.payments)
+          ? payload.payments
+          : [];
+
+    return rows.map((payment: any) => ({
+      method: payment?.method ?? 'other',
+      amount:
+        typeof payment?.amount === 'number'
+          ? payment.amount
+          : Number(payment?.amount) || 0,
+      paidAt:
+        payment?.paidAt ??
+        payment?.createdAt ??
+        payment?.registeredAt ??
+        new Date().toISOString(),
+      paidBy:
+        payment?.paidBy ??
+        payment?.createdBy ??
+        payment?.userName ??
+        payment?.user?.fullName ??
+        'Sistema',
+      status: payment?.status
+        ? String(payment.status).toLowerCase()
+        : undefined,
+      reference: payment?.reference ?? null,
+      notes: payment?.notes ?? null,
+      receivedAmount:
+        typeof payment?.receivedAmount === 'number'
+          ? payment.receivedAmount
+          : payment?.receivedAmount != null
+            ? Number(payment.receivedAmount) || null
+            : null,
+      changeGiven:
+        typeof payment?.changeGiven === 'number'
+          ? payment.changeGiven
+          : payment?.changeGiven != null
+            ? Number(payment.changeGiven) || null
+            : null,
+      metadata: payment?.metadata ?? null,
+    })) as PaymentDto[];
+  }
+
   // ---------- Orders v2 (tenant header) ----------
   createOrGetOrderForTable(tableId: string, dto?: CreateOrderRequest) {
     return this.http
@@ -434,10 +482,9 @@ export class OrderService {
    * GET /api/orders/{orderId}/payments
    */
   listPayments(orderId: string) {
-    return this.http.get<any[]>(
-      `${this.base}/orders/${orderId}/payments`,
-      this.withTenant(),
-    );
+    return this.http
+      .get<any>(`${this.base}/orders/${orderId}/payments`, this.withTenant())
+      .pipe(map((payload) => this.normalizePaymentsPayload(payload)));
   }
 
   // ---------- Payments (legacy) ----------

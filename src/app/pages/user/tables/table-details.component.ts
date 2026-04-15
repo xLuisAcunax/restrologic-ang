@@ -330,8 +330,11 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
             this.currentOrder.set(null);
             this.cart.set([]);
           } else {
-            this.currentOrder.set(order);
-            if (order.id) this.loadOrderItems(order.id);
+            if (order.id) {
+              this.reloadOrder(order.id);
+            } else {
+              this.currentOrder.set(order);
+            }
           }
         } else {
           this.currentOrder.set(null);
@@ -807,7 +810,7 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
         return;
       }
 
-      order.payments = payments;
+      order.payments = this.resolvePayments(payments, optimisticPayments);
       const isTerminal = this.isTerminalOrderStatus(order.status);
 
       if (isTerminal) {
@@ -843,6 +846,17 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
         if (order.id) this.loadOrderItems(order.id);
       }
     });
+  }
+
+  private resolvePayments(
+    payments: PaymentDto[] | null | undefined,
+    optimisticPayments: PaymentDto[],
+  ): PaymentDto[] {
+    const normalized = Array.isArray(payments) ? payments : [];
+    if (normalized.length > 0) {
+      return normalized;
+    }
+    return optimisticPayments;
   }
 
   private buildOptimisticPayment(result: PaymentDialogResult): PaymentDto {
