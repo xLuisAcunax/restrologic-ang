@@ -43,6 +43,7 @@ import {
   OrderItem,
   OrderItemDto,
   OrderItemStatusType,
+  PaymentDto,
   OrderStatusHistoryDto,
   RegisterPaymentDto,
   UpdateDeliveryStatusDto,
@@ -1507,10 +1508,20 @@ export class UserOrdersComponent implements OnInit {
       })
       .subscribe({
         next: () => {
-          // Reload the order to get updated status and payments
-          this.orderService.getOrder(order.id!, { expand: 'items' }).subscribe({
-            next: (updated) => {
+          const optimisticPayments = [
+            ...(order.payments || []),
+            this.buildOptimisticPayment(result, normalizedAmount),
+          ];
+
+          forkJoin({
+            updated: this.orderService.getOrder(order.id!, { expand: 'items' }),
+            payments: this.orderService.listPayments(order.id!).pipe(
+              catchError(() => of(optimisticPayments)),
+            ),
+          }).subscribe({
+            next: ({ updated, payments }) => {
               if (updated) {
+                updated.payments = payments;
                 const status = (updated.status || '').toString().toLowerCase();
                 const closedByBackend =
                   status === 'paid' || status === 'closed';
@@ -1577,6 +1588,21 @@ export class UserOrdersComponent implements OnInit {
           );
         },
       });
+  }
+
+  private buildOptimisticPayment(
+    result: PaymentDialogResult,
+    amount: number,
+  ): PaymentDto {
+    return {
+      method: result.method,
+      amount,
+      paidAt: new Date().toISOString(),
+      paidBy: this.loggedUser()?.fullName || 'Sistema',
+      reference: result.reference || null,
+      notes: result.notes || null,
+      status: 'confirmed',
+    };
   }
 
   generateSaleTicket(order: Order): void {

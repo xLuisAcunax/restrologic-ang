@@ -39,7 +39,8 @@ import {
 } from '../../../core/services/price-adjustment.service';
 import { PaymentDialogComponent } from './payment-dialog/payment-dialog.component';
 import { PaymentDialogResult } from '../../../core/models/payment.model';
-import { concat } from 'rxjs';
+import { concat, forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { ProductConfiguratorForm } from './product-configurator-form/product-configurator-form';
 import {
   PortionSelectorModalComponent,
@@ -55,6 +56,7 @@ import {
   RealtimeService,
   TablePresenceInfo,
 } from '../../../core/services/realtime.service';
+import { PaymentDto } from '../../../core/models/order.model';
 
 export type TableDetailsData = {
   table: Table;
@@ -779,19 +781,33 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
         reference: result.reference || '',
       })
       .subscribe({
-        next: () => this.reloadOrder(orderId),
+        next: () => this.reloadOrder(orderId, result),
         error: () => this.error.set('No se pudo registrar el pago.'),
       });
   }
 
-  private reloadOrder(orderId: string) {
-    this.orderService.getOrder(orderId).subscribe((order) => {
+  private reloadOrder(orderId: string, paymentResult?: PaymentDialogResult) {
+    const currentOrder = this.currentOrder();
+    const optimisticPayments = paymentResult
+      ? [
+          ...(currentOrder?.payments || []),
+          this.buildOptimisticPayment(paymentResult),
+        ]
+      : currentOrder?.payments || [];
+
+    forkJoin({
+      order: this.orderService.getOrder(orderId),
+      payments: this.orderService.listPayments(orderId).pipe(
+        catchError(() => of(optimisticPayments)),
+      ),
+    }).subscribe(({ order, payments }) => {
       if (!order) {
         this.currentOrder.set(null);
         this.cart.set([]);
         return;
       }
 
+      order.payments = payments;
       const isTerminal = this.isTerminalOrderStatus(order.status);
 
       if (isTerminal) {
@@ -827,6 +843,18 @@ export class TableDetailsComponent implements OnInit, OnDestroy {
         if (order.id) this.loadOrderItems(order.id);
       }
     });
+  }
+
+  private buildOptimisticPayment(result: PaymentDialogResult): PaymentDto {
+    return {
+      method: result.method,
+      amount: this.roundCurrency(result.amount),
+      paidAt: new Date().toISOString(),
+      paidBy: this.auth.me()?.fullName || 'Sistema',
+      reference: result.reference || null,
+      notes: result.notes || null,
+      status: 'confirmed',
+    };
   }
 
   private isTerminalOrderStatus(status?: Order['status'] | string | null) {
