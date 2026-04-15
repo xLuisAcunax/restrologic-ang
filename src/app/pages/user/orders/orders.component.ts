@@ -1416,27 +1416,43 @@ export class UserOrdersComponent implements OnInit {
 
   openPaymentDialog(order: Order): void {
     console.log('Opening payment dialog for order:', order);
-    const total = this.orderTotal(order);
-    const paid = this.orderPaidAmount(order);
-    const outstanding = this.orderOutstanding(order);
+    if (!order.id) {
+      return;
+    }
 
-    const dialogRef = this.dialog.open(PaymentDialogComponent, {
-      width: '500px',
-      data: {
-        total,
-        paid,
-        outstanding,
-        currency: 'COP',
-        payments: order.payments || [],
-      },
-    });
+    this.orderService
+      .listPayments(order.id)
+      .pipe(catchError(() => of(order.payments || [])))
+      .subscribe((payments) => {
+        const hydratedOrder = {
+          ...order,
+          payments: this.resolvePayments(payments, order.payments || []),
+        };
 
-    dialogRef.closed.subscribe((result) => {
-      const paymentResult = result as PaymentDialogResult | undefined;
-      if (paymentResult && paymentResult.method && paymentResult.amount) {
-        this.registerPayment(order, paymentResult);
-      }
-    });
+        this.mergeOrder(hydratedOrder);
+
+        const total = this.orderTotal(hydratedOrder);
+        const paid = this.orderPaidAmount(hydratedOrder);
+        const outstanding = this.orderOutstanding(hydratedOrder);
+
+        const dialogRef = this.dialog.open(PaymentDialogComponent, {
+          width: '500px',
+          data: {
+            total,
+            paid,
+            outstanding,
+            currency: 'COP',
+            payments: hydratedOrder.payments || [],
+          },
+        });
+
+        dialogRef.closed.subscribe((result) => {
+          const paymentResult = result as PaymentDialogResult | undefined;
+          if (paymentResult && paymentResult.method && paymentResult.amount) {
+            this.registerPayment(hydratedOrder, paymentResult);
+          }
+        });
+      });
   }
 
   private registerPayment(order: Order, result: PaymentDialogResult): void {
